@@ -3,6 +3,7 @@ use yew::{Html, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
 mod components;
+mod macros;
 mod pages;
 
 #[derive(Clone, Routable, PartialEq)]
