@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+synoptic = "2.2.9"
 yew = { version = "0.21.0", features = ["csr"] }
 yew-router = "0.18.0"

@@ -1,4 +1,4 @@
-use crate::{c, svg};
+use crate::{color, svg};
 use yew::{Html, classes, function_component, html};
 
 const ICON_SIZE: &str = "24";
@@ -6,7 +6,7 @@ const ICON_SIZE: &str = "24";
 pub fn sidebar() -> Html {
     html! {
         <div class={classes!(
-            c!(bg-950), "h-screen", "p-4",
+            color!(bg-950), "h-screen", "p-4",
             "flex", "flex-col", "w-fit"
         )}>
             <div class={classes!(
@@ -24,9 +24,9 @@ pub fn sidebar() -> Html {
                 .map(|(icon, tab)| {
                     html! {
                         <div class={classes!(
-                            "flex", "items-center", "gap-2", c!(text-400),
+                            "flex", "items-center", "gap-2", color!(text-400),
                             "font-semibold", "w-full", "px-4", "h-12",
-                            c!(hover:bg-900), "hover:text-white",
+                            color!(hover:bg-900), "hover:text-white",
                             "cursor-pointer", "transition-colors",
                             "duration-300", "rounded-lg"
                         )}>

@@ -3,6 +3,7 @@ use yew::{Html, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
 mod components;
+mod external;
 mod macros;
 mod pages;
 

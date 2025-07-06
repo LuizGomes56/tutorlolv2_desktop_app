@@ -1,4 +1,4 @@
-use crate::{c, svg};
+use crate::{color, svg};
 use yew::{Html, classes, function_component, html};
 
 fn container<const N: usize>(
@@ -47,9 +47,9 @@ pub fn formula_sidebar() -> Html {
     html! {
         <div class={classes!(
             "flex", "flex-col", "gap-4",
-            "max-w-48", "border-r-2", "h-screen",
-            c!(border-r-800), "p-4",
-            "overflow-y-auto"
+            "w-52", "border-r-2", "h-screen",
+            color!(border-r-800), "p-4",
+            "overflow-y-auto", "bg-neutral-900"
         )}>
             {container(
                 "MACROS",
@@ -62,8 +62,8 @@ pub fn formula_sidebar() -> Html {
                     "insert!",
                 ],
                 html! {
-                    <span class={classes!("text-purple-400")}>
-                        {svg!("../../../public/formulas/function", "16")}
+                    <span class={classes!("text-[#569CD6]")}>
+                        {svg!("../../../public/formulas/macro", "16")}
                     </span>
                 },
                 "text-[#569CD6]"

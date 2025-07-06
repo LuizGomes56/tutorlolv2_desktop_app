@@ -7,7 +7,7 @@ macro_rules! svg {
 }
 
 #[macro_export]
-macro_rules! c {
+macro_rules! color {
     ($property:ident-$weight:literal) => {
         concat!(stringify!($property), "-", "zinc", "-", $weight)
     };
