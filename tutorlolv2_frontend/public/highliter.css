@@ -28,11 +28,13 @@
     color: #DCDCAA;
 }
 
-.token.number {
+.token.number,
+.token.float {
     color: #B3CDA8;
 }
 
-.token.constant {
+.token.constant,
+.token.constvar {
     color: #4FC1DB;
 }
 
@@ -65,7 +67,6 @@ pre {
 }
 
 pre {
-    padding: 1em;
     overflow: auto;
     background: #18181b;
 }

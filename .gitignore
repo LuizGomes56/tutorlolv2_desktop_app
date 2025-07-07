@@ -1,3 +1,4 @@
 **/dist
 **/target
 **/gen/schemas
+*.lock

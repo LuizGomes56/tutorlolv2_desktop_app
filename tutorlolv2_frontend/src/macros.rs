@@ -8,8 +8,9 @@ macro_rules! svg {
 
 #[macro_export]
 macro_rules! color {
+    (@inner) => { "zinc" };
     ($property:ident-$weight:literal) => {
-        concat!(stringify!($property), "-", "zinc", "-", $weight)
+        concat!(stringify!($property), "-", color!(@inner), "-", $weight)
     };
     ($property:ident-$alignment:ident-$weight:literal) => {
         concat!(
@@ -17,7 +18,7 @@ macro_rules! color {
             "-",
             stringify!($alignment),
             "-",
-            "zinc",
+            color!(@inner),
             "-",
             $weight
         )
@@ -28,9 +29,23 @@ macro_rules! color {
             ":",
             stringify!($property),
             "-",
-            "zinc",
+            color!(@inner),
             "-",
             $weight
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! url {
+    (@inner) => { "http://localhost:8082" };
+    ($path:literal) => {
+        concat!(url!(@inner), $path)
+    };
+    ($fmt:literal $(, $vars:expr)*) => {
+        format!(
+            concat!(url!(@inner), $fmt)
+            $(, $vars)*
         )
     };
 }

@@ -1,5 +1,6 @@
-use crate::{color, svg};
+use crate::{Route, color, svg};
 use yew::{Html, classes, function_component, html};
+use yew_router::components::Link;
 
 const ICON_SIZE: &str = "24";
 #[function_component(Sidebar)]
@@ -14,16 +15,15 @@ pub fn sidebar() -> Html {
             )}>
             {
                 [
-                    (svg!("../../public/sidebar/home", ICON_SIZE), "Home"),
-                    (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime"),
-                    (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator"),
-                    (svg!("../../public/sidebar/formulas", ICON_SIZE), "Formulas"),
-                    (svg!("../../public/sidebar/source_code", ICON_SIZE), "API Docs")
+                    (svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home),
+                    (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::NotFound),
+                    (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::NotFound),
+                    (svg!("../../public/sidebar/source_code", ICON_SIZE), "Formulas", Route::Formulas),
                 ]
                 .into_iter()
-                .map(|(icon, tab)| {
+                .map(|(icon, tab, to)| {
                     html! {
-                        <div class={classes!(
+                        <Link<Route> to={to} classes={classes!(
                             "flex", "items-center", "gap-2", color!(text-400),
                             "font-semibold", "w-full", "px-4", "h-12",
                             color!(hover:bg-900), "hover:text-white",
@@ -32,7 +32,7 @@ pub fn sidebar() -> Html {
                         )}>
                             {icon}
                             <span>{tab}</span>
-                        </div>
+                        </Link<Route>>
                     }
                 })
                 .collect::<Html>()
