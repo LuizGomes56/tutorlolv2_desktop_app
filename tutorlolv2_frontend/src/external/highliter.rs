@@ -1,9 +1,6 @@
 use synoptic::{Highlighter, TokOpt};
-use web_sys::console;
 
 pub fn highlight(code_string: &str) -> String {
-    console::log_1(&"highlighting".into());
-
     let mut h = Highlighter::new(4);
     h.bounded("comment", r"/\*", r"\*/", false);
     h.keyword("comment", r"//.*$");
@@ -45,7 +42,7 @@ pub fn highlight(code_string: &str) -> String {
         for token in h.line(i, line) {
             match token {
                 TokOpt::Some(text, kind) => {
-                    line_html.push_str(&format!("<span class=\"token {kind}\">{text}</span>"));
+                    line_html.push_str(&format!("<span class=\"{kind}\">{text}</span>"));
                 }
                 TokOpt::None(text) => {
                     line_html.push_str(&text);
@@ -55,5 +52,5 @@ pub fn highlight(code_string: &str) -> String {
         out.push_str(&line_html);
         out.push_str("\n");
     }
-    format!("<pre class=\"code-highlight\">{}</pre>", out)
+    format!("<pre>{}</pre>", out)
 }

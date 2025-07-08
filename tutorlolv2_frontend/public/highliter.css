@@ -1,46 +1,46 @@
-.token.punctuation {
+.punctuation {
     color: #D4D4D4;
 }
 
-.token.control {
+.control {
     color: #C586C0;
 }
 
-.token.lifetime,
-.token.keyword,
-.token.macro,
-.token.boolean {
+.lifetime,
+.keyword,
+.macro,
+.boolean {
     color: #569CD6;
 }
 
-.token.primitive,
-.token.type {
+.primitive,
+.type {
     color: #4EC8B0;
 }
 
-.token.comment {
+.comment {
     color: #959596;
 }
 
-.token.function {
+.function {
     color: #DCDCAA;
 }
 
-.token.number,
-.token.float {
+.number,
+.float {
     color: #B3CDA8;
 }
 
-.token.constant,
-.token.constvar {
+.constant,
+.constvar {
     color: #4FC1DB;
 }
 
-.token.string {
+.string {
     color: #CE9178;
 }
 
-.token.variable {
+.variable {
     color: #9CDCFE;
 }
 

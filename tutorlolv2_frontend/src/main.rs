@@ -1,20 +1,22 @@
-use crate::pages::*;
+use crate::{components::sidebar::Sidebar, external::invoke, pages::*};
 use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
 use std::{collections::BTreeMap, hash::Hash};
-use yew::{Html, function_component, html, platform::spawn_local};
+use yew::{Html, classes, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
 
 mod components;
 mod external;
 mod hooks;
 mod macros;
+mod models;
 mod pages;
 
 pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
 pub static STATIC_ITEMS: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
 pub static STATIC_RUNES: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
 pub static STATIC_FORMULAS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
+pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
 
 async fn load_static<T: DeserializeOwned + Eq + Hash + Ord>(
     url: &'static str,
@@ -42,6 +44,7 @@ async fn load_static<T: DeserializeOwned + Eq + Hash + Ord>(
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
+    #[not_found]
     #[at("/")]
     Home,
 
@@ -51,19 +54,28 @@ pub enum Route {
     #[at("/realtime")]
     Realtime,
 
+    #[at("/history")]
+    History,
+
     #[at("/child_process/:id")]
     ChildProcess { id: u8 },
-
-    #[not_found]
-    #[at("/404")]
-    NotFound,
 }
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <BrowserRouter>
-            <Switch<Route> render={switch} />
+            <div class={classes!(
+                "flex", "w-full"
+            )}>
+                <Sidebar />
+                <div class={classes!(
+                    "flex", "flex-1",
+                    color!(bg-900)
+                )}>
+                    <Switch<Route> render={switch} />
+                </div>
+            </div>
         </BrowserRouter>
     }
 }
@@ -71,13 +83,13 @@ fn app() -> Html {
 fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => html! { <Home /> },
+        Route::History => html! { <History /> },
         Route::Formulas => html! { <Formulas /> },
         Route::Realtime => html! { <Realtime /> },
         Route::ChildProcess { id } => match id {
             1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },
         },
-        Route::NotFound => html! { <h1>{ "404 - Página não encontrada" }</h1> },
     }
 }
 
@@ -87,6 +99,7 @@ fn main() {
         let _ = STATIC_ITEMS.set(load_static(url!("/api/static/items")).await);
         let _ = STATIC_RUNES.set(load_static(url!("/api/static/runes")).await);
         let _ = STATIC_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
+        let _ = IS_DEKTOP_PLATFORM.set(invoke::invoke_checkup());
 
         yew::Renderer::<App>::new().render();
     });

@@ -1,57 +1,12 @@
 use crate::{
-    STATIC_CHAMPIONS, STATIC_FORMULAS, color, components::sidebar::Sidebar, external::highliter,
+    STATIC_CHAMPIONS, color, components::formulas::source_code::SourceCode,
     hooks::mouseout::use_mouseout, svg, url,
 };
-use rustc_hash::FxHashMap;
-use std::{borrow::Cow, cell::RefCell};
+use std::borrow::Cow;
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
-    use_memo, use_node_ref, use_state, virtual_dom::VNode,
+    use_memo, use_node_ref, use_state,
 };
-
-#[derive(Properties, PartialEq)]
-pub struct SourceCodeProps {
-    pub champion_id: String,
-}
-
-thread_local! {
-    static FORMULA_CODE_CACHE: RefCell<FxHashMap<String, Html>> =
-        RefCell::new(FxHashMap::default());
-}
-
-#[function_component(SourceCode)]
-pub fn source_code(props: &SourceCodeProps) -> Html {
-    let code = STATIC_FORMULAS
-        .get()
-        .and_then(|map| map.get(&props.champion_id))
-        .map(String::as_str)
-        .unwrap_or("Failed to fetch code");
-
-    let highlighted_code = use_memo(props.champion_id.clone(), |champion_id| {
-        if let Some(cached) =
-            FORMULA_CODE_CACHE.with(|cache| cache.borrow().get(champion_id).cloned())
-        {
-            return cached;
-        }
-
-        let raw_html = highliter::highlight(&code);
-        let html_result = html! {
-            <code class={classes!("text-[#D4D4D4]")}>
-                { VNode::from_html_unchecked(raw_html.clone().into()) }
-            </code>
-        };
-
-        FORMULA_CODE_CACHE.with(|cache| {
-            cache
-                .borrow_mut()
-                .insert(champion_id.clone(), html_result.clone());
-        });
-
-        html_result
-    });
-
-    html! {(*highlighted_code).clone()}
-}
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
@@ -207,38 +162,28 @@ pub fn formulas() -> Html {
     let current_champion = use_state(|| String::from("Aatrox"));
 
     html! {
+        // <FormulaSidebar />
         <div class={classes!(
-            "flex", "w-full"
+            "p-6", "flex-1", "h-screen", "overflow-y-auto",
+            "flex", "flex-col", "gap-4",
         )}>
-            <Sidebar />
-            <div class={classes!(
-                "flex", "flex-1",
-                color!(bg-900)
-            )}>
-                // <FormulaSidebar />
-                <div class={classes!(
-                    "p-6", "flex-1", "h-screen", "overflow-y-auto",
-                    "flex", "flex-col", "gap-4",
+            <div class={classes!("flex", "flex-wrap", "gap-4", "items-center")}>
+                <h1 class={classes!(
+                    "font-semibold", "text-2xl", "text-white"
                 )}>
-                    <div class={classes!("flex", "flex-wrap", "gap-4", "items-center")}>
-                        <h1 class={classes!(
-                            "font-semibold", "text-2xl", "text-white"
-                        )}>
-                            {"Formulas and Generator Code"}
-                        </h1>
-                        <ChampionSelector
-                            callback={
-                                let current_champion = current_champion.clone();
-                                Callback::from(move |champion_id: String| {
-                                    current_champion.set(champion_id);
-                                })
-                            }
-                            current_champion={(*current_champion).clone()}
-                        />
-                    </div>
-                    <SourceCode champion_id={(*current_champion).clone()} />
-                </div>
+                    {"Formulas and Generator Code"}
+                </h1>
+                <ChampionSelector
+                    callback={
+                        let current_champion = current_champion.clone();
+                        Callback::from(move |champion_id: String| {
+                            current_champion.set(champion_id);
+                        })
+                    }
+                    current_champion={(*current_champion).clone()}
+                />
             </div>
+            <SourceCode champion_id={(*current_champion).clone()} />
         </div>
     }
 }

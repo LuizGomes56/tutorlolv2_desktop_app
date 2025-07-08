@@ -2,13 +2,14 @@ use crate::{Route, color, svg};
 use yew::{Html, classes, function_component, html};
 use yew_router::components::Link;
 
-const ICON_SIZE: &str = "24";
+const ICON_SIZE: &'static str = "24";
 #[function_component(Sidebar)]
 pub fn sidebar() -> Html {
     html! {
         <div class={classes!(
-            color!(bg-950), "h-screen", "p-4",
-            "flex", "flex-col", "w-fit"
+            "bg-[#141417]", "h-screen", "p-4",
+            "flex", "flex-col", "w-fit",
+            "border-r-2", "border-zinc-800",
         )}>
             <div class={classes!(
                 "flex", "flex-col", "gap-2",
@@ -17,7 +18,8 @@ pub fn sidebar() -> Html {
                 [
                     (svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home),
                     (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::Realtime),
-                    (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::NotFound),
+                    (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::Home),
+                    (svg!("../../public/sidebar/history", ICON_SIZE), "History", Route::History),
                     (svg!("../../public/sidebar/source_code", ICON_SIZE), "Formulas", Route::Formulas),
                 ]
                 .into_iter()
