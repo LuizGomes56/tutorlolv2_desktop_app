@@ -2,7 +2,7 @@ use super::base::{BasicStats, ComparedItem, Damages, DragonMultipliers, Stats};
 use rustc_hash::FxHashMap;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq)]
 pub struct CurrentPlayer {
     pub damaging_abilities: FxHashMap<String, String>,
     pub damaging_items: FxHashMap<usize, String>,
@@ -18,13 +18,13 @@ pub struct CurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq)]
 pub struct GameInformation {
     pub game_time: f64,
     pub map_number: usize,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq)]
 pub struct Enemy {
     pub champion_id: String,
     pub champion_name: String,
@@ -40,7 +40,7 @@ pub struct Enemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq)]
 pub struct Scoreboard {
     pub assists: usize,
     pub creep_score: usize,
@@ -52,7 +52,7 @@ pub struct Scoreboard {
     pub position: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq)]
 pub struct ReqRealtime {
     pub current_player: CurrentPlayer,
     pub enemies: Vec<Enemy>,

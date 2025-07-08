@@ -2,13 +2,18 @@ use crate::{
     models::{base::ApiError, realtime::ReqRealtime},
     url,
 };
-use wasm_bindgen_futures::spawn_local;
+use std::{
+    rc::Rc,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use web_sys::{HtmlInputElement, console};
 use yew::{
-    Html, InputEvent, TargetCast, classes, function_component, html, use_effect_with, use_state,
+    Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
+    use_effect_with, use_state, use_state_eq,
 };
 
 async fn fetch_game_by_code(game_code: &str) -> Result<ReqRealtime, Box<dyn std::error::Error>> {
+    console::log_1(&format!("Fetching game, Code: {}", game_code).into());
     let response = reqwasm::http::Request::post(url!("/api/games/get_by_code"))
         .body(format!("{{\"game_code\":\"{}\"}}", game_code))
         .header("Content-Type", "application/json")
@@ -30,22 +35,63 @@ async fn fetch_game_by_code(game_code: &str) -> Result<ReqRealtime, Box<dyn std:
     }
 }
 
+static LOOP_FLAG: AtomicBool = AtomicBool::new(false);
+
+macro_rules! loop_flag {
+    (set $boolean:literal) => {
+        LOOP_FLAG.store($boolean, Ordering::SeqCst);
+    };
+    () => {
+        LOOP_FLAG.load(Ordering::SeqCst)
+    };
+}
+
 #[function_component(History)]
 pub fn history() -> Html {
-    let game_code_handle = use_state(|| String::with_capacity(6));
-    let game_handle = use_state(|| Option::<ReqRealtime>::None);
+    let game_code = use_state(|| String::with_capacity(6));
+    let game_data = use_state_eq(|| Rc::new(None::<ReqRealtime>));
 
-    use_effect_with(game_code_handle.clone(), |handle_ref| {
-        let game_code_handle = handle_ref.clone();
-        spawn_local(async move {
-            if (*game_code_handle).len() == 6 {
-                match fetch_game_by_code(&(*game_code_handle)).await {
-                    Ok(data) => game_handle.set(Some(data)),
-                    Err(e) => console::log_1(&e.to_string().into()),
-                }
+    {
+        let game_data = game_data.clone();
+        let game_code = game_code.clone();
+        use_effect_with(game_code.clone(), move |_| {
+            loop_flag!(set true);
+            if (*game_code).len() != 6 {
+                return;
             }
+
+            loop_flag!(set false);
+
+            spawn_local(async move {
+                let mut failures = 0usize;
+
+                loop {
+                    if loop_flag!() {
+                        break;
+                    }
+
+                    match fetch_game_by_code(&(*game_code)).await {
+                        Ok(response) => {
+                            game_data.set(Rc::new(Some(response)));
+                            failures = 0;
+                        }
+                        Err(e) => {
+                            console::log_1(&e.to_string().into());
+                            failures += 1;
+                        }
+                    }
+
+                    let delay = if failures > 10 {
+                        std::time::Duration::from_secs(60)
+                    } else {
+                        std::time::Duration::from_secs(1)
+                    };
+
+                    gloo_timers::future::sleep(delay).await;
+                }
+            });
         });
-    });
+    }
 
     html! {
         <div class={classes!(
@@ -67,15 +113,13 @@ pub fn history() -> Html {
                         "bg-zinc-800", "py-2", "px-4", "rounded-lg",
                     )}
                     type="text"
-                    placeholder="0xABCD"
+                    placeholder="ABC123"
                     oninput={{
-                        let game_code_handle = game_code_handle.clone();
+                        let game_code = game_code.clone();
                         move |e: InputEvent| {
                             let input: HtmlInputElement = e.target_unchecked_into();
                             let value = input.value();
-                            if value.len() == 6 {
-                                game_code_handle.set(value);
-                            }
+                            game_code.set(value);
                         }
                     }}
                 />
