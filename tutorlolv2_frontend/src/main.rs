@@ -1,8 +1,7 @@
 use crate::pages::*;
 use once_cell::sync::OnceCell;
-use rustc_hash::FxHashMap;
 use serde::de::DeserializeOwned;
-use std::hash::Hash;
+use std::{collections::BTreeMap, hash::Hash};
 use yew::{Html, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
 
@@ -12,17 +11,19 @@ mod hooks;
 mod macros;
 mod pages;
 
-pub static STATIC_CHAMPIONS: OnceCell<FxHashMap<String, String>> = OnceCell::new();
-pub static STATIC_ITEMS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
-pub static STATIC_RUNES: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
-pub static STATIC_FORMULAS: OnceCell<FxHashMap<String, String>> = OnceCell::new();
+pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
+pub static STATIC_ITEMS: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
+pub static STATIC_RUNES: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
+pub static STATIC_FORMULAS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
 
-async fn load_static<T: DeserializeOwned + Eq + Hash>(url: &'static str) -> FxHashMap<T, String> {
+async fn load_static<T: DeserializeOwned + Eq + Hash + Ord>(
+    url: &'static str,
+) -> BTreeMap<T, String> {
     let request = reqwasm::http::Request::new(url).send().await;
     match request {
         Ok(response) => {
             let bytes = response.binary().await.unwrap();
-            let decoded = bincode::serde::decode_from_slice::<FxHashMap<T, String>, _>(
+            let decoded = bincode::serde::decode_from_slice::<BTreeMap<T, String>, _>(
                 &bytes,
                 bincode::config::standard(),
             );
@@ -47,6 +48,9 @@ pub enum Route {
     #[at("/formulas")]
     Formulas,
 
+    #[at("/realtime")]
+    Realtime,
+
     #[at("/child_process/:id")]
     ChildProcess { id: u8 },
 
@@ -68,6 +72,7 @@ fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => html! { <Home /> },
         Route::Formulas => html! { <Formulas /> },
+        Route::Realtime => html! { <Realtime /> },
         Route::ChildProcess { id } => match id {
             1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },

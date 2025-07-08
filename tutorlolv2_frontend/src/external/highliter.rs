@@ -1,6 +1,9 @@
 use synoptic::{Highlighter, TokOpt};
+use web_sys::console;
 
 pub fn highlight(code_string: &str) -> String {
+    console::log_1(&"highlighting".into());
+
     let mut h = Highlighter::new(4);
     h.bounded("comment", r"/\*", r"\*/", false);
     h.keyword("comment", r"//.*$");

@@ -16,7 +16,7 @@ pub fn sidebar() -> Html {
             {
                 [
                     (svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home),
-                    (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::NotFound),
+                    (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::Realtime),
                     (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::NotFound),
                     (svg!("../../public/sidebar/source_code", ICON_SIZE), "Formulas", Route::Formulas),
                 ]
