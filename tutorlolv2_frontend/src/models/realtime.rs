@@ -1,12 +1,12 @@
 use super::base::{BasicStats, ComparedItem, Damages, DragonMultipliers, Stats};
-use rustc_hash::FxHashMap;
 use serde::Deserialize;
+use std::{collections::BTreeMap, rc::Rc};
 
 #[derive(Deserialize, PartialEq)]
-pub struct CurrentPlayer {
-    pub damaging_abilities: FxHashMap<String, String>,
-    pub damaging_items: FxHashMap<usize, String>,
-    pub damaging_runes: FxHashMap<usize, String>,
+pub struct ReqCurrentPlayer {
+    pub damaging_abilities: BTreeMap<String, String>,
+    pub damaging_items: BTreeMap<usize, String>,
+    pub damaging_runes: BTreeMap<usize, String>,
     pub riot_id: String,
     pub level: usize,
     pub team: String,
@@ -25,7 +25,7 @@ pub struct GameInformation {
 }
 
 #[derive(Deserialize, PartialEq)]
-pub struct Enemy {
+pub struct ReqEnemy {
     pub champion_id: String,
     pub champion_name: String,
     pub riot_id: String,
@@ -54,11 +54,55 @@ pub struct Scoreboard {
 
 #[derive(Deserialize, PartialEq)]
 pub struct ReqRealtime {
+    pub current_player: ReqCurrentPlayer,
+    pub enemies: Vec<ReqEnemy>,
+    pub game_information: GameInformation,
+    pub recommended_items: Vec<usize>,
+    pub compared_items: BTreeMap<usize, ComparedItem>,
+    pub scoreboard: Scoreboard,
+    pub enemy_dragon_multipliers: DragonMultipliers,
+    pub ally_dragon_multipliers: DragonMultipliers,
+}
+
+#[derive(PartialEq)]
+pub struct CurrentPlayer {
+    pub damaging_abilities: Rc<BTreeMap<String, String>>,
+    pub damaging_items: Rc<BTreeMap<usize, String>>,
+    pub damaging_runes: Rc<BTreeMap<usize, String>>,
+    pub riot_id: String,
+    pub level: usize,
+    pub team: String,
+    pub position: String,
+    pub champion_name: String,
+    pub champion_id: String,
+    pub base_stats: BasicStats,
+    pub bonus_stats: BasicStats,
+    pub current_stats: Stats,
+}
+
+#[derive(PartialEq)]
+pub struct Enemy {
+    pub champion_id: String,
+    pub champion_name: String,
+    pub riot_id: String,
+    pub team: String,
+    pub level: usize,
+    pub position: String,
+    pub damages: Rc<Damages>,
+    pub base_stats: BasicStats,
+    pub bonus_stats: BasicStats,
+    pub current_stats: BasicStats,
+    pub real_armor: f64,
+    pub real_magic_resist: f64,
+}
+
+#[derive(PartialEq)]
+pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: Vec<Enemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
-    pub compared_items: FxHashMap<usize, ComparedItem>,
+    pub compared_items: Rc<BTreeMap<usize, ComparedItem>>,
     pub scoreboard: Scoreboard,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,

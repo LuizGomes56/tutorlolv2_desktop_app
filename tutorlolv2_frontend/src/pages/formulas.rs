@@ -120,7 +120,7 @@ fn champion_selector(props: &ChampionSelectorProps) -> Html {
                     if *is_open { "flex" } else { "hidden" }
                 )
             }>
-                {visible_champions.iter().map(|item| item.html.clone()).collect::<Html>()}
+                {for visible_champions.iter().map(|item| item.html.clone())}
             </div>
         </div>
     }
@@ -149,7 +149,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
         >
             <img
                 src={url!("/cdn/champions/{}.png", props.champion_id)}
-                alt=""
+                alt={""}
                 class={classes!("w-6", "h-6")}
             />
             <span>{&props.champion_name}</span>

@@ -15,7 +15,7 @@ pub fn sidebar() -> Html {
                 "flex", "flex-col", "gap-2",
             )}>
             {
-                [
+                for [
                     (svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home),
                     (svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::Realtime),
                     (svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::Home),
@@ -37,7 +37,6 @@ pub fn sidebar() -> Html {
                         </Link<Route>>
                     }
                 })
-                .collect::<Html>()
             }
             </div>
         </div>

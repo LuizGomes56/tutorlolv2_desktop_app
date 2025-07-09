@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +30,7 @@ pub struct Stats {
     pub current_mana: f64,
 }
 
-pub type DamageLike<T> = FxHashMap<T, InstanceDamage>;
+pub type DamageLike<T> = BTreeMap<T, InstanceDamage>;
 
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct BasicStats {
@@ -58,7 +60,7 @@ pub struct Damages {
     pub abilities: DamageLike<String>,
     pub items: DamageLike<usize>,
     pub runes: DamageLike<usize>,
-    pub compared_items: FxHashMap<usize, SimulatedDamages>,
+    pub compared_items: BTreeMap<usize, SimulatedDamages>,
 }
 
 #[derive(Deserialize, PartialEq)]

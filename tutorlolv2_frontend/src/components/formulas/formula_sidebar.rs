@@ -17,7 +17,7 @@ fn container<const N: usize>(
                 {title}
             </span>
             {
-                array
+                for array
                 .into_iter()
                 .map(|name| {
                     html! {
@@ -36,7 +36,6 @@ fn container<const N: usize>(
                         </div>
                     }
                 })
-                .collect::<Html>()
             }
         </div>
     }
