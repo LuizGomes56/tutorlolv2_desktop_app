@@ -34,7 +34,7 @@ pub struct OutputGame {
     pub recommended_items: Vec<usize>,
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct InputActivePlayer {
     pub champion_id: String,
     pub champion_stats: Stats,
@@ -46,7 +46,7 @@ pub struct InputActivePlayer {
     pub infer_stats: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct InputEnemyPlayers {
     pub champion_name: String,
     pub items: Vec<usize>,
@@ -55,7 +55,7 @@ pub struct InputEnemyPlayers {
     pub infer_stats: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct InputGame {
     pub active_player: InputActivePlayer,
     pub enemy_players: Vec<InputEnemyPlayers>,

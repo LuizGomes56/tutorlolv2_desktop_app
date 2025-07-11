@@ -62,6 +62,9 @@ pub enum Route {
     #[at("/history")]
     History,
 
+    #[at("/calculator")]
+    Calculator,
+
     #[at("/child_process/:id")]
     ChildProcess { id: u8 },
 }
@@ -91,6 +94,7 @@ fn switch(routes: Route) -> Html {
         Route::History => html! { <History /> },
         Route::Formulas => html! { <Formulas /> },
         Route::Realtime => html! { <Realtime /> },
+        Route::Calculator => html! { <Calculator /> },
         Route::ChildProcess { id } => match id {
             1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },

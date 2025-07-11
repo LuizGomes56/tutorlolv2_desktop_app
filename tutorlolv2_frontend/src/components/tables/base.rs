@@ -1,40 +1,13 @@
 use crate::{
-    components::tables::cells::{ImageCell, Instances},
-    models::base::{Damages, InstanceDamage},
+    color,
+    components::tables::cells::{ImageCell, Instances, damage_cells},
+    models::base::Damages,
 };
 use std::{
-    collections::{BTreeMap, BTreeSet, btree_map::Values},
+    collections::{BTreeMap, BTreeSet},
     rc::Rc,
 };
 use yew::{Html, Properties, classes, function_component, html, use_memo};
-
-pub fn damage_cells<T>(btree: Values<'_, T, InstanceDamage>) -> Html {
-    html! {
-        {
-            for btree.map(|value| {
-                let text = if value.maximum_damage != 0.0 {
-                    format!("{} - {}", value.minimum_damage.round(), value.maximum_damage.round())
-                } else {
-                    value.minimum_damage.round().to_string()
-                };
-                html! {
-                    <td class={classes!{
-                        "text-center", match value.damage_type.as_str() {
-                            "PHYSICAL_DAMAGE" => "text-orange-500",
-                            "MAGIC_DAMAGE" => "text-sky-500",
-                            "TRUE_DAMAGE" => "text-white",
-                            "ADAPTATIVE_DAMAGE" => "text-pink-500",
-                            "MIXED" => "text-violet-500",
-                            _ => "text-emerald-500"
-                        }
-                    }}>
-                        {text}
-                    </td>
-                }
-            })
-        }
-    }
-}
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
@@ -55,13 +28,15 @@ pub fn base_table(props: &BaseTableProps) -> Html {
         use_memo((abilities, items, runes, champ_id), move |_| {
             html! {
                 <thead>
-                  <tr>
-                    <th></th>
+                    <tr class={classes!(
+                        color!(odd:bg-950),
+                    )}>
+                    <th class={classes!("h-10")}></th>
                     {
                         for props.damaging_abilities.iter().map(|key| {
-                            let first_char = key.chars().next().unwrap();
+                            let first_char = key.chars().next().unwrap_or_default();
                             html! {
-                                <th>
+                                <th class={classes!("group", "min-w-10")}>
                                     <ImageCell
                                         instance={
                                             Instances::Abilities(
@@ -78,7 +53,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                     {
                         for props.damaging_items.iter().map(|key| {
                             html! {
-                                <th>
+                                <th class={classes!("group", "min-w-10")}>
                                     <ImageCell
                                         instance={
                                             Instances::Items(*key)
@@ -91,7 +66,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                     {
                         for props.damaging_runes.iter().map(|key| {
                             html! {
-                                <th>
+                                <th class={classes!("group", "min-w-10")}>
                                     <ImageCell
                                         instance={
                                             Instances::Runes(*key)
@@ -101,7 +76,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                             }
                         })
                     }
-                  </tr>
+                    </tr>
                 </thead>
             }
         })
@@ -116,8 +91,10 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         .iter()
                         .map(|(enemy_champion_id, damages)| {
                             html! {
-                                <tr>
-                                    <td>
+                                <tr class={classes!(
+                                    // color!(odd:bg-900), color!(even:bg-800)
+                                )}>
+                                    <td class={classes!("w-10", "h-10")}>
                                         <ImageCell
                                             instance={
                                                 Instances::Champions(

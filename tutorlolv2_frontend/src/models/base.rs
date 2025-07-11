@@ -10,7 +10,7 @@ pub struct InstanceDamage {
     pub damage_type: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Default)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
@@ -32,7 +32,7 @@ pub struct Stats {
 
 pub type DamageLike<T> = BTreeMap<T, InstanceDamage>;
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Default)]
 pub struct BasicStats {
     pub armor: f64,
     pub health: f64,
@@ -70,7 +70,7 @@ pub struct DragonMultipliers {
     pub chemtech: f64,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Default)]
 pub struct AbilityLevels {
     pub q: usize,
     pub w: usize,

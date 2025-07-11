@@ -1,7 +1,7 @@
 use crate::{STATIC_ABILITY_FORMULAS, STATIC_ITEM_FORMULAS, STATIC_RUNE_FORMULAS, color, url};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, virtual_dom::VNode};
 
-const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">BASIC_ATTACK</span><span class="punctuation"> = </span><span class="type">DamageExpression</span> {
+const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">BASIC_ATTACK</span><span class="punctuation"> = {
     <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Basic Attack"</span>,
     <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
     <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span><span class="punctuation">: </span>&amp;<span class="type">EvalContext</span><span class="punctuation">|</span> {
@@ -10,7 +10,7 @@ const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrins
     <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0f64</span>,
 };</pre>"#;
 
-const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">CRITICAL_STRIKE</span><span class="punctuation"> = </span><span class="type">DamageExpression</span> {
+const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">CRITICAL_STRIKE</span><span class="punctuation"> = {
     <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Critical Strike"</span>,
     <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
     <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span><span class="punctuation">: </span>&amp;<span class="type">EvalContext</span><span class="punctuation">|</span> {
@@ -25,11 +25,12 @@ const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intr
 fn hover_docs(formula: AttrValue) -> Html {
     html! {
         <div class={classes!(
-            "hidden", "group-hover:flex", "absolute",
+            "hidden", "group-hover:flex", "fixed",
             "border", color!(bg-900), "leading-6",
-            "transform", "translate-x-[calc(50%-16px)]",
-            // translate-x-[calc(-50%+16px)]
-            "translate-y-[calc(50%+16px)]", "overflow-auto",
+            "transform", "max-w-md",
+            "translate-x-[calc(50%-16px)]",
+            "translate-y-[calc(50%+20px)]",
+            "overflow-auto",
             "max-h-96", "hover-docs",
             color!(border-800), "z-50"
         )}>
@@ -76,19 +77,6 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 url!("/cdn/abilities/{}{}.png", champion_id, first_char),
                 html! {
                     <>
-                        {
-                            hover_docs(
-                                STATIC_ABILITY_FORMULAS
-                                    .get()
-                                    .unwrap()
-                                    .get(champion_id)
-                                    .unwrap()
-                                    .get(keyname)
-                                    .unwrap()
-                                    .as_str()
-                                    .into()
-                            )
-                        }
                         <span class={classes!("img-letter")}>
                             {first_char}
                             <sub>
@@ -102,6 +90,19 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 }
                             </sub>
                         </span>
+                        {
+                            hover_docs(
+                                STATIC_ABILITY_FORMULAS
+                                    .get()
+                                    .unwrap()
+                                    .get(champion_id)
+                                    .unwrap()
+                                    .get(keyname)
+                                    .unwrap()
+                                    .as_str()
+                                    .into(),
+                            )
+                        }
                     </>
                 },
             ),
@@ -116,7 +117,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                         .get(keyname)
                         .unwrap()
                         .as_str()
-                        .into()
+                        .into(),
                 )
             },
         ),
@@ -130,7 +131,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                         .get(keyname)
                         .unwrap()
                         .as_str()
-                        .into()
+                        .into(),
                 )
             },
         ),
@@ -138,18 +139,20 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     };
 
     html! {
-        <div class={classes!(
-            "flex", "items-center", "justify-center",
-            "relative", "group"
-        )}>
-            <img
-                class={classes!(
-                    "w-8", "h-8", "peer"
-                )}
-                src={img_path}
-                alt={""}
-            />
-            { content }
-        </div>
+        <>
+            <div class={classes!(
+                "flex", "items-center", "justify-center",
+                "relative", "cell"
+            )}>
+                <img
+                    class={classes!(
+                        "w-8", "h-8",
+                    )}
+                    src={img_path}
+                    alt={""}
+                />
+                { content }
+            </div>
+        </>
     }
 }

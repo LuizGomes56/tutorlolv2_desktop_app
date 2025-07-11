@@ -1,10 +1,10 @@
 use crate::{
     components::tables::BaseTable,
+    external::fetch::fetch_backend,
     models::{
-        base::{ApiError, Damages},
+        base::Damages,
         realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
     },
-    url,
 };
 use rustc_hash::FxHashSet;
 use std::{
@@ -18,32 +18,73 @@ use yew::{
     use_effect_with, use_state, use_state_eq,
 };
 
-async fn fetch_game_by_code(game_code: &str) -> Result<ReqRealtime, Box<dyn std::error::Error>> {
-    console::log_1(&format!("Fetching game, Code: {}", game_code).into());
-    let response = reqwasm::http::Request::post(url!("/api/games/get_by_code"))
-        .body(format!("{{\"game_code\":\"{}\"}}", game_code))
-        .header("Content-Type", "application/json")
-        .send()
-        .await?;
-
-    let bytes = response.binary().await?;
-
-    match bincode::serde::decode_from_slice::<ReqRealtime, _>(&bytes, bincode::config::standard()) {
-        Ok(decoded) => Ok(decoded.0),
-        Err(e) => {
-            let api_error = bincode::serde::decode_from_slice::<ApiError, _>(
-                &bytes,
-                bincode::config::standard(),
-            )?;
-
-            Err(format!(
-                "API returned error: {}, error: {:#?}",
-                api_error.0.message, e
-            )
-            .into())
-        }
-    }
+/*
+{
+    for enemies.iter().map(|(enemy_champion_id, enemy)| {
+        STATIC_COMPARED_ITEMS
+            .get()
+            .and_then(|compared_items| {
+                compared_items.iter().map(|(siml_item_id, compared_item)| {
+                    let mut sum = 0.0;
+                    for (ability_id, ability) in enemy.damages.abilities.iter() {
+                        sum += enemy.damages.compared_items
+                            .get(&siml_item_id)
+                            .and_then(|siml_items| {
+                                siml_items.abilities.get(ability_id)
+                            })
+                            .map(|siml| {
+                                siml.minimum_damage
+                                    + siml.maximum_damage
+                                    - ability.minimum_damage
+                                    - ability.maximum_damage
+                            })
+                            .unwrap_or(0.0);
+                    }
+                    Some(
+                        html! {
+                            <div class={classes!(
+                                "flex", "gap-2", "items-center",
+                                "text-white",
+                            )}>
+                                <div class={classes!(
+                                    "flex", "gap-2", "items-center",
+                                )}>
+                                    <img
+                                        class={classes!("h-8", "w-8")}
+                                        src={url!("/cdn/champions/{}.png", enemy_champion_id)}
+                                        alt={""}
+                                    />
+                                    <span>
+                                        { enemy_champion_id }
+                                    </span>
+                                </div>
+                                <div class={classes!(
+                                    "flex", "gap-2", "items-center",
+                                )}>
+                                    <img
+                                        class={classes!("h-8", "w-8")}
+                                        src={url!("/cdn/items/{}.png", siml_item_id)}
+                                        alt={""}
+                                    />
+                                    <span>
+                                        { &compared_item.name }
+                                    </span>
+                                </div>
+                                { sum }
+                            </div>
+                        }
+                    )
+                })
+                .collect::<Option<Html>>()
+            })
+            .unwrap_or_else(|| html! {
+                <div>
+                    {"Erro ao carregar itens comparados."}
+                </div>
+            })
+    })
 }
+*/
 
 static LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 
@@ -81,7 +122,12 @@ pub fn history() -> Html {
                         break;
                     }
 
-                    match fetch_game_by_code(&(*game_code)).await {
+                    match fetch_backend::<ReqRealtime, _>(
+                        "/api/games/get_by_code",
+                        format!("{{\"game_code\":\"{}\"}}", *game_code),
+                    )
+                    .await
+                    {
                         Ok(response) => {
                             game_data.set(Rc::new(Some(Realtime {
                                 current_player: CurrentPlayer {
@@ -185,10 +231,7 @@ pub fn history() -> Html {
             </div>
             {
                 if let Some(ref data) = **game_data {
-                    let hidden_set = vec!["Ashe", "Rakan", "Nasus"]
-                        .iter()
-                        .map(|val| val.to_string())
-                        .collect::<FxHashSet<String>>();
+                    let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
 
                     let enemies = data
                         .enemies
@@ -198,20 +241,22 @@ pub fn history() -> Html {
                         .collect::<BTreeMap<_, _>>();
 
                     html! {
-                        <BaseTable
-                            damaging_abilities={data.current_player.damaging_abilities.clone()}
-                            damaging_items={data.current_player.damaging_items.clone()}
-                            damaging_runes={data.current_player.damaging_runes.clone()}
-                            champion_id={data.current_player.champion_id.clone()}
-                            damages={
-                                enemies
-                                    .iter()
-                                    .map(|(enemy_champion_id, enemy)| {
-                                        ((*enemy_champion_id).clone(), enemy.damages.clone())
-                                    })
-                                    .collect::<BTreeMap<String, Rc<Damages>>>()
-                            }
-                        />
+                        <div>
+                            <BaseTable
+                                damaging_abilities={data.current_player.damaging_abilities.clone()}
+                                damaging_items={data.current_player.damaging_items.clone()}
+                                damaging_runes={data.current_player.damaging_runes.clone()}
+                                champion_id={data.current_player.champion_id.clone()}
+                                damages={
+                                    enemies
+                                        .iter()
+                                        .map(|(enemy_champion_id, enemy)| {
+                                            ((*enemy_champion_id).clone(), enemy.damages.clone())
+                                        })
+                                        .collect::<BTreeMap<String, Rc<Damages>>>()
+                                }
+                            />
+                        </div>
                     }
                 } else {
                     html!()
