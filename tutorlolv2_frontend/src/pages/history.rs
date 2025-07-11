@@ -6,8 +6,9 @@ use crate::{
     },
     url,
 };
-use rustc_hash::FxHashMap;
+use rustc_hash::FxHashSet;
 use std::{
+    collections::BTreeMap,
     rc::Rc,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -29,13 +30,17 @@ async fn fetch_game_by_code(game_code: &str) -> Result<ReqRealtime, Box<dyn std:
 
     match bincode::serde::decode_from_slice::<ReqRealtime, _>(&bytes, bincode::config::standard()) {
         Ok(decoded) => Ok(decoded.0),
-        Err(_) => {
+        Err(e) => {
             let api_error = bincode::serde::decode_from_slice::<ApiError, _>(
                 &bytes,
                 bincode::config::standard(),
             )?;
 
-            Err(format!("API returned error: {}", api_error.0.message).into())
+            Err(format!(
+                "API returned error: {}, error: {:#?}",
+                api_error.0.message, e
+            )
+            .into())
         }
     }
 }
@@ -43,7 +48,7 @@ async fn fetch_game_by_code(game_code: &str) -> Result<ReqRealtime, Box<dyn std:
 static LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 
 macro_rules! loop_flag {
-    (set $boolean:literal) => {
+    ($boolean:literal) => {
         LOOP_FLAG.store($boolean, Ordering::SeqCst);
     };
     () => {
@@ -54,19 +59,19 @@ macro_rules! loop_flag {
 #[function_component(History)]
 pub fn history() -> Html {
     // let game_code = use_state(|| String::with_capacity(6));
-    let game_code = use_state(|| String::from("591504"));
+    let game_code = use_state(|| String::from("113680"));
     let game_data = use_state_eq(|| Rc::new(None::<Realtime>));
 
     {
         let game_data = game_data.clone();
         let game_code = game_code.clone();
         use_effect_with(game_code.clone(), move |_| {
-            loop_flag!(set true);
+            loop_flag!(true);
             if (*game_code).len() != 6 {
                 return;
             }
 
-            loop_flag!(set false);
+            loop_flag!(false);
 
             spawn_local(async move {
                 let mut failures = 0usize;
@@ -79,7 +84,6 @@ pub fn history() -> Html {
                     match fetch_game_by_code(&(*game_code)).await {
                         Ok(response) => {
                             game_data.set(Rc::new(Some(Realtime {
-                                compared_items: Rc::new(response.compared_items),
                                 current_player: CurrentPlayer {
                                     damaging_abilities: Rc::new(
                                         response.current_player.damaging_abilities,
@@ -99,19 +103,23 @@ pub fn history() -> Html {
                                 enemies: response
                                     .enemies
                                     .into_iter()
-                                    .map(|enemy| Enemy {
-                                        riot_id: enemy.riot_id,
-                                        level: enemy.level,
-                                        team: enemy.team,
-                                        champion_id: enemy.champion_id,
-                                        champion_name: enemy.champion_name,
-                                        current_stats: enemy.current_stats,
-                                        base_stats: enemy.base_stats,
-                                        bonus_stats: enemy.bonus_stats,
-                                        position: enemy.position,
-                                        real_armor: enemy.real_armor,
-                                        real_magic_resist: enemy.real_magic_resist,
-                                        damages: Rc::new(enemy.damages),
+                                    .map(|(enemy_id, enemy)| {
+                                        (
+                                            enemy_id,
+                                            Enemy {
+                                                riot_id: enemy.riot_id,
+                                                level: enemy.level,
+                                                team: enemy.team,
+                                                champion_name: enemy.champion_name,
+                                                current_stats: enemy.current_stats,
+                                                base_stats: enemy.base_stats,
+                                                bonus_stats: enemy.bonus_stats,
+                                                position: enemy.position,
+                                                real_armor: enemy.real_armor,
+                                                real_magic_resist: enemy.real_magic_resist,
+                                                damages: Rc::new(enemy.damages),
+                                            },
+                                        )
                                     })
                                     .collect(),
                                 game_information: response.game_information,
@@ -177,6 +185,18 @@ pub fn history() -> Html {
             </div>
             {
                 if let Some(ref data) = **game_data {
+                    let hidden_set = vec!["Ashe", "Rakan", "Nasus"]
+                        .iter()
+                        .map(|val| val.to_string())
+                        .collect::<FxHashSet<String>>();
+
+                    let enemies = data
+                        .enemies
+                        .iter()
+                        .filter(|(keyname, _)| !hidden_set.contains(*keyname))
+                        .map(|(key, val)| (key, val))
+                        .collect::<BTreeMap<_, _>>();
+
                     html! {
                         <BaseTable
                             damaging_abilities={data.current_player.damaging_abilities.clone()}
@@ -184,12 +204,12 @@ pub fn history() -> Html {
                             damaging_runes={data.current_player.damaging_runes.clone()}
                             champion_id={data.current_player.champion_id.clone()}
                             damages={
-                                data.enemies
+                                enemies
                                     .iter()
-                                    .map(|enemy| {
-                                        (enemy.champion_id.clone(), enemy.damages.clone())
+                                    .map(|(enemy_champion_id, enemy)| {
+                                        ((*enemy_champion_id).clone(), enemy.damages.clone())
                                     })
-                                    .collect::<FxHashMap<String, Rc<Damages>>>()
+                                    .collect::<BTreeMap<String, Rc<Damages>>>()
                             }
                         />
                     }

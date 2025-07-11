@@ -1,12 +1,16 @@
-use super::base::{BasicStats, ComparedItem, Damages, DragonMultipliers, Stats};
+use super::base::{BasicStats, Damages, DragonMultipliers, Stats};
+use rustc_hash::FxHashMap;
 use serde::Deserialize;
-use std::{collections::BTreeMap, rc::Rc};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    rc::Rc,
+};
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize)]
 pub struct ReqCurrentPlayer {
-    pub damaging_abilities: BTreeMap<String, String>,
-    pub damaging_items: BTreeMap<usize, String>,
-    pub damaging_runes: BTreeMap<usize, String>,
+    pub damaging_abilities: BTreeSet<String>,
+    pub damaging_items: BTreeSet<usize>,
+    pub damaging_runes: BTreeSet<usize>,
     pub riot_id: String,
     pub level: usize,
     pub team: String,
@@ -24,9 +28,8 @@ pub struct GameInformation {
     pub map_number: usize,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize)]
 pub struct ReqEnemy {
-    pub champion_id: String,
     pub champion_name: String,
     pub riot_id: String,
     pub team: String,
@@ -52,13 +55,12 @@ pub struct Scoreboard {
     pub position: String,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize)]
 pub struct ReqRealtime {
     pub current_player: ReqCurrentPlayer,
-    pub enemies: Vec<ReqEnemy>,
+    pub enemies: FxHashMap<String, ReqEnemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
-    pub compared_items: BTreeMap<usize, ComparedItem>,
     pub scoreboard: Scoreboard,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,
@@ -66,9 +68,9 @@ pub struct ReqRealtime {
 
 #[derive(PartialEq)]
 pub struct CurrentPlayer {
-    pub damaging_abilities: Rc<BTreeMap<String, String>>,
-    pub damaging_items: Rc<BTreeMap<usize, String>>,
-    pub damaging_runes: Rc<BTreeMap<usize, String>>,
+    pub damaging_abilities: Rc<BTreeSet<String>>,
+    pub damaging_items: Rc<BTreeSet<usize>>,
+    pub damaging_runes: Rc<BTreeSet<usize>>,
     pub riot_id: String,
     pub level: usize,
     pub team: String,
@@ -82,7 +84,6 @@ pub struct CurrentPlayer {
 
 #[derive(PartialEq)]
 pub struct Enemy {
-    pub champion_id: String,
     pub champion_name: String,
     pub riot_id: String,
     pub team: String,
@@ -99,10 +100,9 @@ pub struct Enemy {
 #[derive(PartialEq)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
-    pub enemies: Vec<Enemy>,
+    pub enemies: BTreeMap<String, Enemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
-    pub compared_items: Rc<BTreeMap<usize, ComparedItem>>,
     pub scoreboard: Scoreboard,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,

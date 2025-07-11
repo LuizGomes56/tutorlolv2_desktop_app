@@ -78,7 +78,7 @@ pub struct AbilityLevels {
     pub r: usize,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize)]
 pub struct ApiError {
     pub message: String,
 }

@@ -10,3 +10,28 @@
     filter: drop-shadow(1.25px 1.25px 0px black);
     text-shadow: 0px 0px 4px black;
 }
+
+.hover-docs {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(153, 153, 153, 0.4) transparent;
+}
+
+.hover-docs::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.hover-docs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hover-docs::-webkit-scrollbar-thumb {
+    background-color: rgba(153, 153, 153, 0.4);
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+}
+
+.hover-docs::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(153, 153, 153, 0.7);
+}

@@ -1,7 +1,9 @@
-use crate::{components::sidebar::Sidebar, external::invoke, pages::*};
+use crate::{components::sidebar::Sidebar, external::invoke, models::base::ComparedItem, pages::*};
 use once_cell::sync::OnceCell;
+use rustc_hash::FxHashMap;
 use serde::de::DeserializeOwned;
-use std::{collections::BTreeMap, hash::Hash};
+use std::collections::{BTreeMap, HashMap};
+use web_sys::console;
 use yew::{Html, classes, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
 
@@ -13,22 +15,24 @@ mod models;
 mod pages;
 
 pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
-pub static STATIC_ITEMS: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
-pub static STATIC_RUNES: OnceCell<BTreeMap<usize, String>> = OnceCell::new();
-pub static STATIC_FORMULAS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
+pub static STATIC_ABILITY_FORMULAS: OnceCell<FxHashMap<String, FxHashMap<String, String>>> =
+    OnceCell::new();
+pub static STATIC_ITEMS: OnceCell<BTreeMap<String, usize>> = OnceCell::new();
+pub static STATIC_RUNES: OnceCell<BTreeMap<String, usize>> = OnceCell::new();
+pub static STATIC_CHAMPION_FORMULAS: OnceCell<HashMap<String, String>> = OnceCell::new();
+pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
+pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
+pub static STATIC_COMPARED_ITEMS: OnceCell<FxHashMap<usize, ComparedItem>> = OnceCell::new();
 pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
 
-async fn load_static<T: DeserializeOwned + Eq + Hash + Ord>(
-    url: &'static str,
-) -> BTreeMap<T, String> {
+async fn load_static<T: DeserializeOwned>(url: &'static str) -> T {
     let request = reqwasm::http::Request::new(url).send().await;
     match request {
         Ok(response) => {
+            console::log_1(&format!("Loaded {}", url).into());
             let bytes = response.binary().await.unwrap();
-            let decoded = bincode::serde::decode_from_slice::<BTreeMap<T, String>, _>(
-                &bytes,
-                bincode::config::standard(),
-            );
+            let decoded =
+                bincode::serde::decode_from_slice::<T, _>(&bytes, bincode::config::standard());
             match decoded {
                 Ok(data) => data.0,
                 Err(e) => {
@@ -37,7 +41,8 @@ async fn load_static<T: DeserializeOwned + Eq + Hash + Ord>(
             }
         }
         Err(e) => {
-            panic!("Error sending request for {}: {:#?}", url, e)
+            console::log_1(&format!("Error sending request for {}: {:#?}", url, e).into());
+            panic!();
         }
     }
 }
@@ -98,7 +103,11 @@ fn main() {
         let _ = STATIC_CHAMPIONS.set(load_static(url!("/api/static/champions")).await);
         let _ = STATIC_ITEMS.set(load_static(url!("/api/static/items")).await);
         let _ = STATIC_RUNES.set(load_static(url!("/api/static/runes")).await);
-        let _ = STATIC_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
+        let _ = STATIC_COMPARED_ITEMS.set(load_static(url!("/api/static/compared_items")).await);
+        let _ = STATIC_CHAMPION_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
+        let _ = STATIC_ITEM_FORMULAS.set(load_static(url!("/api/formulas/items")).await);
+        let _ = STATIC_RUNE_FORMULAS.set(load_static(url!("/api/formulas/runes")).await);
+        let _ = STATIC_ABILITY_FORMULAS.set(load_static(url!("/api/formulas/abilities")).await);
         let _ = IS_DEKTOP_PLATFORM.set(invoke::invoke_checkup());
 
         yew::Renderer::<App>::new().render();

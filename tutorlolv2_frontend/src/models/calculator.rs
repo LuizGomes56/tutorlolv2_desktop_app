@@ -1,14 +1,14 @@
-use super::base::{AbilityLevels, BasicStats, ComparedItem, Damages, Stats};
+use super::base::{AbilityLevels, BasicStats, Damages, Stats};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    pub damaging_abilities: BTreeMap<String, String>,
-    pub damaging_items: BTreeMap<usize, String>,
-    pub damaging_runes: BTreeMap<usize, String>,
+    pub damaging_abilities: BTreeSet<String>,
+    pub damaging_items: BTreeSet<usize>,
+    pub damaging_runes: BTreeSet<usize>,
     pub level: usize,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
@@ -18,7 +18,6 @@ pub struct OutputCurrentPlayer {
 #[derive(Deserialize)]
 pub struct OutputEnemy {
     pub champion_name: String,
-    pub champion_id: String,
     pub level: usize,
     pub damages: Damages,
     pub base_stats: BasicStats,
@@ -31,9 +30,8 @@ pub struct OutputEnemy {
 #[derive(Deserialize)]
 pub struct OutputGame {
     pub current_player: OutputCurrentPlayer,
-    pub enemies: Vec<OutputEnemy>,
+    pub enemies: BTreeMap<String, OutputEnemy>,
     pub recommended_items: Vec<usize>,
-    pub compared_items: BTreeMap<usize, ComparedItem>,
 }
 
 #[derive(Serialize)]

@@ -2,9 +2,8 @@ use crate::{
     components::tables::cells::{ImageCell, Instances},
     models::base::{Damages, InstanceDamage},
 };
-use rustc_hash::FxHashMap;
 use std::{
-    collections::{BTreeMap, btree_map::Values},
+    collections::{BTreeMap, BTreeSet, btree_map::Values},
     rc::Rc,
 };
 use yew::{Html, Properties, classes, function_component, html, use_memo};
@@ -39,11 +38,11 @@ pub fn damage_cells<T>(btree: Values<'_, T, InstanceDamage>) -> Html {
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
-    pub damaging_abilities: Rc<BTreeMap<String, String>>,
-    pub damaging_items: Rc<BTreeMap<usize, String>>,
-    pub damaging_runes: Rc<BTreeMap<usize, String>>,
+    pub damaging_abilities: Rc<BTreeSet<String>>,
+    pub damaging_items: Rc<BTreeSet<usize>>,
+    pub damaging_runes: Rc<BTreeSet<usize>>,
     pub champion_id: String,
-    pub damages: FxHashMap<String, Rc<Damages>>,
+    pub damages: BTreeMap<String, Rc<Damages>>,
 }
 
 #[function_component(BaseTable)]
@@ -59,7 +58,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                   <tr>
                     <th></th>
                     {
-                        for props.damaging_abilities.iter().map(|(key, _)| {
+                        for props.damaging_abilities.iter().map(|key| {
                             let first_char = key.chars().next().unwrap();
                             html! {
                                 <th>
@@ -77,7 +76,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         })
                     }
                     {
-                        for props.damaging_items.iter().map(|(key, _)| {
+                        for props.damaging_items.iter().map(|key| {
                             html! {
                                 <th>
                                     <ImageCell
@@ -90,7 +89,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         })
                     }
                     {
-                        for props.damaging_runes.iter().map(|(key, _)| {
+                        for props.damaging_runes.iter().map(|key| {
                             html! {
                                 <th>
                                     <ImageCell

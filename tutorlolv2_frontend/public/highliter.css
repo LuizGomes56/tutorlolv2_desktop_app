@@ -31,8 +31,7 @@
     color: #B3CDA8;
 }
 
-.constant,
-.constvar {
+.constant {
     color: #4FC1DB;
 }
 
@@ -48,6 +47,4 @@ code,
 pre {
     background: 0 0;
     font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-    text-wrap: wrap;
-    word-break: break-all;
 }
