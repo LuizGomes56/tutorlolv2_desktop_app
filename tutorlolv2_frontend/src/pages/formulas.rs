@@ -148,7 +148,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
             }}
         >
             <img
-                src={url!("/cdn/champions/{}.png", props.champion_id)}
+                src={url!("/img/champions/{}.avif", props.champion_id)}
                 alt={""}
                 class={classes!("w-6", "h-6")}
             />

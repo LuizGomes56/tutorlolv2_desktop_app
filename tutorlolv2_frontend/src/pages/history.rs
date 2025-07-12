@@ -5,6 +5,7 @@ use crate::{
         base::Damages,
         realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
     },
+    url,
 };
 use rustc_hash::FxHashSet;
 use std::{
@@ -51,7 +52,7 @@ use yew::{
                                 )}>
                                     <img
                                         class={classes!("h-8", "w-8")}
-                                        src={url!("/cdn/champions/{}.png", enemy_champion_id)}
+                                        src={url!("/img/champions/{}.avif", enemy_champion_id)}
                                         alt={""}
                                     />
                                     <span>
@@ -63,7 +64,7 @@ use yew::{
                                 )}>
                                     <img
                                         class={classes!("h-8", "w-8")}
-                                        src={url!("/cdn/items/{}.png", siml_item_id)}
+                                        src={url!("/img/items/{}.avif", siml_item_id)}
                                         alt={""}
                                     />
                                     <span>
@@ -123,7 +124,7 @@ pub fn history() -> Html {
                     }
 
                     match fetch_backend::<ReqRealtime, _>(
-                        "/api/games/get_by_code",
+                        url!("/api/games/get_by_code"),
                         format!("{{\"game_code\":\"{}\"}}", *game_code),
                     )
                     .await

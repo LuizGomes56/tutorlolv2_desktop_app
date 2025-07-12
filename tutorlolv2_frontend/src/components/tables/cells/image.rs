@@ -66,15 +66,15 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     let (img_path, content) = match &props.instance {
         Instances::Abilities(keyname, first_char, champion_id) => match first_char {
             'A' => (
-                url!("/cdn/abilities/{}.png", first_char),
+                url!("/img/abilities/{}.avif", first_char),
                 html! { hover_docs(BASIC_ATTACK_FORMULA.into()) },
             ),
             'C' => (
-                url!("/cdn/abilities/{}.png", first_char),
+                url!("/img/abilities/{}.avif", first_char),
                 html! { hover_docs(CRITICAL_STRIKE_FORMULA.into()) },
             ),
             _ => (
-                url!("/cdn/abilities/{}{}.png", champion_id, first_char),
+                url!("/img/abilities/{}{}.avif", champion_id, first_char),
                 html! {
                     <>
                         <span class={classes!("img-letter")}>
@@ -108,7 +108,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             ),
         },
         Instances::Items(keyname) => (
-            url!("/cdn/items/{}.png", keyname),
+            url!("/img/items/{}.avif", keyname),
             html! {
                 hover_docs(
                     STATIC_ITEM_FORMULAS
@@ -122,7 +122,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             },
         ),
         Instances::Runes(keyname) => (
-            url!("/cdn/runes/{}.png", keyname),
+            url!("/img/runes/{}.avif", keyname),
             html! {
                 hover_docs(
                     STATIC_RUNE_FORMULAS
@@ -135,7 +135,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 )
             },
         ),
-        Instances::Champions(champion_id) => (url!("/cdn/champions/{}.png", champion_id), html!()),
+        Instances::Champions(champion_id) => (url!("/img/champions/{}.avif", champion_id), html!()),
     };
 
     html! {

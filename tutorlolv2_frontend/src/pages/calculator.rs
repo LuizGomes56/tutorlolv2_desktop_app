@@ -15,7 +15,7 @@ pub fn calculator() -> Html {
             )}>
                 <img
                     class={classes!("w-full")}
-                    src={url!("/cdn/centered/Neeko_0.jpg")}
+                    src={url!("/img/centered/Neeko_0.avif")}
                     alt={""}
                 />
             </div>

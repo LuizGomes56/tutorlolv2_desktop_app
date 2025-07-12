@@ -1,2 +1,6 @@
 [serve]
 port = 8000
+
+[build]
+release = true
+minify = "on_release"
