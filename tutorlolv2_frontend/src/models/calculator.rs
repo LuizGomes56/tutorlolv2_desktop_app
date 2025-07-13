@@ -34,7 +34,7 @@ pub struct OutputGame {
     pub recommended_items: Vec<usize>,
 }
 
-#[derive(Default, Serialize)]
+#[derive(PartialEq, Serialize)]
 pub struct InputActivePlayer {
     pub champion_id: String,
     pub champion_stats: Stats,
@@ -46,21 +46,54 @@ pub struct InputActivePlayer {
     pub infer_stats: bool,
 }
 
-#[derive(Default, Serialize)]
+#[derive(PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
     pub champion_name: String,
     pub items: Vec<usize>,
-    pub level: usize,
+    pub level: u8,
     pub stats: BasicStats,
     pub infer_stats: bool,
 }
 
-#[derive(Default, Serialize)]
+#[derive(PartialEq, Serialize)]
 pub struct InputGame {
     pub active_player: InputActivePlayer,
     pub enemy_players: Vec<InputEnemyPlayers>,
-    pub ally_earth_dragons: usize,
-    pub ally_fire_dragons: usize,
-    pub enemy_earth_dragons: usize,
-    pub stack_exceptions: FxHashMap<usize, usize>,
+    pub ally_earth_dragons: u8,
+    pub ally_fire_dragons: u8,
+    pub enemy_earth_dragons: u8,
+    pub stack_exceptions: FxHashMap<usize, u8>,
+}
+
+impl Default for InputGame {
+    fn default() -> Self {
+        Self {
+            active_player: InputActivePlayer {
+                champion_id: "Neeko".into(),
+                champion_stats: Default::default(),
+                abilities: AbilityLevels {
+                    q: 5,
+                    w: 5,
+                    e: 5,
+                    r: 3,
+                },
+                level: 15,
+                infer_stats: true,
+                items: Default::default(),
+                runes: Default::default(),
+                stacks: Default::default(),
+            },
+            enemy_players: Vec::from_iter([InputEnemyPlayers {
+                champion_name: "Gwen".into(),
+                level: 15,
+                infer_stats: true,
+                items: Default::default(),
+                stats: Default::default(),
+            }]),
+            ally_earth_dragons: 0,
+            ally_fire_dragons: 0,
+            enemy_earth_dragons: 0,
+            stack_exceptions: Default::default(),
+        }
+    }
 }

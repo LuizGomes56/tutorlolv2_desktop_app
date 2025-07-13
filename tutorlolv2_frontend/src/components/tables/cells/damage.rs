@@ -13,7 +13,7 @@ pub fn damage_cells<T>(btree: Values<'_, T, InstanceDamage>) -> Html {
                 };
                 html! {
                     <td class={classes!{
-                        "text-center", match value.damage_type.as_str() {
+                        "text-center", "text-sm", "px-2", match value.damage_type.as_str() {
                             "PHYSICAL_DAMAGE" => "text-orange-500",
                             "MAGIC_DAMAGE" => "text-sky-500",
                             "TRUE_DAMAGE" => "text-white",

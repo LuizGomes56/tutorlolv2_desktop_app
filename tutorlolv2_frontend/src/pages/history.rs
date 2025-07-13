@@ -1,6 +1,8 @@
 use crate::{
+    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
     components::tables::BaseTable,
     external::fetch::fetch_backend,
+    loop_flag,
     models::{
         base::Damages,
         realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
@@ -8,11 +10,7 @@ use crate::{
     url,
 };
 use rustc_hash::FxHashSet;
-use std::{
-    collections::BTreeMap,
-    rc::Rc,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{collections::BTreeMap, rc::Rc};
 use web_sys::{HtmlInputElement, console};
 use yew::{
     Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
@@ -51,6 +49,7 @@ use yew::{
                                     "flex", "gap-2", "items-center",
                                 )}>
                                     <img
+                                        loading={"lazy"}
                                         class={classes!("h-8", "w-8")}
                                         src={url!("/img/champions/{}.avif", enemy_champion_id)}
                                         alt={""}
@@ -63,6 +62,7 @@ use yew::{
                                     "flex", "gap-2", "items-center",
                                 )}>
                                     <img
+                                        loading={"lazy"}
                                         class={classes!("h-8", "w-8")}
                                         src={url!("/img/items/{}.avif", siml_item_id)}
                                         alt={""}
@@ -87,17 +87,6 @@ use yew::{
 }
 */
 
-static LOOP_FLAG: AtomicBool = AtomicBool::new(false);
-
-macro_rules! loop_flag {
-    ($boolean:literal) => {
-        LOOP_FLAG.store($boolean, Ordering::SeqCst);
-    };
-    () => {
-        LOOP_FLAG.load(Ordering::SeqCst)
-    };
-}
-
 #[function_component(History)]
 pub fn history() -> Html {
     // let game_code = use_state(|| String::with_capacity(6));
@@ -108,18 +97,19 @@ pub fn history() -> Html {
         let game_data = game_data.clone();
         let game_code = game_code.clone();
         use_effect_with(game_code.clone(), move |_| {
-            loop_flag!(true);
+            loop_flag!(history true);
             if (*game_code).len() != 6 {
                 return;
             }
 
-            loop_flag!(false);
+            loop_flag!(history false);
 
             spawn_local(async move {
                 let mut failures = 0usize;
 
                 loop {
-                    if loop_flag!() {
+                    console::log_1(&format!("Loop flag: {}", loop_flag!(history)).into());
+                    if loop_flag!(history) {
                         break;
                     }
 
@@ -183,10 +173,10 @@ pub fn history() -> Html {
                         }
                     }
 
-                    let delay = if failures > 10 {
-                        std::time::Duration::from_secs(60)
+                    let delay = if failures > MAX_FAILURES {
+                        std::time::Duration::from_secs(RETRY_INTERVAL)
                     } else {
-                        std::time::Duration::from_secs(1)
+                        std::time::Duration::from_millis(REFRESH_RATE)
                     };
 
                     gloo_timers::future::sleep(delay).await;

@@ -31,7 +31,8 @@
     color: #B3CDA8;
 }
 
-.constant {
+.constant,
+.intrinsic {
     color: #4FC1DB;
 }
 

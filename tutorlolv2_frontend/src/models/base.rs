@@ -70,12 +70,12 @@ pub struct DragonMultipliers {
     pub chemtech: f64,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Default)]
+#[derive(Serialize, Deserialize, PartialEq)]
 pub struct AbilityLevels {
-    pub q: usize,
-    pub w: usize,
-    pub e: usize,
-    pub r: usize,
+    pub q: u8,
+    pub w: u8,
+    pub e: u8,
+    pub r: u8,
 }
 
 #[derive(Deserialize)]

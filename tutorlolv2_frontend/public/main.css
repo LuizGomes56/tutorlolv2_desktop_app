@@ -11,6 +11,12 @@
     text-shadow: 0px 0px 4px black;
 }
 
+.img-clipped {
+    width: 100%;
+    object-fit: cover;
+    object-position: 0% 15%;
+}
+
 .hover-docs {
     scrollbar-width: thin;
     scrollbar-color: rgba(153, 153, 153, 0.4) transparent;

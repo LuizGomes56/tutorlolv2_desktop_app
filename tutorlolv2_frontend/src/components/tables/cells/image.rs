@@ -145,6 +145,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 "relative", "cell"
             )}>
                 <img
+                    loading={"lazy"}
                     class={classes!(
                         "w-8", "h-8",
                     )}

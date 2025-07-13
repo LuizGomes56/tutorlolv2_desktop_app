@@ -2,5 +2,5 @@
 port = 8000
 
 [build]
-release = true
+release = false
 minify = "on_release"

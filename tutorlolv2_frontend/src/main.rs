@@ -2,7 +2,10 @@ use crate::{components::sidebar::Sidebar, external::invoke, models::base::Compar
 use once_cell::sync::OnceCell;
 use rustc_hash::FxHashMap;
 use serde::de::DeserializeOwned;
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::atomic::AtomicBool,
+};
 use web_sys::console;
 use yew::{Html, classes, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
@@ -13,6 +16,7 @@ mod hooks;
 mod macros;
 mod models;
 mod pages;
+mod utils;
 
 pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
 pub static STATIC_ABILITY_FORMULAS: OnceCell<FxHashMap<String, FxHashMap<String, String>>> =
@@ -24,6 +28,28 @@ pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::
 pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
 pub static STATIC_COMPARED_ITEMS: OnceCell<FxHashMap<usize, ComparedItem>> = OnceCell::new();
 pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
+pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
+pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
+
+pub const MAX_FAILURES: usize = 10; /* Attempts */
+pub const RETRY_INTERVAL: u64 = 60; /* Seconds */
+pub const REFRESH_RATE: u64 = 1_000_000; /* Millis */
+
+#[macro_export]
+macro_rules! loop_flag {
+    (history $boolean:literal) => {
+        crate::HISTORY_LOOP_FLAG.store($boolean, std::sync::atomic::Ordering::SeqCst);
+    };
+    (history) => {
+        crate::HISTORY_LOOP_FLAG.load(std::sync::atomic::Ordering::SeqCst)
+    };
+    (realtime $boolean:literal) => {
+        crate::REALTIME_LOOP_FLAG.store($boolean, std::sync::atomic::Ordering::SeqCst);
+    };
+    (realtime) => {
+        crate::REALTIME_LOOP_FLAG.load(std::sync::atomic::Ordering::SeqCst)
+    };
+}
 
 async fn load_static<T: DeserializeOwned>(url: &'static str) -> T {
     let request = reqwasm::http::Request::new(url).send().await;
@@ -89,9 +115,13 @@ fn app() -> Html {
 }
 
 fn switch(routes: Route) -> Html {
+    loop_flag!(history true);
     match routes {
         Route::Home => html! { <Home /> },
-        Route::History => html! { <History /> },
+        Route::History => {
+            loop_flag!(history false);
+            html! { <History /> }
+        }
         Route::Formulas => html! { <Formulas /> },
         Route::Realtime => html! { <Realtime /> },
         Route::Calculator => html! { <Calculator /> },
