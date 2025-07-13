@@ -1,4 +1,9 @@
-use crate::{components::sidebar::Sidebar, external::invoke, models::base::ComparedItem, pages::*};
+use crate::{
+    components::sidebar::Sidebar,
+    external::{api::decode_bytes, invoke},
+    models::base::ComparedItem,
+    pages::*,
+};
 use once_cell::sync::OnceCell;
 use rustc_hash::FxHashMap;
 use serde::de::DeserializeOwned;
@@ -54,18 +59,7 @@ macro_rules! loop_flag {
 async fn load_static<T: DeserializeOwned>(url: &'static str) -> T {
     let request = reqwasm::http::Request::new(url).send().await;
     match request {
-        Ok(response) => {
-            console::log_1(&format!("Loaded {}", url).into());
-            let bytes = response.binary().await.unwrap();
-            let decoded =
-                bincode::serde::decode_from_slice::<T, _>(&bytes, bincode::config::standard());
-            match decoded {
-                Ok(data) => data.0,
-                Err(e) => {
-                    panic!("Error decoding {} at get_static_instance: {:#?}", url, e)
-                }
-            }
-        }
+        Ok(response) => decode_bytes::<T>(response).await.unwrap(),
         Err(e) => {
             console::log_1(&format!("Error sending request for {}: {:#?}", url, e).into());
             panic!();

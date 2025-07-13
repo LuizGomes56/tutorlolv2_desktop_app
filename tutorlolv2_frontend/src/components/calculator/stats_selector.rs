@@ -7,7 +7,7 @@ use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_
 
 #[derive(PartialEq, Properties)]
 pub struct StatsSelectorProps {
-    pub data: CalculatorState,
+    pub input_game: CalculatorState,
 }
 
 #[function_component(StatsSelector)]
@@ -31,10 +31,10 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
                         placeholder={"0"}
                         value={$value.to_string()}
                         oninput={{
-                            let data = props.data.clone();
+                            let input_game = props.input_game.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                data.update(|game| {
+                                input_game.update(|game| {
                                     game
                                         .active_player
                                         .champion_stats
@@ -47,16 +47,16 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             }
         };
         ($stat:ident) => {{
-            let value = props.data.get().active_player.champion_stats.$stat;
+            let value = props.input_game.get().active_player.champion_stats.$stat;
             let text = stringify!($stat);
             stat_cell!(@inner $stat, text, text, value)
         }};
         (@$img_path:ident $stat:ident) => {{
-            let value = props.data.get().active_player.champion_stats.$stat;
+            let value = props.input_game.get().active_player.champion_stats.$stat;
             stat_cell!(@inner $stat, stringify!($img_path), stringify!($stat), value)
         }};
         (%$img_path:ident $stat:ident) => {{
-            let value = props.data.get().active_player.champion_stats.$stat;
+            let value = props.input_game.get().active_player.champion_stats.$stat;
             let text = concat!(stringify!($img_path), " %");
             stat_cell!(@inner $stat, stringify!($img_path), text, value)
         }};

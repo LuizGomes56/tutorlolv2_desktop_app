@@ -6,7 +6,7 @@ use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub data: CalculatorState,
+    pub input_game: CalculatorState,
 }
 
 #[function_component(ExceptionSelector)]
@@ -43,12 +43,12 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         type={"text"}
                         class={classes!("w-full", "text-center", "text-sm")}
                         placeholder={"0"}
-                        value={props.data.get().$field.to_string()}
+                        value={props.input_game.get().$field.to_string()}
                         oninput={{
-                            let data = props.data.clone();
+                            let input_game = props.input_game.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                data.update(|game| {
+                                input_game.update(|game| {
                                     game.$field = target.value().parse::<u8>().unwrap_or(0);
                                 });
                             })
@@ -66,7 +66,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             {exception_cell!(exception_cell!(img url!("/img/other/fire_dragon.avif")), ally_fire_dragons)}
             {exception_cell!(exception_cell!(img url!("/img/other/earth_dragon.avif")), ally_earth_dragons)}
             {
-                match props.data.get().active_player.champion_id.as_str() {
+                match props.input_game.get().active_player.champion_id.as_str() {
                     "Bard" | "Kindred" | "Sion" | "ChoGath" | "Smolder" |
                     "Nasus" | "AurelionSol" | "Veigar" => {
                         let image = html! {
@@ -78,7 +78,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                             >
                                 {exception_cell!(img url!(
                                     "/img/other/{}_stacks.avif",
-                                    props.data.get().active_player.champion_id
+                                    props.input_game.get().active_player.champion_id
                                 ))}
                                 <span class={classes!("text-xs", "img-letter")}>{"S"}</span>
                             </div>

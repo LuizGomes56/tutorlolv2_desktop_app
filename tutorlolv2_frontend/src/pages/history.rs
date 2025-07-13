@@ -1,7 +1,7 @@
 use crate::{
     MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
     components::tables::BaseTable,
-    external::fetch::fetch_backend,
+    external::api::{decode_bytes, send_bytes},
     loop_flag,
     models::{
         base::Damages,
@@ -10,6 +10,7 @@ use crate::{
     url,
 };
 use rustc_hash::FxHashSet;
+use serde::Serialize;
 use std::{collections::BTreeMap, rc::Rc};
 use web_sys::{HtmlInputElement, console};
 use yew::{
@@ -108,70 +109,83 @@ pub fn history() -> Html {
                 let mut failures = 0usize;
 
                 loop {
-                    console::log_1(&format!("Loop flag: {}", loop_flag!(history)).into());
                     if loop_flag!(history) {
                         break;
                     }
 
-                    match fetch_backend::<ReqRealtime, _>(
-                        url!("/api/games/get_by_code"),
-                        format!("{{\"game_code\":\"{}\"}}", *game_code),
-                    )
-                    .await
-                    {
-                        Ok(response) => {
-                            game_data.set(Rc::new(Some(Realtime {
-                                current_player: CurrentPlayer {
-                                    damaging_abilities: Rc::new(
-                                        response.current_player.damaging_abilities,
-                                    ),
-                                    damaging_items: Rc::new(response.current_player.damaging_items),
-                                    damaging_runes: Rc::new(response.current_player.damaging_runes),
-                                    riot_id: response.current_player.riot_id,
-                                    level: response.current_player.level,
-                                    team: response.current_player.team,
-                                    champion_id: response.current_player.champion_id,
-                                    champion_name: response.current_player.champion_name,
-                                    current_stats: response.current_player.current_stats,
-                                    base_stats: response.current_player.base_stats,
-                                    bonus_stats: response.current_player.bonus_stats,
-                                    position: response.current_player.position,
-                                },
-                                enemies: response
-                                    .enemies
-                                    .into_iter()
-                                    .map(|(enemy_id, enemy)| {
-                                        (
-                                            enemy_id,
-                                            Enemy {
-                                                riot_id: enemy.riot_id,
-                                                level: enemy.level,
-                                                team: enemy.team,
-                                                champion_name: enemy.champion_name,
-                                                current_stats: enemy.current_stats,
-                                                base_stats: enemy.base_stats,
-                                                bonus_stats: enemy.bonus_stats,
-                                                position: enemy.position,
-                                                real_armor: enemy.real_armor,
-                                                real_magic_resist: enemy.real_magic_resist,
-                                                damages: Rc::new(enemy.damages),
-                                            },
-                                        )
-                                    })
-                                    .collect(),
-                                game_information: response.game_information,
-                                scoreboard: response.scoreboard,
-                                ally_dragon_multipliers: response.ally_dragon_multipliers,
-                                enemy_dragon_multipliers: response.enemy_dragon_multipliers,
-                                recommended_items: response.recommended_items,
-                            })));
-                            failures = 0;
-                        }
-                        Err(e) => {
-                            console::log_1(&e.to_string().into());
-                            failures += 1;
-                        }
+                    #[derive(Serialize)]
+                    struct GetByCodeBody<'a> {
+                        game_code: &'a str,
                     }
+
+                    let response = send_bytes(
+                        url!("/api/games/get_by_code"),
+                        &GetByCodeBody {
+                            game_code: &*game_code,
+                        },
+                    )
+                    .await;
+
+                    if let Ok(data) = response {
+                        match decode_bytes::<ReqRealtime>(data).await {
+                            Ok(req_realtime) => {
+                                game_data.set(Rc::new(Some(Realtime {
+                                    current_player: CurrentPlayer {
+                                        damaging_abilities: Rc::new(
+                                            req_realtime.current_player.damaging_abilities,
+                                        ),
+                                        damaging_items: Rc::new(
+                                            req_realtime.current_player.damaging_items,
+                                        ),
+                                        damaging_runes: Rc::new(
+                                            req_realtime.current_player.damaging_runes,
+                                        ),
+                                        riot_id: req_realtime.current_player.riot_id,
+                                        level: req_realtime.current_player.level,
+                                        team: req_realtime.current_player.team,
+                                        champion_id: req_realtime.current_player.champion_id,
+                                        champion_name: req_realtime.current_player.champion_name,
+                                        current_stats: req_realtime.current_player.current_stats,
+                                        base_stats: req_realtime.current_player.base_stats,
+                                        bonus_stats: req_realtime.current_player.bonus_stats,
+                                        position: req_realtime.current_player.position,
+                                    },
+                                    enemies: req_realtime
+                                        .enemies
+                                        .into_iter()
+                                        .map(|(enemy_id, enemy)| {
+                                            (
+                                                enemy_id,
+                                                Enemy {
+                                                    riot_id: enemy.riot_id,
+                                                    level: enemy.level,
+                                                    team: enemy.team,
+                                                    champion_name: enemy.champion_name,
+                                                    current_stats: enemy.current_stats,
+                                                    base_stats: enemy.base_stats,
+                                                    bonus_stats: enemy.bonus_stats,
+                                                    position: enemy.position,
+                                                    real_armor: enemy.real_armor,
+                                                    real_magic_resist: enemy.real_magic_resist,
+                                                    damages: Rc::new(enemy.damages),
+                                                },
+                                            )
+                                        })
+                                        .collect(),
+                                    game_information: req_realtime.game_information,
+                                    scoreboard: req_realtime.scoreboard,
+                                    ally_dragon_multipliers: req_realtime.ally_dragon_multipliers,
+                                    enemy_dragon_multipliers: req_realtime.enemy_dragon_multipliers,
+                                    recommended_items: req_realtime.recommended_items,
+                                })));
+                                failures = 0;
+                            }
+                            Err(e) => {
+                                console::log_1(&e.to_string().into());
+                                failures += 1;
+                            }
+                        }
+                    };
 
                     let delay = if failures > MAX_FAILURES {
                         std::time::Duration::from_secs(RETRY_INTERVAL)

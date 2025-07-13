@@ -6,7 +6,7 @@ use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_
 
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorProps {
-    pub data: CalculatorState,
+    pub input_game: CalculatorState,
 }
 
 #[function_component(AbilitySelector)]
@@ -25,7 +25,7 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                             class={classes!("h-6", "w-6")}
                             src={url!(
                                 "/img/abilities/{}{}.avif",
-                                props.data.get().active_player.champion_id,
+                                props.input_game.get().active_player.champion_id,
                                 text
                             )}
                             alt={""}
@@ -35,12 +35,12 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                         type={"text"}
                         class={classes!("w-full", "text-center", "text-sm")}
                         placeholder={"0"}
-                        value={props.data.get().active_player.abilities.$field.to_string()}
+                        value={props.input_game.get().active_player.abilities.$field.to_string()}
                         oninput={{
-                            let data = props.data.clone();
+                            let input_game = props.input_game.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                data.update(|game| {
+                                input_game.update(|game| {
                                     game.active_player.abilities.$field = target.value().parse::<u8>().unwrap_or(0);
                                 });
                             })
