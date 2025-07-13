@@ -3,14 +3,14 @@ use std::collections::BTreeMap;
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct InstanceDamage {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
     pub damage_type: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
@@ -32,7 +32,7 @@ pub struct Stats {
 
 pub type DamageLike<T> = BTreeMap<T, InstanceDamage>;
 
-#[derive(Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct BasicStats {
     pub armor: f64,
     pub health: f64,
@@ -41,21 +41,21 @@ pub struct BasicStats {
     pub mana: f64,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct ComparedItem {
     pub name: String,
     pub gold_cost: usize,
     pub prettified_stats: FxHashMap<String, f64>,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct SimulatedDamages {
     pub abilities: DamageLike<String>,
     pub items: DamageLike<usize>,
     pub runes: DamageLike<usize>,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct Damages {
     pub abilities: DamageLike<String>,
     pub items: DamageLike<usize>,
@@ -63,14 +63,14 @@ pub struct Damages {
     pub compared_items: BTreeMap<usize, SimulatedDamages>,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct DragonMultipliers {
     pub earth: f64,
     pub fire: f64,
     pub chemtech: f64,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct AbilityLevels {
     pub q: u8,
     pub w: u8,
@@ -78,7 +78,7 @@ pub struct AbilityLevels {
     pub r: u8,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ApiError {
     pub message: String,
 }

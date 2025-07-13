@@ -1,10 +1,12 @@
-use crate::{models::calculator::InputGame, svg, url};
-use std::{cell::RefCell, rc::Rc};
+use crate::{
+    pages::calculator::{CalculatorExt, CalculatorState},
+    svg, url,
+};
 use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub data: Rc<RefCell<InputGame>>,
+    pub data: CalculatorState,
 }
 
 #[function_component(ExceptionSelector)]
@@ -41,14 +43,14 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         type={"text"}
                         class={classes!("w-full", "text-center", "text-sm")}
                         placeholder={"0"}
-                        value={(*props.data).borrow().$field.to_string()}
+                        value={props.data.get().$field.to_string()}
                         oninput={{
                             let data = props.data.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                (*data)
-                                    .borrow_mut()
-                                    .$field = target.value().parse::<u8>().unwrap_or(0);
+                                data.update(|game| {
+                                    game.$field = target.value().parse::<u8>().unwrap_or(0);
+                                });
                             })
                         }}
                     />
@@ -64,7 +66,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             {exception_cell!(exception_cell!(img url!("/img/other/fire_dragon.avif")), ally_fire_dragons)}
             {exception_cell!(exception_cell!(img url!("/img/other/earth_dragon.avif")), ally_earth_dragons)}
             {
-                match (*props.data).borrow().active_player.champion_id.as_str() {
+                match props.data.get().active_player.champion_id.as_str() {
                     "Bard" | "Kindred" | "Sion" | "ChoGath" | "Smolder" |
                     "Nasus" | "AurelionSol" | "Veigar" => {
                         let image = html! {
@@ -76,7 +78,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                             >
                                 {exception_cell!(img url!(
                                     "/img/other/{}_stacks.avif",
-                                    (*props.data).borrow().active_player.champion_id
+                                    props.data.get().active_player.champion_id
                                 ))}
                                 <span class={classes!("text-xs", "img-letter")}>{"S"}</span>
                             </div>

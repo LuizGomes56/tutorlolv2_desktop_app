@@ -6,7 +6,7 @@ use std::{
     rc::Rc,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ReqCurrentPlayer {
     pub damaging_abilities: BTreeSet<String>,
     pub damaging_items: BTreeSet<usize>,
@@ -22,13 +22,13 @@ pub struct ReqCurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct GameInformation {
     pub game_time: f64,
     pub map_number: usize,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ReqEnemy {
     pub champion_name: String,
     pub riot_id: String,
@@ -43,7 +43,7 @@ pub struct ReqEnemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct Scoreboard {
     pub assists: usize,
     pub creep_score: usize,
@@ -55,7 +55,7 @@ pub struct Scoreboard {
     pub position: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ReqRealtime {
     pub current_player: ReqCurrentPlayer,
     pub enemies: FxHashMap<String, ReqEnemy>,
@@ -66,7 +66,7 @@ pub struct ReqRealtime {
     pub ally_dragon_multipliers: DragonMultipliers,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct CurrentPlayer {
     pub damaging_abilities: Rc<BTreeSet<String>>,
     pub damaging_items: Rc<BTreeSet<usize>>,
@@ -82,7 +82,7 @@ pub struct CurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Enemy {
     pub champion_name: String,
     pub riot_id: String,
@@ -97,7 +97,7 @@ pub struct Enemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: BTreeMap<String, Enemy>,

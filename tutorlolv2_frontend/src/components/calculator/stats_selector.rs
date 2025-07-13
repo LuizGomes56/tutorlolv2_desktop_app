@@ -1,10 +1,13 @@
-use crate::{models::calculator::InputGame, url, utils::to_pascal_case};
-use std::{cell::RefCell, rc::Rc};
+use crate::{
+    pages::calculator::{CalculatorExt, CalculatorState},
+    url,
+    utils::to_pascal_case,
+};
 use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
 pub struct StatsSelectorProps {
-    pub data: Rc<RefCell<InputGame>>,
+    pub data: CalculatorState,
 }
 
 #[function_component(StatsSelector)]
@@ -31,11 +34,12 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
                             let data = props.data.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                (*data)
-                                    .borrow_mut()
-                                    .active_player
-                                    .champion_stats
-                                    .$field = target.value().parse::<f64>().unwrap_or(0.0);
+                                data.update(|game| {
+                                    game
+                                        .active_player
+                                        .champion_stats
+                                        .$field = target.value().parse::<f64>().unwrap_or(0.0);
+                                });
                             })
                         }}
                     />
@@ -43,16 +47,16 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             }
         };
         ($stat:ident) => {{
-            let value = (*props.data).borrow().active_player.champion_stats.$stat;
+            let value = props.data.get().active_player.champion_stats.$stat;
             let text = stringify!($stat);
             stat_cell!(@inner $stat, text, text, value)
         }};
         (@$img_path:ident $stat:ident) => {{
-            let value = (*props.data).borrow().active_player.champion_stats.$stat;
+            let value = props.data.get().active_player.champion_stats.$stat;
             stat_cell!(@inner $stat, stringify!($img_path), stringify!($stat), value)
         }};
         (%$img_path:ident $stat:ident) => {{
-            let value = (*props.data).borrow().active_player.champion_stats.$stat;
+            let value = props.data.get().active_player.champion_stats.$stat;
             let text = concat!(stringify!($img_path), " %");
             stat_cell!(@inner $stat, stringify!($img_path), text, value)
         }};

@@ -3,7 +3,7 @@ use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
     pub damaging_abilities: BTreeSet<String>,
@@ -15,7 +15,7 @@ pub struct OutputCurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OutputEnemy {
     pub champion_name: String,
     pub level: usize,
@@ -27,14 +27,14 @@ pub struct OutputEnemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OutputGame {
     pub current_player: OutputCurrentPlayer,
     pub enemies: BTreeMap<String, OutputEnemy>,
     pub recommended_items: Vec<usize>,
 }
 
-#[derive(PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct InputActivePlayer {
     pub champion_id: String,
     pub champion_stats: Stats,
@@ -46,7 +46,7 @@ pub struct InputActivePlayer {
     pub infer_stats: bool,
 }
 
-#[derive(PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
     pub champion_name: String,
     pub items: Vec<usize>,
@@ -55,7 +55,7 @@ pub struct InputEnemyPlayers {
     pub infer_stats: bool,
 }
 
-#[derive(PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct InputGame {
     pub active_player: InputActivePlayer,
     pub enemy_players: Vec<InputEnemyPlayers>,
