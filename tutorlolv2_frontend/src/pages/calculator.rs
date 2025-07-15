@@ -5,11 +5,11 @@ use crate::{
     url,
 };
 use std::{
-    cell::{Ref, RefCell, RefMut},
+    cell::{Ref, RefCell},
     rc::Rc,
 };
 use yew::{
-    Callback, Html, UseStateHandle, classes, function_component, html, platform::spawn_local,
+    Html, UseStateHandle, classes, function_component, html, platform::spawn_local,
     use_effect_with, use_state,
 };
 
@@ -17,9 +17,8 @@ pub type CalculatorState = UseStateHandle<(Rc<RefCell<InputGame>>, u64)>;
 
 pub trait CalculatorExt {
     fn force_update(&self);
-    fn get_mut(&self) -> RefMut<'_, InputGame>;
     fn get(&self) -> Ref<'_, InputGame>;
-    fn update<F: FnOnce(&mut InputGame)>(&self, f: F);
+    fn try_update<F: FnOnce(&mut InputGame)>(&self, f: F) -> Result<(), String>;
 }
 
 impl CalculatorExt for UseStateHandle<(Rc<RefCell<InputGame>>, u64)> {
@@ -28,22 +27,31 @@ impl CalculatorExt for UseStateHandle<(Rc<RefCell<InputGame>>, u64)> {
         self.set((data.clone(), *index + 1));
     }
 
-    fn get_mut(&self) -> RefMut<'_, InputGame> {
-        self.0.borrow_mut()
-    }
-
     fn get(&self) -> Ref<'_, InputGame> {
         self.0.borrow()
     }
 
-    fn update<F: FnOnce(&mut InputGame)>(&self, f: F) {
-        f(&mut self.get_mut());
-        self.force_update();
+    fn try_update<F: FnOnce(&mut InputGame)>(&self, f: F) -> Result<(), String> {
+        match self.0.try_borrow_mut() {
+            Ok(mut borrowed) => {
+                f(&mut *borrowed);
+                drop(borrowed);
+                self.force_update();
+                Ok(())
+            }
+            Err(_) => {
+                let msg = "Unsafe update of struct InputGame was prevented";
+                web_sys::console::log_1(&msg.into());
+                Err(msg.to_string())
+            }
+        }
     }
 }
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
+    // must be split in several other state variables because it is too unsafe to
+    // mutate values with Callbacks of InputEvent
     let input_game = use_state(|| (Rc::new(RefCell::new(InputGame::default())), 0));
     let output_game = use_state(|| None::<Rc<OutputGame>>);
 
@@ -51,7 +59,7 @@ pub fn calculator() -> Html {
         let input_game = input_game.clone();
         let output_game = output_game.clone();
         use_effect_with(input_game.clone(), move |_| {
-            web_sys::console::log_1(&format!("{:#?}", input_game.get()).into());
+            // web_sys::console::log_1(&format!("{:#?}", input_game.get()).into());
 
             spawn_local(async move {
                 let response = send_bytes(url!("/api/games/calculator"), &*input_game.get()).await;

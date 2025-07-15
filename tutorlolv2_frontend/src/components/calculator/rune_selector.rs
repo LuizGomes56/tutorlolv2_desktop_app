@@ -38,7 +38,7 @@ pub fn rune_selector(props: &RuneSelectorProps) -> Html {
                                         let input_game = props.input_game.clone();
                                         Callback::from(move |_| {
                                             web_sys::console::log_1(&rune_id.to_string().into());
-                                            input_game.update(|game| {
+                                            let _ = input_game.try_update(|game| {
                                                 game.active_player.runes.push(*rune_id);
                                             });
                                         })
@@ -74,7 +74,7 @@ pub fn rune_selector(props: &RuneSelectorProps) -> Html {
                                     onclick={{
                                         let input_game = props.input_game.clone();
                                         Callback::from(move |_| {
-                                            input_game.update(|game| {
+                                            let _ = input_game.try_update(|game| {
                                                 game.active_player.runes.remove(index);
                                             });
                                         })

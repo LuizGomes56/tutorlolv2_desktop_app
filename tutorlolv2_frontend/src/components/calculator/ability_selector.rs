@@ -11,6 +11,8 @@ pub struct AbilitySelectorProps {
 
 #[function_component(AbilitySelector)]
 pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
+    let input_game = props.input_game.clone();
+    let data = props.input_game.get();
     macro_rules! ability_cell {
         ($field:ident) => {{
             let text = stringify!($field).to_uppercase();
@@ -25,7 +27,7 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                             class={classes!("h-6", "w-6")}
                             src={url!(
                                 "/img/abilities/{}{}.avif",
-                                props.input_game.get().active_player.champion_id,
+                                data.active_player.champion_id,
                                 text
                             )}
                             alt={""}
@@ -35,12 +37,12 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                         type={"text"}
                         class={classes!("w-full", "text-center", "text-sm")}
                         placeholder={"0"}
-                        value={props.input_game.get().active_player.abilities.$field.to_string()}
+                        value={data.active_player.abilities.$field.to_string()}
                         oninput={{
-                            let input_game = props.input_game.clone();
+                            let input_game = input_game.clone();
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                input_game.update(|game| {
+                                let _ = input_game.try_update(|game| {
                                     game.active_player.abilities.$field = target.value().parse::<u8>().unwrap_or(0);
                                 });
                             })

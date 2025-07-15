@@ -38,7 +38,7 @@ pub fn item_selector(props: &ItemSelectorProps) -> Html {
                                         let input_game = props.input_game.clone();
                                         Callback::from(move |_| {
                                             web_sys::console::log_1(&item_id.to_string().into());
-                                            input_game.update(|game| {
+                                            let _ = input_game.try_update(|game| {
                                                 game.active_player.items.push(*item_id);
                                             });
                                         })
@@ -74,7 +74,7 @@ pub fn item_selector(props: &ItemSelectorProps) -> Html {
                                     onclick={{
                                         let input_game = props.input_game.clone();
                                         Callback::from(move |_| {
-                                            input_game.update(|game| {
+                                            let _ = input_game.try_update(|game| {
                                                 game.active_player.items.remove(index);
                                             });
                                         })

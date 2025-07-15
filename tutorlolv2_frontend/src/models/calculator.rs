@@ -34,25 +34,6 @@ pub struct OutputGame {
     pub recommended_items: Vec<usize>,
 }
 
-impl Default for OutputGame {
-    fn default() -> Self {
-        Self {
-            current_player: OutputCurrentPlayer {
-                champion_id: "Neeko".into(),
-                level: 15,
-                damaging_abilities: Default::default(),
-                damaging_items: Default::default(),
-                damaging_runes: Default::default(),
-                base_stats: Default::default(),
-                bonus_stats: Default::default(),
-                current_stats: Default::default(),
-            },
-            enemies: Default::default(),
-            recommended_items: Default::default(),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Serialize)]
 pub struct InputActivePlayer {
     pub champion_id: String,

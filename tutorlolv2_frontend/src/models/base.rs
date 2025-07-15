@@ -10,7 +10,7 @@ pub struct InstanceDamage {
     pub damage_type: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Serialize, Clone, Copy, Deserialize, PartialEq, Default)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
