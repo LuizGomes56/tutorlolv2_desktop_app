@@ -34,19 +34,19 @@ pub struct OutputGame {
     pub recommended_items: Vec<usize>,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputActivePlayer {
     pub champion_id: String,
     pub champion_stats: Stats,
     pub abilities: AbilityLevels,
     pub items: Vec<usize>,
     pub runes: Vec<usize>,
-    pub level: usize,
+    pub level: u8,
     pub stacks: usize,
     pub infer_stats: bool,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
     pub champion_name: String,
     pub items: Vec<usize>,
@@ -55,7 +55,7 @@ pub struct InputEnemyPlayers {
     pub infer_stats: bool,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputGame {
     pub active_player: InputActivePlayer,
     pub enemy_players: Vec<InputEnemyPlayers>,

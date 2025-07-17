@@ -22,7 +22,7 @@ pub struct ReqCurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct GameInformation {
     pub game_time: f64,
     pub map_number: usize,
@@ -43,7 +43,7 @@ pub struct ReqEnemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct Scoreboard {
     pub assists: usize,
     pub creep_score: usize,
@@ -66,7 +66,7 @@ pub struct ReqRealtime {
     pub ally_dragon_multipliers: DragonMultipliers,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct CurrentPlayer {
     pub damaging_abilities: Rc<BTreeSet<String>>,
     pub damaging_items: Rc<BTreeSet<usize>>,
@@ -82,7 +82,7 @@ pub struct CurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Enemy {
     pub champion_name: String,
     pub riot_id: String,
@@ -97,7 +97,7 @@ pub struct Enemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: BTreeMap<String, Enemy>,

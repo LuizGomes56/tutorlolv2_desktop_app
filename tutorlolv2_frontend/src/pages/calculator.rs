@@ -1,94 +1,39 @@
 use crate::{
     components::calculator::*,
     external::api::{decode_bytes, send_bytes},
-    models::calculator::{InputActivePlayer, InputEnemyPlayers, InputGame, OutputGame},
+    models::calculator::{InputGame, OutputGame},
     url,
 };
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 use yew::{
-    Html, classes, function_component, html, platform::spawn_local, use_effect_with, use_state,
+    Html, classes, function_component, html, platform::spawn_local, use_effect_with, use_reducer,
+    use_state,
 };
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
-    let current_player_volatile_attrs = use_state(CurrentPlayerVolatileAttrs::default);
-    let enemy_players_volatile_attrs = use_state(Vec::<EnemyPlayerVolatileAttrs>::new);
-    let outer_volatile_attrs = use_state(OuterVolatileAttrs::default);
-    let dangerous_attrs = use_state(|| (Rc::new(RefCell::new(DangerousAttrs::default())), 0));
+    let input_game = use_reducer(InputGame::default);
     let output_game = use_state(|| None::<Rc<OutputGame>>);
 
     {
-        let current_player_volatile_attrs = current_player_volatile_attrs.clone();
-        let enemy_players_volatile_attrs = enemy_players_volatile_attrs.clone();
-        let outer_volatile_attrs = outer_volatile_attrs.clone();
-        let dangerous_attrs = dangerous_attrs.clone();
         let output_game = output_game.clone();
-        use_effect_with(
-            (
-                current_player_volatile_attrs,
-                enemy_players_volatile_attrs,
-                outer_volatile_attrs,
-                dangerous_attrs,
-            ),
-            move |(
-                current_player_volatile_attrs,
-                enemy_players_volatile_attrs,
-                outer_volatile_attrs,
-                dangerous_attrs,
-            )| {
-                let dangerous_values = dangerous_attrs.get();
-                let input_game = InputGame {
-                    active_player: InputActivePlayer {
-                        champion_id: dangerous_values.current_player_champion_id.clone(),
-                        abilities: current_player_volatile_attrs.abilities,
-                        level: current_player_volatile_attrs.level,
-                        stacks: current_player_volatile_attrs.stacks,
-                        infer_stats: current_player_volatile_attrs.infer_stats,
-                        champion_stats: current_player_volatile_attrs.champion_stats,
-                        items: dangerous_values.current_player_items.clone(),
-                        runes: dangerous_values.current_player_runes.clone(),
-                    },
-                    enemy_players: enemy_players_volatile_attrs
-                        .iter()
-                        .enumerate()
-                        .map(|(i, enemy_attr)| InputEnemyPlayers {
-                            champion_name: dangerous_values
-                                .enemy_champion_names
-                                .get(i)
-                                .unwrap_or(&String::new())
-                                .clone(),
-                            items: dangerous_values
-                                .enemy_items
-                                .get(i)
-                                .unwrap_or(&Vec::new())
-                                .clone(),
-                            infer_stats: enemy_attr.infer_stats,
-                            level: enemy_attr.level,
-                            stats: enemy_attr.stats,
-                        })
-                        .collect(),
-                    ally_earth_dragons: outer_volatile_attrs.ally_earth_dragons,
-                    enemy_earth_dragons: outer_volatile_attrs.enemy_earth_dragons,
-                    ally_fire_dragons: outer_volatile_attrs.ally_fire_dragons,
-                    stack_exceptions: Default::default(),
-                };
+        use_effect_with(input_game, move |input_game| {
+            let input_game = input_game.clone();
+            spawn_local(async move {
+                let response = send_bytes(url!("/api/games/calculator"), &*input_game).await;
 
-                spawn_local(async move {
-                    let response = send_bytes(url!("/api/games/calculator"), &input_game).await;
-
-                    if let Ok(res) = response {
-                        match decode_bytes::<OutputGame>(res).await {
-                            Ok(data) => {
-                                output_game.set(Some(Rc::new(data)));
-                            }
-                            Err(e) => {
-                                web_sys::console::log_1(&format!("{:#?}", e).into());
-                            }
+                if let Ok(res) = response {
+                    match decode_bytes::<OutputGame>(res).await {
+                        Ok(data) => {
+                            output_game.set(Some(Rc::new(data)));
+                        }
+                        Err(e) => {
+                            web_sys::console::log_1(&format!("{:#?}", e).into());
                         }
                     }
-                });
-            },
-        );
+                }
+            });
+        });
     }
 
     html! {

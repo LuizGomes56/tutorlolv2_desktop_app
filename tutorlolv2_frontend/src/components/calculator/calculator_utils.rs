@@ -1,109 +1,192 @@
-use crate::models::base::{AbilityLevels, BasicStats, Stats};
-use std::{
-    cell::{Ref, RefCell},
-    rc::Rc,
+use crate::models::{
+    base::{AbilityLevels, BasicStats, Stats},
+    calculator::InputGame,
 };
-use yew::UseStateHandle;
+use paste::paste;
+use std::rc::Rc;
+use yew::Reducible;
 
-#[derive(PartialEq)]
-pub struct StackExceptions {}
-
-#[derive(Default, PartialEq, Clone, Copy)]
-pub struct OuterVolatileAttrs {
-    pub ally_earth_dragons: u8,
-    pub ally_fire_dragons: u8,
-    pub enemy_earth_dragons: u8,
-}
-
-/// Will be placed inside an Rc<RefCell> and since they don't depend on InputEvent,
-/// they can "safely" be mutated without causing a BorrowMut error. However, if the
-/// user decides to create a script to trigger a huge amount of events on this list,
-/// a BorrowMut error may occur, but in fair use, this is acceptable and performant
-#[derive(PartialEq)]
-pub struct DangerousAttrs {
-    pub current_player_champion_id: String,
-    pub current_player_items: Vec<usize>,
-    pub current_player_runes: Vec<usize>,
-    pub stack_exceptions: StackExceptions,
-    pub enemy_champion_names: Vec<String>,
-    pub enemy_items: Vec<Vec<usize>>,
-}
-
-impl Default for DangerousAttrs {
-    fn default() -> Self {
-        Self {
-            current_player_champion_id: "Neeko".into(),
-            current_player_items: Default::default(),
-            current_player_runes: Default::default(),
-            stack_exceptions: StackExceptions {},
-            enemy_champion_names: Default::default(),
-            enemy_items: Default::default(),
-        }
-    }
-}
-
-#[derive(PartialEq, Clone, Copy)]
-pub struct CurrentPlayerVolatileAttrs {
-    pub champion_stats: Stats,
-    pub abilities: AbilityLevels,
-    pub level: usize,
-    pub stacks: usize,
-    pub infer_stats: bool,
-}
-
-impl Default for CurrentPlayerVolatileAttrs {
-    fn default() -> Self {
-        Self {
-            abilities: AbilityLevels {
-                q: 5,
-                w: 5,
-                e: 5,
-                r: 3,
-            },
-            level: 15,
-            stacks: 0,
-            infer_stats: true,
-            champion_stats: Default::default(),
-        }
-    }
-}
-
-#[derive(Default, PartialEq, Clone, Copy)]
-pub struct EnemyPlayerVolatileAttrs {
-    pub level: u8,
-    pub stats: BasicStats,
-    pub infer_stats: bool,
-}
-
-pub trait DangerousMutAttrExt<T> {
-    fn force_update(&self);
-    fn get(&self) -> Ref<'_, T>;
-    fn try_update<F: FnOnce(&mut T)>(&self, f: F) -> Result<(), String>;
-}
-
-impl<T> DangerousMutAttrExt<T> for UseStateHandle<(Rc<RefCell<T>>, u64)> {
-    fn force_update(&self) {
-        let (data, index) = &**self;
-        self.set((data.clone(), *index + 1));
-    }
-
-    fn get(&self) -> Ref<'_, T> {
-        self.0.borrow()
-    }
-
-    fn try_update<F: FnOnce(&mut T)>(&self, f: F) -> Result<(), String> {
-        match self.0.try_borrow_mut() {
-            Ok(mut borrowed) => {
-                f(&mut *borrowed);
-                drop(borrowed);
-                self.force_update();
-                Ok(())
+macro_rules! stats_reducer {
+    ($name:ident, $( $stat:ident ),*) => {
+        paste! {
+            pub enum [<Change $name Action>] {
+                $(
+                    [<Set $stat:camel>](f64),
+                )*
             }
-            Err(_) => {
-                let msg = "Unsafe struct update was prevented";
-                web_sys::console::log_1(&msg.into());
-                Err(msg.to_string())
+
+            pub fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
+                match action {
+                    $(
+                        [<Change $name Action>]::[<Set $stat:camel>](value) => {
+                            stats.$stat = value;
+                        }
+                    )*
+                }
             }
         }
+    };
+}
+
+stats_reducer!(
+    Stats,
+    ability_power,
+    armor,
+    armor_penetration_flat,
+    armor_penetration_percent,
+    attack_damage,
+    attack_range,
+    attack_speed,
+    crit_chance,
+    crit_damage,
+    current_health,
+    magic_penetration_flat,
+    magic_penetration_percent,
+    magic_resist,
+    max_health,
+    max_mana,
+    current_mana
+);
+
+stats_reducer!(BasicStats, armor, health, attack_damage, magic_resist, mana);
+
+macro_rules! ability_level_reducer {
+    ($name:ident, $( $ability:ident ),*) => {
+        paste! {
+            pub enum $name {
+                $(
+                    [<Set $ability:upper>](u8),
+                )*
+            }
+
+            pub fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
+                match action {
+                    $(
+                        $name::[<Set $ability:upper>](value) => {
+                            ability_levels.$ability = value;
+                        }
+                    )*
+                }
+            }
+        }
+    };
+}
+
+ability_level_reducer!(ChangeAbilityLevelsAction, q, w, e, r);
+
+pub enum InputGameAction {
+    SetCurrentPlayerChampionId(String),
+    SetCurrentPlayerLevel(u8),
+    SetCurrentPlayerInferStats(bool),
+    SetCurrentPlayerStacks(usize),
+    SetCurrentPlayerStats(ChangeStatsAction),
+    InsertCurrentPlayerItem(usize),
+    RemoveCurrentPlayerItem(usize),
+    ClearCurrentPlayerItems,
+    InsertCurrentPlayerRune(usize),
+    RemoveCurrentPlayerRune(usize),
+    ClearCurrentPlayerRunes,
+    SetAbilityLevels(ChangeAbilityLevelsAction),
+    SetEnemyPlayerChampionName(usize, String),
+    SetEnemyPlayerStats(usize, ChangeBasicStatsAction),
+    SetEnemyPlayerInferStats(usize, bool),
+    InsertEnemyPlayerItem(usize, usize),
+    RemoveEnemyPlayerItem(usize, usize),
+    ClearEnemyPlayerItems(usize),
+    SetEnemyPlayerLevel(usize, u8),
+    SetAllyFireDragons(u8),
+    SetAllyEarthDragons(u8),
+    SetEnemyEarthDragons(u8),
+}
+
+impl Reducible for InputGame {
+    type Action = InputGameAction;
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+
+        match action {
+            InputGameAction::SetCurrentPlayerLevel(value) => {
+                new_state.active_player.level = value;
+            }
+            InputGameAction::InsertCurrentPlayerItem(value) => {
+                new_state.active_player.items.push(value);
+            }
+            InputGameAction::RemoveCurrentPlayerItem(item) => {
+                new_state.active_player.items.retain(|&i| i != item);
+            }
+            InputGameAction::ClearCurrentPlayerItems => {
+                new_state.active_player.items.clear();
+            }
+            InputGameAction::InsertCurrentPlayerRune(value) => {
+                new_state.active_player.runes.push(value);
+            }
+            InputGameAction::RemoveCurrentPlayerRune(rune) => {
+                new_state.active_player.runes.retain(|&r| r != rune);
+            }
+            InputGameAction::ClearCurrentPlayerRunes => {
+                new_state.active_player.runes.clear();
+            }
+            InputGameAction::SetCurrentPlayerStacks(value) => {
+                new_state.active_player.stacks = value;
+            }
+            InputGameAction::SetCurrentPlayerChampionId(value) => {
+                new_state.active_player.champion_id = value;
+            }
+            InputGameAction::SetCurrentPlayerInferStats(value) => {
+                new_state.active_player.infer_stats = value;
+            }
+            InputGameAction::SetCurrentPlayerStats(action) => {
+                change_stats(&mut new_state.active_player.champion_stats, action);
+            }
+            InputGameAction::SetEnemyPlayerStats(index, action) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    change_basic_stats(&mut enemy.stats, action);
+                }
+            }
+            InputGameAction::SetEnemyPlayerInferStats(index, value) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.infer_stats = value;
+                }
+            }
+            InputGameAction::InsertEnemyPlayerItem(index, value) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.items.push(value);
+                }
+            }
+            InputGameAction::RemoveEnemyPlayerItem(index, item) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.items.retain(|&i| i != item);
+                }
+            }
+            InputGameAction::ClearEnemyPlayerItems(index) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.items.clear();
+                }
+            }
+            InputGameAction::SetEnemyPlayerLevel(index, value) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.level = value;
+                }
+            }
+            InputGameAction::SetEnemyPlayerChampionName(index, value) => {
+                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                    enemy.champion_name = value;
+                }
+            }
+            InputGameAction::SetAbilityLevels(action) => {
+                change_ability_levels(&mut new_state.active_player.abilities, action);
+            }
+            InputGameAction::SetAllyFireDragons(value) => {
+                new_state.ally_fire_dragons = value;
+            }
+            InputGameAction::SetAllyEarthDragons(value) => {
+                new_state.ally_earth_dragons = value;
+            }
+            InputGameAction::SetEnemyEarthDragons(value) => {
+                new_state.enemy_earth_dragons = value;
+            }
+        }
+
+        Rc::new(new_state)
     }
 }

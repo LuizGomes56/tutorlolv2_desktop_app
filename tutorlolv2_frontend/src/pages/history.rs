@@ -92,7 +92,7 @@ use yew::{
 pub fn history() -> Html {
     // let game_code = use_state(|| String::with_capacity(6));
     let game_code = use_state(|| String::from("113680"));
-    let game_data = use_state_eq(|| Rc::new(None::<Realtime>));
+    let game_data = use_state(|| Rc::new(None::<Realtime>));
 
     {
         let game_data = game_data.clone();
