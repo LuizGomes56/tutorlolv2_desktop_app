@@ -15,7 +15,7 @@ macro_rules! stats_reducer {
                 )*
             }
 
-            pub fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
+            fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
                 match action {
                     $(
                         [<Change $name Action>]::[<Set $stat:camel>](value) => {
@@ -59,7 +59,7 @@ macro_rules! ability_level_reducer {
                 )*
             }
 
-            pub fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
+            fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
                 match action {
                     $(
                         $name::[<Set $ability:upper>](value) => {
@@ -112,7 +112,7 @@ impl Reducible for InputGame {
                 new_state.active_player.items.push(value);
             }
             InputGameAction::RemoveCurrentPlayerItem(item) => {
-                new_state.active_player.items.retain(|&i| i != item);
+                new_state.active_player.items.remove(item);
             }
             InputGameAction::ClearCurrentPlayerItems => {
                 new_state.active_player.items.clear();
@@ -121,7 +121,7 @@ impl Reducible for InputGame {
                 new_state.active_player.runes.push(value);
             }
             InputGameAction::RemoveCurrentPlayerRune(rune) => {
-                new_state.active_player.runes.retain(|&r| r != rune);
+                new_state.active_player.runes.remove(rune);
             }
             InputGameAction::ClearCurrentPlayerRunes => {
                 new_state.active_player.runes.clear();
@@ -155,7 +155,7 @@ impl Reducible for InputGame {
             }
             InputGameAction::RemoveEnemyPlayerItem(index, item) => {
                 if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.items.retain(|&i| i != item);
+                    enemy.items.remove(item);
                 }
             }
             InputGameAction::ClearEnemyPlayerItems(index) => {

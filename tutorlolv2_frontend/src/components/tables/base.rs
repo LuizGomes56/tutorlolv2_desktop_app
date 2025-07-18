@@ -15,7 +15,7 @@ pub struct BaseTableProps {
     pub damaging_items: Rc<BTreeSet<usize>>,
     pub damaging_runes: Rc<BTreeSet<usize>>,
     pub champion_id: String,
-    pub damages: BTreeMap<String, Rc<Damages>>,
+    pub damages: Html,
 }
 
 #[function_component(BaseTable)]
@@ -85,32 +85,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
     html! {
         <table class={classes!()}>
             {(*thead).clone()}
-            <tbody>
-                {
-                    for props.damages
-                        .iter()
-                        .map(|(enemy_champion_id, damages)| {
-                            html! {
-                                <tr class={classes!(
-                                    // color!(odd:bg-900), color!(even:bg-800)
-                                )}>
-                                    <td class={classes!("w-10", "h-10")}>
-                                        <ImageCell
-                                            instance={
-                                                Instances::Champions(
-                                                    enemy_champion_id.clone(),
-                                                )
-                                            }
-                                        />
-                                    </td>
-                                    {damage_cells(damages.abilities.values())}
-                                    {damage_cells(damages.items.values())}
-                                    {damage_cells(damages.runes.values())}
-                                </tr>
-                            }
-                        })
-                }
-            </tbody>
+            <tbody>{props.damages.clone()}</tbody>
         </table>
     }
 }

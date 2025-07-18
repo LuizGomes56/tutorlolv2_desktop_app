@@ -1,13 +1,21 @@
-use crate::{svg, url};
-use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
+use crate::{components::calculator::InputGameAction, models::calculator::InputGame, svg, url};
+use paste::paste;
+use yew::{
+    Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
+    function_component, html,
+};
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
     pub current_player_champion_id: String,
+    pub input_game: UseReducerHandle<InputGame>,
 }
 
+/// Pending
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
+    let data = &*props.input_game;
+
     macro_rules! exception_cell {
         (img $img_path:expr) => {
             html! {
@@ -27,27 +35,30 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             }
         };
         ($img:expr, $field:ident) => {
-            html! {
-                <label class={classes!(
-                    "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
-                )}>
-                    {$img}
-                    <input
-                        type={"text"}
-                        class={classes!("w-full", "text-center", "text-sm")}
-                        placeholder={"0"}
-                        // value={data.$field.to_string()}
-                        // oninput={{
-                        //     let input_game = props.input_game.clone();
-                        //     Callback::from(move |e: InputEvent| {
-                        //         let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                        //         let _ = input_game.try_update(|game| {
-                        //             game.$field = target.value().parse::<u8>().unwrap_or(0);
-                        //         });
-                        //     })
-                        // }}
-                    />
-                </label>
+            paste! {
+                html! {
+                    <label class={classes!(
+                        "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
+                    )}>
+                        {$img}
+                        <input
+                            type={"text"}
+                            class={classes!("w-full", "text-center", "text-sm")}
+                            placeholder={"0"}
+                            value={data.$field.to_string()}
+                            oninput={{
+                                let input_game = props.input_game.clone();
+                                Callback::from(move |e: InputEvent| {
+                                    let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                                    let value = target.value().parse::<u8>().unwrap_or(0);
+                                    input_game.dispatch(
+                                        InputGameAction::[<Set $field:camel>](value)
+                                    );
+                                })
+                            }}
+                        />
+                    </label>
+                }
             }
         };
     }
@@ -95,9 +106,9 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                     }
                 }
             }
-            <div title={"Infer Stats"}>
-                {exception_cell!(exception_cell!(svg "../../../public/svgs/infer"), ally_fire_dragons)}
-            </div>
+            // <div title={"Infer Stats"}>
+            //     {exception_cell!(exception_cell!(svg "../../../public/svgs/infer"), ally_fire_dragons)}
+            // </div>
         </div>
     }
 }

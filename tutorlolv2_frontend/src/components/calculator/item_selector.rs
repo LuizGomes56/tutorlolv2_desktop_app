@@ -1,9 +1,12 @@
-use crate::{STATIC_ITEMS, color, url};
-use yew::{Callback, Html, Properties, classes, function_component, html};
+use crate::{
+    STATIC_ITEMS, color, components::calculator::InputGameAction, models::calculator::InputGame,
+    url,
+};
+use yew::{Callback, Html, Properties, UseReducerHandle, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
 pub struct ItemSelectorProps {
-    // pub input_game: CalculatorState,
+    pub input_game: UseReducerHandle<InputGame>,
 }
 
 #[function_component(ItemSelector)]
@@ -28,17 +31,15 @@ pub fn item_selector(props: &ItemSelectorProps) -> Html {
                                     class={classes!(
                                         "grid", "grid-cols-[auto_1fr]",
                                         "items-center", "gap-2", "text-sm",
-                                        color!(hover:bg-800),
+                                        color!(hover:bg-800), "select-none",
+                                        "cursor-pointer"
                                     )}
-                                    // onclick={{
-                                    //     let input_game = props.input_game.clone();
-                                    //     Callback::from(move |_| {
-                                    //         web_sys::console::log_1(&item_id.to_string().into());
-                                    //         let _ = input_game.try_update(|game| {
-                                    //             game.active_player.items.push(*item_id);
-                                    //         });
-                                    //     })
-                                    // }}
+                                    onclick={{
+                                        let input_game = props.input_game.clone();
+                                        Callback::from(move |_| {
+                                            input_game.dispatch(InputGameAction::InsertCurrentPlayerItem(*item_id));
+                                        })
+                                    }}
                                 >
                                     <img
                                         class={classes!("w-5", "h-5")}
@@ -47,46 +48,43 @@ pub fn item_selector(props: &ItemSelectorProps) -> Html {
                                         loading={"lazy"}
                                     />
                                     <span class={classes!("text-left")}>
-                                        {item_name.clone()}
+                                        {item_name}
                                     </span>
                                 </button>
                             }
                         })
                 }
             </div>
-            // <div class={classes!("flex", "h-fit", "flex-wrap", "gap-2")}>
-            //     {
-            //         for props
-            //             .input_game
-            //             .get()
-            //             .active_player
-            //             .items
-            //             .iter()
-            //             .enumerate()
-            //             .map(|(index, item_id)| {
-            //                 html! {
-            //                     <button
-            //                         class={classes!("cursor-pointer")}
-            //                         onclick={{
-            //                             let input_game = props.input_game.clone();
-            //                             Callback::from(move |_| {
-            //                                 let _ = input_game.try_update(|game| {
-            //                                     game.active_player.items.remove(index);
-            //                                 });
-            //                             })
-            //                         }}
-            //                     >
-            //                         <img
-            //                             class={classes!("w-5", "h-5")}
-            //                             src={url!("/img/items/{}.avif", item_id)}
-            //                             alt={""}
-            //                             loading={"lazy"}
-            //                         />
-            //                     </button>
-            //                 }
-            //         })
-            //     }
-            // </div>
+            <div class={classes!("flex", "h-fit", "flex-wrap", "gap-2")}>
+                {
+                    for props
+                        .input_game
+                        .active_player
+                        .items
+                        .iter()
+                        .enumerate()
+                        .map(|(index, item_id)| {
+                            html! {
+                                <button
+                                    class={classes!("cursor-pointer", "select-none")}
+                                    onclick={{
+                                        let input_game = props.input_game.clone();
+                                        Callback::from(move |_| {
+                                            input_game.dispatch(InputGameAction::RemoveCurrentPlayerItem(index));
+                                        })
+                                    }}
+                                >
+                                    <img
+                                        class={classes!("w-5", "h-5")}
+                                        src={url!("/img/items/{}.avif", item_id)}
+                                        alt={""}
+                                        loading={"lazy"}
+                                    />
+                                </button>
+                            }
+                    })
+                }
+            </div>
         </div>
     }
 }

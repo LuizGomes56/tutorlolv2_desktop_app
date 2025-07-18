@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct InstanceDamage {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
@@ -41,21 +41,21 @@ pub struct BasicStats {
     pub mana: f64,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct ComparedItem {
     pub name: String,
     pub gold_cost: usize,
     pub prettified_stats: FxHashMap<String, f64>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct SimulatedDamages {
     pub abilities: DamageLike<String>,
     pub items: DamageLike<usize>,
     pub runes: DamageLike<usize>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct Damages {
     pub abilities: DamageLike<String>,
     pub items: DamageLike<usize>,
@@ -63,7 +63,7 @@ pub struct Damages {
     pub compared_items: BTreeMap<usize, SimulatedDamages>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize)]
 pub struct DragonMultipliers {
     pub earth: f64,
     pub fire: f64,

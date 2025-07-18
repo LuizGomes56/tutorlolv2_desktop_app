@@ -21,7 +21,6 @@ mod hooks;
 mod macros;
 mod models;
 mod pages;
-mod utils;
 
 pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
 pub static STATIC_ABILITY_FORMULAS: OnceCell<FxHashMap<String, FxHashMap<String, String>>> =

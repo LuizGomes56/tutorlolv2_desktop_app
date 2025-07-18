@@ -1,6 +1,9 @@
 use crate::{
     MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
-    components::tables::BaseTable,
+    components::tables::{
+        BaseTable,
+        cells::{ImageCell, Instances, damage_cells},
+    },
     external::api::{decode_bytes, send_bytes},
     loop_flag,
     models::{
@@ -256,9 +259,26 @@ pub fn history() -> Html {
                                     enemies
                                         .iter()
                                         .map(|(enemy_champion_id, enemy)| {
-                                            ((*enemy_champion_id).clone(), enemy.damages.clone())
+                                            html! {
+                                                <tr class={classes!(
+                                                    // color!(odd:bg-900), color!(even:bg-800)
+                                                )}>
+                                                    <td class={classes!("w-10", "h-10")}>
+                                                        <ImageCell
+                                                            instance={
+                                                                Instances::Champions(
+                                                                    (*enemy_champion_id).clone(),
+                                                                )
+                                                            }
+                                                        />
+                                                    </td>
+                                                    {damage_cells(enemy.damages.abilities.values())}
+                                                    {damage_cells(enemy.damages.items.values())}
+                                                    {damage_cells(enemy.damages.runes.values())}
+                                                </tr>
+                                            }
                                         })
-                                        .collect::<BTreeMap<String, Rc<Damages>>>()
+                                        .collect::<Html>()
                                 }
                             />
                         </div>
