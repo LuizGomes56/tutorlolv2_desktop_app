@@ -1,9 +1,6 @@
 use crate::{
     components::{
-        calculator::{
-            static_selector::{StaticIterator, StaticSelector},
-            *,
-        },
+        calculator::*,
         tables::{
             BaseTable,
             cells::{ImageCell, Instances, damage_cells},
@@ -15,6 +12,7 @@ use crate::{
 };
 use rustc_hash::FxHashSet;
 use std::{collections::BTreeMap, rc::Rc};
+use web_sys::AbortController;
 use yew::{
     Html, classes, function_component, html, platform::spawn_local, use_effect_with, use_reducer,
     use_state,
@@ -24,16 +22,26 @@ use yew::{
 pub fn calculator() -> Html {
     let input_game = use_reducer(InputGame::default);
     let output_game = use_state(|| None::<Rc<OutputGame>>);
+    let abort_controller = use_state(|| None::<AbortController>);
 
     {
         let output_game = output_game.clone();
+        let abort_controller = abort_controller.clone();
         use_effect_with(input_game.clone(), move |input_game| {
             let input_game = input_game.clone();
+            // web_sys::console::log_1(&format!("{:#?}", *input_game).into());
 
-            web_sys::console::log_1(&format!("{:#?}", *input_game).into());
+            if let Some(controller) = &*abort_controller {
+                controller.abort();
+            }
+
+            let new_controller = AbortController::new().ok();
+            let signal = new_controller.as_ref().map(|c| c.signal());
+            abort_controller.set(new_controller);
 
             spawn_local(async move {
-                let response = send_bytes(url!("/api/games/calculator"), &*input_game).await;
+                let response =
+                    send_bytes(url!("/api/games/calculator"), &*input_game, signal).await;
 
                 if let Ok(res) = response {
                     match decode_bytes::<ReqOutputGame>(res).await {
@@ -103,92 +111,97 @@ pub fn calculator() -> Html {
     let current_player_champion_id = &(*input_game).active_player.champion_id;
 
     html! {
-        <div class={classes!(
-            "h-screen", "overflow-y-auto",
-            "gap-4", "grid", "grid-cols-[auto_1fr]",
-        )}>
+        <>
             <div class={classes!(
-                "flex", "flex-col", "gap-4", "w-56"
+                "h-screen", "overflow-y-auto",
+                "gap-4", "grid", "grid-cols-[auto_1fr]",
             )}>
-                <img
-                    loading={"lazy"}
-                    class={classes!("w-full", "img-clipped", "h-16")}
-                    src={url!("/img/centered/{}_0.avif", current_player_champion_id)}
-                    alt={""}
-                />
                 <div class={classes!(
-                    "grid", "grid-cols-2", "gap-x-2",
+                    "flex", "flex-col", "gap-4", "w-56"
                 )}>
-                    <AbilitySelector input_game={input_game.clone()} />
-                    <ExceptionSelector
-                        current_player_champion_id={current_player_champion_id.clone()}
-                        input_game={input_game.clone()}
+                    <img
+                        loading={"lazy"}
+                        class={classes!("w-full", "img-clipped", "h-16")}
+                        src={url!("/img/centered/{}_0.avif", current_player_champion_id)}
+                        alt={""}
                     />
+                    <div class={classes!(
+                        "grid", "grid-cols-2", "gap-x-2",
+                    )}>
+                        <AbilitySelector input_game={input_game.clone()} />
+                        <ExceptionSelector
+                            current_player_champion_id={current_player_champion_id.clone()}
+                            input_game={input_game.clone()}
+                        />
+                    </div>
+                    <StatsSelector input_game={input_game.clone()} />
                 </div>
-                <div class={classes!("hidden")}>
-                    <StaticSelector
-                        static_iter={StaticIterator::Items}
-                        input_game={input_game.clone()}
-                    />
-                </div>
-                <div class={classes!("hidden")}>
-                    <StaticSelector
-                        static_iter={StaticIterator::Runes}
-                        input_game={input_game.clone()}
-                    />
-                </div>
-                <StatsSelector input_game={input_game.clone()} />
-            </div>
-            <div>
-                {
-                    if let Some(output_game) = &*output_game {
-                        let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
+                <div>
+                    {
+                        if let Some(output_game) = &*output_game {
+                            let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
 
-                        let enemies = output_game
-                            .enemies
-                            .iter()
-                            .filter(|(keyname, _)| !hidden_set.contains(*keyname))
-                            .map(|(key, val)| (key, val))
-                            .collect::<BTreeMap<_, _>>();
+                            let enemies = output_game
+                                .enemies
+                                .iter()
+                                .filter(|(keyname, _)| !hidden_set.contains(*keyname))
+                                .map(|(key, val)| (key, val))
+                                .collect::<BTreeMap<_, _>>();
 
-                        html! {
-                            <BaseTable
-                                damaging_abilities={output_game.current_player.damaging_abilities.clone()}
-                                damaging_items={output_game.current_player.damaging_items.clone()}
-                                damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                champion_id={output_game.current_player.champion_id.clone()}
-                                damages={
-                                    enemies
-                                        .iter()
-                                        .map(|(enemy_champion_id, enemy)| {
-                                            html! {
-                                                <tr class={classes!(
-                                                    // color!(odd:bg-900), color!(even:bg-800)
-                                                )}>
-                                                    <td class={classes!("w-10", "h-10")}>
-                                                        <ImageCell
-                                                            instance={
-                                                                Instances::Champions(
-                                                                    (*enemy_champion_id).clone(),
-                                                                )
-                                                            }
-                                                        />
-                                                    </td>
-                                                    {damage_cells(enemy.damages.abilities.values())}
-                                                    {damage_cells(enemy.damages.items.values())}
-                                                    {damage_cells(enemy.damages.runes.values())}
-                                                </tr>
-                                            }
-                                        })
-                                        .collect::<Html>()
-                                }
-                            />
+                            html! {
+                                <BaseTable
+                                    damaging_abilities={output_game.current_player.damaging_abilities.clone()}
+                                    damaging_items={output_game.current_player.damaging_items.clone()}
+                                    damaging_runes={output_game.current_player.damaging_runes.clone()}
+                                    champion_id={output_game.current_player.champion_id.clone()}
+                                    damages={
+                                        enemies
+                                            .iter()
+                                            .map(|(enemy_champion_id, enemy)| {
+                                                html! {
+                                                    <tr class={classes!(
+                                                        // color!(odd:bg-900), color!(even:bg-800)
+                                                    )}>
+                                                        <td class={classes!("w-10", "h-10")}>
+                                                            <ImageCell
+                                                                instance={
+                                                                    Instances::Champions(
+                                                                        (*enemy_champion_id).clone(),
+                                                                    )
+                                                                }
+                                                            />
+                                                        </td>
+                                                        {damage_cells(enemy.damages.abilities.values())}
+                                                        {damage_cells(enemy.damages.items.values())}
+                                                        {damage_cells(enemy.damages.runes.values())}
+                                                    </tr>
+                                                }
+                                            })
+                                            .collect::<Html>()
+                                    }
+                                />
+                            }
+                        } else {
+                            html! {}
                         }
-                    } else {
-                        html! {}
                     }
-                }
+                </div>
             </div>
-        </div>
+            <div class={classes!("hidden")}>
+                <ChampionSelector input_game={input_game.clone()} />
+            </div>
+            <div class={classes!("hidden")}>
+                <StaticSelector
+                    static_iter={StaticIterator::Items}
+                    input_game={input_game.clone()}
+                />
+            </div>
+            <div class={classes!("hidden")}>
+                <StaticSelector
+                    static_iter={StaticIterator::Runes}
+                    input_game={input_game.clone()}
+                />
+            </div>
+        </>
     }
 }

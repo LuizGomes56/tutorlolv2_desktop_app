@@ -24,10 +24,10 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
             "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
         )}>
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
-                <span class={classes!("text-xs", "img-letter")}>{props.text}</span>
+                <span class={classes!("text-[13px]", "img-letter")}>{props.text}</span>
                 <img
                     loading={"lazy"}
-                    class={classes!("h-6", "w-6")}
+                    class={classes!("h-7", "w-7")}
                     src={url!(
                         "/img/abilities/{}{}.avif",
                         &props.current_player_champion_id,

@@ -91,7 +91,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             "gap-x-3", "text-sm", "gap-y-1", "px-4"
         )}>
             <StatsCell<u8>
-                path={"level.avif"}
+                path={"level.svg"}
                 value={props.input_game.active_player.level}
                 display={"Level"}
                 oninput={

@@ -51,7 +51,7 @@ use yew::{
                                 )}>
                                     <img
                                         loading={"lazy"}
-                                        class={classes!("h-8", "w-8")}
+                                        class={classes!("h-7", "w-7")}
                                         src={url!("/img/champions/{}.avif", enemy_champion_id)}
                                         alt={""}
                                     />
@@ -64,7 +64,7 @@ use yew::{
                                 )}>
                                     <img
                                         loading={"lazy"}
-                                        class={classes!("h-8", "w-8")}
+                                        class={classes!("h-7", "w-7")}
                                         src={url!("/img/items/{}.avif", siml_item_id)}
                                         alt={""}
                                     />
@@ -123,6 +123,7 @@ pub fn history() -> Html {
                         &GetByCodeBody {
                             game_code: &*game_code,
                         },
+                        None,
                     )
                     .await;
 

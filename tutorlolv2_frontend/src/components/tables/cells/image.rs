@@ -77,7 +77,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 url!("/img/abilities/{}{}.avif", champion_id, first_char),
                 html! {
                     <>
-                        <span class={classes!("img-letter")}>
+                        <span class={classes!("text-[13px]", "img-letter")}>
                             {first_char}
                             <sub>
                                 {
@@ -147,7 +147,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 <img
                     loading={"lazy"}
                     class={classes!(
-                        "w-8", "h-8",
+                        "w-7", "h-7",
                     )}
                     src={img_path}
                     alt={""}

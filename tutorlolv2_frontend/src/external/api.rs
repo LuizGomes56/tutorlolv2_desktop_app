@@ -1,17 +1,24 @@
 use crate::models::base::ApiError;
 use serde::{Serialize, de::DeserializeOwned};
+use web_sys::AbortSignal;
 
 pub async fn send_bytes<T: Serialize>(
     url: &str,
     data: &T,
+    signal: Option<AbortSignal>,
 ) -> Result<reqwasm::http::Response, String> {
     match bincode::serde::encode_to_vec(data, bincode::config::standard()) {
-        Ok(body) => reqwasm::http::Request::post(url)
-            .body(body)
-            .header("Content-Type", "application/octet-stream")
-            .send()
-            .await
-            .map_err(|e| e.to_string()),
+        Ok(body) => {
+            let mut request = reqwasm::http::Request::post(url)
+                .body(body)
+                .header("Content-Type", "application/octet-stream");
+
+            if let Some(ref signal) = signal {
+                request = request.abort_signal(Some(signal));
+            }
+
+            request.send().await.map_err(|e| e.to_string())
+        }
         Err(e) => {
             web_sys::console::log_1(&format!("{:#?}", e).into());
             Err(e.to_string())

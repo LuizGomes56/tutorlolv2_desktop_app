@@ -151,7 +151,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 loading={"lazy"}
                 src={url!("/img/champions/{}.avif", props.champion_id)}
                 alt={""}
-                class={classes!("w-6", "h-6")}
+                class={classes!("w-7", "h-7")}
             />
             <span>{&props.champion_name}</span>
         </div>

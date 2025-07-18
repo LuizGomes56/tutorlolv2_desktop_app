@@ -33,12 +33,12 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
 
     html! {
         <div class={classes!(
-            "absolute", "top-1/2", "left-1/2", "translate-x-[50%]", "translate-y-[-50%]",
+            "absolute", "top-1/2", "left-1/2", "translate-x-[-50%]", "translate-y-[-50%]",
             "w-md", "grid", "grid-cols-2", "h-96", "overflow-y-auto", "text-white",
             color!(bg-900), "p-4", "rounded-xl"
         )}>
             <div class={classes!(
-                "flex", "flex-col", "gap-2",
+                "flex", "flex-col",
             )}>
                 {
                     for iterator
@@ -49,7 +49,7 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                             html! {
                                 <button
                                     class={classes!(
-                                        "grid", "grid-cols-[auto_1fr]",
+                                        "grid", "p-1", "grid-cols-[auto_1fr]",
                                         "items-center", "gap-2", "text-sm",
                                         color!(hover:bg-800), "select-none",
                                         "cursor-pointer"

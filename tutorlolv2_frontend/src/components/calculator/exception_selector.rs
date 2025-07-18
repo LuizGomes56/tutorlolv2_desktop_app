@@ -21,7 +21,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             html! {
                 <img
                     loading={"lazy"}
-                    class={classes!("h-6", "w-6")}
+                    class={classes!("h-7", "w-7")}
                     src={$img_path}
                     alt={""}
                 />
@@ -29,7 +29,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
         };
         (svg $svg_path:literal) => {
             html! {
-                <span class={classes!("h-6", "w-6")}>
+                <span class={classes!("h-7", "w-7")}>
                     {svg!($svg_path, "24")}
                 </span>
             }
@@ -84,7 +84,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                                     "/img/other/{}_stacks.avif",
                                     &props.current_player_champion_id
                                 ))}
-                                <span class={classes!("text-xs", "img-letter")}>{"S"}</span>
+                                <span class={classes!("text-[13px]", "img-letter")}>{"S"}</span>
                             </div>
                         };
                         {exception_cell!(
