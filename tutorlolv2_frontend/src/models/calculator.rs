@@ -112,7 +112,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: true,
+                infer_stats: false,
                 items: Default::default(),
                 runes: Default::default(),
                 stacks: Default::default(),

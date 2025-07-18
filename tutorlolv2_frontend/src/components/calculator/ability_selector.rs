@@ -1,18 +1,14 @@
-use crate::{
-    components::calculator::{ChangeAbilityLevelsAction, InputGameAction},
-    models::calculator::InputGame,
-    url,
-};
+use crate::{components::calculator::ChangeAbilityLevelsAction, models::base::AbilityLevels, url};
 use paste::paste;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
-    function_component, html,
+    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
+    html,
 };
 
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorContainerProps {
     pub text: &'static str,
-    pub current_player_champion_id: String,
+    pub current_player_champion_id: AttrValue,
     pub value: u8,
     pub oninput: Callback<InputEvent>,
 }
@@ -49,34 +45,31 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
 
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorProps {
-    pub input_game: UseReducerHandle<InputGame>,
+    pub ability_levels: AbilityLevels,
+    pub current_player_champion_id: AttrValue,
+    pub callback: Callback<ChangeAbilityLevelsAction>,
 }
 
 #[function_component(AbilitySelector)]
 pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
-    let data = props.input_game.active_player.abilities;
     macro_rules! ability_cell {
         ($field:ident) => {
             paste! {
                 html! {
                     <AbilitySelectorContainer
-                        value={data.$field}
+                        value={props.ability_levels.$field}
                         text={stringify!([<$field:upper>])}
-                        current_player_champion_id={props.input_game.active_player.champion_id.clone()}
+                        current_player_champion_id={props.current_player_champion_id.clone()}
                         oninput={{
-                            let input_game = props.input_game.clone();
-                            let max = match props.input_game.active_player.champion_id.as_str() {
+                            let callback = props.callback.clone();
+                            let max = match props.current_player_champion_id.as_str() {
                                 "Jayce" | "Elise" | "Udyr" => 6,
                                 _ => 5
                             };
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                                 let value = target.value().parse::<u8>().unwrap_or(0).clamp(0, max);
-                                input_game.dispatch(
-                                    InputGameAction::SetAbilityLevels(
-                                        ChangeAbilityLevelsAction::[<Set $field:upper>](value)
-                                    )
-                                );
+                                callback.emit(ChangeAbilityLevelsAction::[<Set $field:upper>](value));
                             })
                         }}
                     />

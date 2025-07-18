@@ -4,14 +4,14 @@ use crate::{
 };
 use std::borrow::Cow;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
-    use_memo, use_node_ref, use_state,
+    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
+    html, use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
     pub callback: Callback<String>,
-    pub current_champion: String,
+    pub current_champion: AttrValue,
 }
 
 #[derive(Clone, PartialEq)]
@@ -33,6 +33,21 @@ fn champion_selector(props: &ChampionSelectorProps) -> Html {
             Callback::from(move |_| is_open.set(false)),
             [dropdown_ref.clone()],
         )
+    };
+
+    let onfocus = {
+        let is_open = is_open.clone();
+        use_callback((), move |_, _| is_open.set(true))
+    };
+
+    let oninput = {
+        let search_query = search_query.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let input = e
+                .target_unchecked_into::<web_sys::HtmlInputElement>()
+                .value();
+            search_query.set(input);
+        })
     };
 
     let all_champions = use_memo(props.callback.clone(), |callback| {
@@ -97,17 +112,8 @@ fn champion_selector(props: &ChampionSelectorProps) -> Html {
                             .unwrap_or("Select Champion")
                     }}
                     value={(*search_query).clone()}
-                    onfocus={{
-                        let is_open = is_open.clone();
-                        Callback::from(move |_| is_open.set(true))
-                    }}
-                    oninput={{
-                        let search_query = search_query.clone();
-                        Callback::from(move |e: InputEvent| {
-                            let input = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
-                            search_query.set(input);
-                        })
-                    }}
+                    onfocus={onfocus.clone()}
+                    oninput={oninput.clone()}
                 />
             </label>
 
@@ -129,8 +135,8 @@ fn champion_selector(props: &ChampionSelectorProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct ChampionOptionsProps {
     pub callback: Callback<String>,
-    pub champion_id: String,
-    pub champion_name: String,
+    pub champion_id: AttrValue,
+    pub champion_name: AttrValue,
 }
 
 #[function_component(ChampionOptions)]
@@ -161,6 +167,12 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
     let current_champion = use_state(|| String::from("Aatrox"));
+    let callback = {
+        let current_champion = current_champion.clone();
+        use_callback((), move |v, _| {
+            current_champion.set(v);
+        })
+    };
 
     html! {
         // <FormulaSidebar />
@@ -175,12 +187,7 @@ pub fn formulas() -> Html {
                     {"Formulas and Generator Code"}
                 </h1>
                 <ChampionSelector
-                    callback={
-                        let current_champion = current_champion.clone();
-                        Callback::from(move |champion_id: String| {
-                            current_champion.set(champion_id);
-                        })
-                    }
+                    callback={callback.clone()}
                     current_champion={(*current_champion).clone()}
                 />
             </div>

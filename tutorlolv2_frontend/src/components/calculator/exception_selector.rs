@@ -1,13 +1,13 @@
 use crate::{components::calculator::InputGameAction, models::calculator::InputGame, svg, url};
 use paste::paste;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
+    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
     function_component, html,
 };
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub current_player_champion_id: String,
+    pub current_player_champion_id: AttrValue,
     pub input_game: UseReducerHandle<InputGame>,
 }
 

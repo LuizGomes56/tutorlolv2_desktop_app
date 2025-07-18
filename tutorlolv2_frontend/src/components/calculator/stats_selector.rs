@@ -1,13 +1,8 @@
-use crate::{
-    color,
-    components::calculator::{ChangeStatsAction, InputGameAction},
-    models::calculator::InputGame,
-    url,
-};
+use crate::{color, components::calculator::ChangeStatsAction, models::base::Stats, url};
 use paste::paste;
+use rustc_hash::FxHashMap;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
-    function_component, html,
+    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html, use_memo,
 };
 
 #[derive(PartialEq, Properties)]
@@ -41,7 +36,13 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
                 )}
                 disabled={props.disabled}
                 placeholder={"0"}
-                value={props.value.to_string()}
+                value={
+                    if props.disabled {
+                        Some(props.value.to_string())
+                    } else {
+                        None
+                    }
+                }
                 oninput={props.oninput.clone()}
             />
         </>
@@ -50,36 +51,69 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
 
 #[derive(PartialEq, Properties)]
 pub struct StatsSelectorProps {
-    pub input_game: UseReducerHandle<InputGame>,
+    pub infer_stats: bool,
+    pub champion_stats: Stats,
+    pub set_stats_callback: Callback<ChangeStatsAction>,
+    pub set_level_callback: Callback<u8>,
+    pub level: u8,
 }
 
 #[function_component(StatsSelector)]
 pub fn stats_selector(props: &StatsSelectorProps) -> Html {
-    let stats = props.input_game.active_player.champion_stats;
-
-    macro_rules! stat_cell {
-        (@dispatch $field:ident) => {
+    macro_rules! generate_callback {
+        ($field:ident) => {
             paste! {{
-                let input_game = props.input_game.clone();
+                let set_stats_callback = props.set_stats_callback.clone();
                 Callback::from(move |e: InputEvent| {
                     let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                     let value = target.value().parse::<f64>().unwrap_or(0.0).max(0.0);
-                    input_game.dispatch(
-                        InputGameAction::SetCurrentPlayerStats(
-                            ChangeStatsAction::[<Set $field:camel>](value)
-                        )
-                    );
+                    set_stats_callback.emit(ChangeStatsAction::[<Set $field:camel>](value));
                 })
             }}
         };
+    }
+
+    let memo_callbacks = use_memo((), move |_| {
+        let mut callback_map = FxHashMap::default();
+        callback_map.insert("attack_damage", generate_callback!(attack_damage));
+        callback_map.insert("ability_power", generate_callback!(ability_power));
+        callback_map.insert("max_health", generate_callback!(max_health));
+        callback_map.insert("current_health", generate_callback!(current_health));
+        callback_map.insert("armor", generate_callback!(armor));
+        callback_map.insert(
+            "armor_penetration_flat",
+            generate_callback!(armor_penetration_flat),
+        );
+        callback_map.insert(
+            "armor_penetration_percent",
+            generate_callback!(armor_penetration_percent),
+        );
+        callback_map.insert("magic_resist", generate_callback!(magic_resist));
+        callback_map.insert(
+            "magic_penetration_flat",
+            generate_callback!(magic_penetration_flat),
+        );
+        callback_map.insert(
+            "magic_penetration_percent",
+            generate_callback!(magic_penetration_percent),
+        );
+        callback_map.insert("crit_chance", generate_callback!(crit_chance));
+        callback_map.insert("crit_damage", generate_callback!(crit_damage));
+        callback_map.insert("attack_speed", generate_callback!(attack_speed));
+        callback_map.insert("max_mana", generate_callback!(max_mana));
+        callback_map.insert("current_mana", generate_callback!(current_mana));
+        callback_map
+    });
+
+    macro_rules! stat_cell {
         ($path:literal, $stat:ident, $display:literal) => {
             html! {
                 <StatsCell<f64>
                     path={$path}
-                    disabled={props.input_game.active_player.infer_stats}
-                    value={stats.$stat.round()}
+                    disabled={props.infer_stats}
+                    value={props.champion_stats.$stat.round()}
                     display={$display}
-                    oninput={stat_cell!(@dispatch $stat)}
+                    oninput={memo_callbacks.get(stringify!($stat)).unwrap().clone()}
                 />
             }
         };
@@ -92,14 +126,14 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         )}>
             <StatsCell<u8>
                 path={"level.svg"}
-                value={props.input_game.active_player.level}
+                value={props.level}
                 display={"Level"}
                 oninput={
-                    let input_game = props.input_game.clone();
+                    let set_level_callback = props.set_level_callback.clone();
                     Callback::from(move |e: InputEvent| {
                         let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                         let value = target.value().parse::<u8>().unwrap_or(1).clamp(1, 18);
-                        input_game.dispatch(InputGameAction::SetCurrentPlayerLevel(value));
+                        set_level_callback.emit(value);
                     })
                 }
                 disabled={false}

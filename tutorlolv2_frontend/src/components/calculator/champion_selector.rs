@@ -1,12 +1,9 @@
-use crate::{
-    STATIC_CHAMPIONS, color, components::calculator::InputGameAction,
-    models::calculator::InputGame, url,
-};
-use yew::{Callback, Html, Properties, UseReducerHandle, classes, function_component, html};
+use crate::{STATIC_CHAMPIONS, color, url};
+use yew::{Callback, Html, Properties, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
 pub struct ChampionSelectorProps {
-    pub input_game: UseReducerHandle<InputGame>,
+    pub callback: Callback<String>,
 }
 
 #[function_component(ChampionSelector)]
@@ -32,9 +29,10 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                                     "cursor-pointer"
                                 )}
                                 onclick={{
-                                    let input_game = props.input_game.clone();
+                                    let callback = props.callback.clone();
+                                    let champion_id = id.clone();
                                     Callback::from(move |_| {
-                                        input_game.dispatch(InputGameAction::SetCurrentPlayerChampionId(id.clone()));
+                                        callback.emit(champion_id.clone());
                                     })
                                 }}
                             >

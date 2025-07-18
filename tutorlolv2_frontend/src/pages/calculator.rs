@@ -14,8 +14,8 @@ use rustc_hash::FxHashSet;
 use std::{collections::BTreeMap, rc::Rc};
 use web_sys::AbortController;
 use yew::{
-    Html, classes, function_component, html, platform::spawn_local, use_effect_with, use_reducer,
-    use_state,
+    AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
+    use_effect_with, use_reducer, use_state,
 };
 
 #[function_component(Calculator)]
@@ -23,6 +23,58 @@ pub fn calculator() -> Html {
     let input_game = use_reducer(InputGame::default);
     let output_game = use_state(|| None::<Rc<OutputGame>>);
     let abort_controller = use_state(|| None::<AbortController>);
+
+    let current_player_champion_id =
+        AttrValue::from((*input_game).active_player.champion_id.clone());
+
+    let set_current_player_champion_id = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerChampionId(v));
+        })
+    };
+    let insert_current_player_items = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::InsertCurrentPlayerItem(v));
+        })
+    };
+    let remove_current_player_items = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::RemoveCurrentPlayerItem(v));
+        })
+    };
+    let insert_current_player_runes = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::InsertCurrentPlayerRune(v));
+        })
+    };
+    let remove_current_player_runes = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::RemoveCurrentPlayerRune(v));
+        })
+    };
+    let change_ability_level = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetAbilityLevels(v));
+        })
+    };
+    let set_current_player_stats = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerStats(v));
+        })
+    };
+    let set_current_player_level = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerLevel(v));
+        })
+    };
 
     {
         let output_game = output_game.clone();
@@ -108,8 +160,6 @@ pub fn calculator() -> Html {
         });
     }
 
-    let current_player_champion_id = &(*input_game).active_player.champion_id;
-
     html! {
         <>
             <div class={classes!(
@@ -128,13 +178,23 @@ pub fn calculator() -> Html {
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-x-2",
                     )}>
-                        <AbilitySelector input_game={input_game.clone()} />
+                        <AbilitySelector
+                            ability_levels={input_game.active_player.abilities}
+                            callback={change_ability_level.clone()}
+                            current_player_champion_id={&current_player_champion_id}
+                        />
                         <ExceptionSelector
-                            current_player_champion_id={current_player_champion_id.clone()}
+                            current_player_champion_id={&current_player_champion_id}
                             input_game={input_game.clone()}
                         />
                     </div>
-                    <StatsSelector input_game={input_game.clone()} />
+                    <StatsSelector
+                        champion_stats={input_game.active_player.champion_stats}
+                        infer_stats={input_game.active_player.infer_stats}
+                        set_stats_callback={set_current_player_stats.clone()}
+                        set_level_callback={set_current_player_level.clone()}
+                        level={input_game.active_player.level}
+                    />
                 </div>
                 <div>
                     {
@@ -188,18 +248,24 @@ pub fn calculator() -> Html {
                 </div>
             </div>
             <div class={classes!("hidden")}>
-                <ChampionSelector input_game={input_game.clone()} />
+                <ChampionSelector
+                    callback={set_current_player_champion_id}
+                />
             </div>
             <div class={classes!("hidden")}>
                 <StaticSelector
                     static_iter={StaticIterator::Items}
-                    input_game={input_game.clone()}
+                    iterator={input_game.active_player.items.clone()}
+                    insert_callback={insert_current_player_items.clone()}
+                    remove_callback={remove_current_player_items.clone()}
                 />
             </div>
             <div class={classes!("hidden")}>
                 <StaticSelector
                     static_iter={StaticIterator::Runes}
-                    input_game={input_game.clone()}
+                    iterator={input_game.active_player.runes.clone()}
+                    insert_callback={insert_current_player_runes.clone()}
+                    remove_callback={remove_current_player_runes.clone()}
                 />
             </div>
         </>

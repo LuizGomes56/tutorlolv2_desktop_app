@@ -10,7 +10,7 @@ pub fn sidebar() -> Html {
             "bg-[#141417]", "h-screen", "p-4",
             "flex", "flex-col", "w-fit",
             "border-r-2", "border-zinc-800",
-            "overflow-y-auto"
+            "overflow-y-auto", "flex-shrink-0"
         )}>
             <div class={classes!(
                 "flex", "flex-col", "gap-2",
