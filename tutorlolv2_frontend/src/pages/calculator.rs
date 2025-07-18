@@ -7,7 +7,7 @@ use crate::{
         },
     },
     external::api::{decode_bytes, send_bytes},
-    models::calculator::{InputGame, OutputCurrentPlayer, OutputEnemy, OutputGame, ReqOutputGame},
+    models::calculator::{InputGame, OutputGame},
     url,
 };
 use rustc_hash::FxHashSet;
@@ -79,8 +79,8 @@ pub fn calculator() -> Html {
     {
         let output_game = output_game.clone();
         let abort_controller = abort_controller.clone();
-        use_effect_with(input_game.clone(), move |input_game| {
-            let input_game = input_game.clone();
+        let input_game = input_game.clone();
+        use_effect_with(input_game.clone(), move |_| {
             // web_sys::console::log_1(&format!("{:#?}", *input_game).into());
 
             if let Some(controller) = &*abort_controller {
@@ -96,60 +96,14 @@ pub fn calculator() -> Html {
                     send_bytes(url!("/api/games/calculator"), &*input_game, signal).await;
 
                 if let Ok(res) = response {
-                    match decode_bytes::<ReqOutputGame>(res).await {
+                    match decode_bytes::<OutputGame>(res).await {
                         Ok(data) => {
                             if input_game.active_player.infer_stats {
                                 input_game.dispatch(InputGameAction::SetCurrentPlayerStats(
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
-                            output_game.set(Some(Rc::new(OutputGame {
-                                current_player: OutputCurrentPlayer {
-                                    champion_id: data.current_player.champion_id,
-                                    damaging_abilities: Rc::new(
-                                        data.current_player
-                                            .damaging_abilities
-                                            .into_iter()
-                                            .collect(),
-                                    ),
-                                    damaging_items: data
-                                        .current_player
-                                        .damaging_items
-                                        .into_iter()
-                                        .collect(),
-
-                                    damaging_runes: data
-                                        .current_player
-                                        .damaging_runes
-                                        .into_iter()
-                                        .collect(),
-
-                                    level: data.current_player.level,
-                                    base_stats: data.current_player.base_stats,
-                                    bonus_stats: data.current_player.bonus_stats,
-                                    current_stats: data.current_player.current_stats,
-                                },
-                                enemies: data
-                                    .enemies
-                                    .into_iter()
-                                    .map(|(enemy_id, enemy)| {
-                                        (
-                                            enemy_id,
-                                            OutputEnemy {
-                                                level: enemy.level,
-                                                champion_name: enemy.champion_name,
-                                                current_stats: enemy.current_stats,
-                                                base_stats: enemy.base_stats,
-                                                bonus_stats: enemy.bonus_stats,
-                                                real_armor: enemy.real_armor,
-                                                real_magic_resist: enemy.real_magic_resist,
-                                                damages: Rc::new(enemy.damages),
-                                            },
-                                        )
-                                    })
-                                    .collect(),
-                                recommended_items: data.recommended_items,
-                            })));
+                            output_game.set(Some(Rc::new(data)));
                         }
                         Err(e) => {
                             web_sys::console::log_1(&format!("{:#?}", e).into());
@@ -169,11 +123,9 @@ pub fn calculator() -> Html {
                 <div class={classes!(
                     "flex", "flex-col", "gap-4", "w-56"
                 )}>
-                    <img
-                        loading={"lazy"}
-                        class={classes!("w-full", "img-clipped", "h-16")}
-                        src={url!("/img/centered/{}_0.avif", current_player_champion_id)}
-                        alt={""}
+                    <ChampionBanner
+                        champion_id={&current_player_champion_id}
+                        set_callback={set_current_player_champion_id.clone()}
                     />
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-x-2",
@@ -213,7 +165,7 @@ pub fn calculator() -> Html {
                                     damaging_abilities={output_game.current_player.damaging_abilities.clone()}
                                     damaging_items={output_game.current_player.damaging_items.clone()}
                                     damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                    champion_id={output_game.current_player.champion_id.clone()}
+                                    champion_id={&current_player_champion_id}
                                     damages={
                                         enemies
                                             .iter()
@@ -226,14 +178,14 @@ pub fn calculator() -> Html {
                                                             <ImageCell
                                                                 instance={
                                                                     Instances::Champions(
-                                                                        (*enemy_champion_id).clone(),
+                                                                        AttrValue::from((*enemy_champion_id).clone()),
                                                                     )
                                                                 }
                                                             />
                                                         </td>
-                                                        {damage_cells(enemy.damages.abilities.values())}
-                                                        {damage_cells(enemy.damages.items.values())}
-                                                        {damage_cells(enemy.damages.runes.values())}
+                                                        {damage_cells(&enemy.damages.abilities)}
+                                                        {damage_cells(&enemy.damages.items)}
+                                                        {damage_cells(&enemy.damages.runes)}
                                                     </tr>
                                                 }
                                             })
@@ -246,11 +198,6 @@ pub fn calculator() -> Html {
                         }
                     }
                 </div>
-            </div>
-            <div class={classes!("hidden")}>
-                <ChampionSelector
-                    callback={set_current_player_champion_id}
-                />
             </div>
             <div class={classes!("hidden")}>
                 <StaticSelector

@@ -1,53 +1,19 @@
-use super::base::{AbilityLevels, BasicStats, Damages, Stats};
+use super::base::{AbilityLevels, BasicStats, DamageLike, Stats};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    rc::Rc,
-};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Deserialize)]
-pub struct ReqOutputCurrentPlayer {
-    pub champion_id: String,
-    pub damaging_abilities: Vec<String>,
-    pub damaging_items: Vec<usize>,
-    pub damaging_runes: Vec<usize>,
-    pub level: usize,
-    pub base_stats: BasicStats,
-    pub bonus_stats: BasicStats,
-    pub current_stats: Stats,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ReqOutputEnemy {
-    pub champion_name: String,
-    pub level: usize,
-    pub damages: Damages,
-    pub base_stats: BasicStats,
-    pub bonus_stats: BasicStats,
-    pub current_stats: BasicStats,
-    pub real_armor: f64,
-    pub real_magic_resist: f64,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ReqOutputGame {
-    pub current_player: ReqOutputCurrentPlayer,
-    pub enemies: FxHashMap<String, ReqOutputEnemy>,
-    pub recommended_items: Vec<usize>,
-}
-
-#[derive(Debug)]
 pub struct OutputGame {
     pub current_player: OutputCurrentPlayer,
     pub enemies: BTreeMap<String, OutputEnemy>,
     pub recommended_items: Vec<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    pub damaging_abilities: Rc<BTreeSet<String>>,
+    pub damaging_abilities: BTreeSet<String>,
     pub damaging_items: BTreeSet<usize>,
     pub damaging_runes: BTreeSet<usize>,
     pub level: usize,
@@ -56,11 +22,18 @@ pub struct OutputCurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
+pub struct CalculatorDamages {
+    pub abilities: DamageLike<String>,
+    pub items: DamageLike<usize>,
+    pub runes: DamageLike<usize>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct OutputEnemy {
     pub champion_name: String,
     pub level: usize,
-    pub damages: Rc<Damages>,
+    pub damages: CalculatorDamages,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,

@@ -5,6 +5,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     rc::Rc,
 };
+use yew::AttrValue;
 
 #[derive(Debug, Deserialize)]
 pub struct ReqCurrentPlayer {
@@ -68,7 +69,7 @@ pub struct ReqRealtime {
 
 #[derive(Debug)]
 pub struct CurrentPlayer {
-    pub damaging_abilities: Rc<BTreeSet<String>>,
+    pub damaging_abilities: BTreeSet<String>,
     pub damaging_items: BTreeSet<usize>,
     pub damaging_runes: BTreeSet<usize>,
     pub riot_id: String,
@@ -100,7 +101,7 @@ pub struct Enemy {
 #[derive(Debug)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
-    pub enemies: BTreeMap<String, Enemy>,
+    pub enemies: BTreeMap<AttrValue, Enemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
     pub scoreboard: Scoreboard,

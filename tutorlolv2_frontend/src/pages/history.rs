@@ -14,8 +14,8 @@ use serde::Serialize;
 use std::{collections::BTreeMap, rc::Rc};
 use web_sys::{HtmlInputElement, console};
 use yew::{
-    Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
-    use_effect_with, use_state,
+    AttrValue, Html, InputEvent, TargetCast, classes, function_component, html,
+    platform::spawn_local, use_effect_with, use_state,
 };
 
 /*
@@ -132,13 +132,11 @@ pub fn history() -> Html {
                             Ok(req_realtime) => {
                                 game_data.set(Rc::new(Some(Realtime {
                                     current_player: CurrentPlayer {
-                                        damaging_abilities: Rc::new(
-                                            req_realtime
-                                                .current_player
-                                                .damaging_abilities
-                                                .into_iter()
-                                                .collect(),
-                                        ),
+                                        damaging_abilities: req_realtime
+                                            .current_player
+                                            .damaging_abilities
+                                            .into_iter()
+                                            .collect(),
                                         damaging_items: req_realtime
                                             .current_player
                                             .damaging_items
@@ -165,7 +163,7 @@ pub fn history() -> Html {
                                         .into_iter()
                                         .map(|(enemy_id, enemy)| {
                                             (
-                                                enemy_id,
+                                                AttrValue::from(enemy_id),
                                                 Enemy {
                                                     riot_id: enemy.riot_id,
                                                     level: enemy.level,
@@ -246,7 +244,7 @@ pub fn history() -> Html {
             </div>
             {
                 if let Some(ref data) = **game_data {
-                    let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
+                    let hidden_set = FxHashSet::from_iter([AttrValue::from("Neeko")]);
 
                     let enemies = data
                         .enemies
@@ -279,9 +277,9 @@ pub fn history() -> Html {
                                                             }
                                                         />
                                                     </td>
-                                                    {damage_cells(enemy.damages.abilities.values())}
-                                                    {damage_cells(enemy.damages.items.values())}
-                                                    {damage_cells(enemy.damages.runes.values())}
+                                                    {damage_cells(&enemy.damages.abilities)}
+                                                    {damage_cells(&enemy.damages.items)}
+                                                    {damage_cells(&enemy.damages.runes)}
                                                 </tr>
                                             }
                                         })

@@ -2,15 +2,15 @@ use crate::{
     color,
     components::tables::cells::{ImageCell, Instances},
 };
-use std::{collections::BTreeSet, rc::Rc};
-use yew::{Html, Properties, classes, function_component, html, use_memo};
+use std::collections::BTreeSet;
+use yew::{AttrValue, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
-    pub damaging_abilities: Rc<BTreeSet<String>>,
+    pub damaging_abilities: BTreeSet<String>,
     pub damaging_items: BTreeSet<usize>,
     pub damaging_runes: BTreeSet<usize>,
-    pub champion_id: String,
+    pub champion_id: AttrValue,
     pub damages: Html,
 }
 
@@ -20,8 +20,8 @@ pub fn base_table(props: &BaseTableProps) -> Html {
         let abilities = props.damaging_abilities.clone();
         let items = props.damaging_items.clone();
         let runes = props.damaging_runes.clone();
-        let champ_id = props.champion_id.clone();
-        use_memo((abilities, items, runes, champ_id), move |_| {
+        let champion_id = props.champion_id.clone();
+        use_memo((abilities, items, runes, champion_id), move |_| {
             html! {
                 <thead>
                     <tr class={classes!(
@@ -50,11 +50,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         for props.damaging_items.iter().map(|key| {
                             html! {
                                 <th class={classes!("group", "min-w-10")}>
-                                    <ImageCell
-                                        instance={
-                                            Instances::Items(*key)
-                                        }
-                                    />
+                                    <ImageCell instance={Instances::Items(*key)} />
                                 </th>
                             }
                         })
@@ -63,11 +59,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         for props.damaging_runes.iter().map(|key| {
                             html! {
                                 <th class={classes!("group", "min-w-10")}>
-                                    <ImageCell
-                                        instance={
-                                            Instances::Runes(*key)
-                                        }
-                                    />
+                                    <ImageCell instance={Instances::Runes(*key)} />
                                 </th>
                             }
                         })

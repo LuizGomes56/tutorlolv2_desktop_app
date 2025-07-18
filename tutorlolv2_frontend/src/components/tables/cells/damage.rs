@@ -1,11 +1,11 @@
 use crate::models::base::InstanceDamage;
-use std::collections::btree_map::Values;
+use std::collections::BTreeMap;
 use yew::{Html, classes, html};
 
-pub fn damage_cells<T>(btree: Values<'_, T, InstanceDamage>) -> Html {
+pub fn damage_cells<T>(btree: &BTreeMap<T, InstanceDamage>) -> Html {
     html! {
         {
-            for btree.map(|value| {
+            for btree.values().map(|value| {
                 let text = if value.maximum_damage != 0.0 {
                     format!("{} - {}", value.minimum_damage.round(), value.maximum_damage.round())
                 } else {

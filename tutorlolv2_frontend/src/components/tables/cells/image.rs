@@ -50,10 +50,10 @@ fn hover_docs(formula: AttrValue) -> Html {
 
 #[derive(PartialEq)]
 pub enum Instances {
-    Abilities(String, char, String),
+    Abilities(String, char, AttrValue),
     Items(usize),
     Runes(usize),
-    Champions(String),
+    Champions(AttrValue),
 }
 
 #[derive(Properties, PartialEq)]
@@ -73,67 +73,51 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 url!("/img/abilities/{}.avif", first_char),
                 html! { hover_docs(CRITICAL_STRIKE_FORMULA.into()) },
             ),
-            _ => (
-                url!("/img/abilities/{}{}.avif", champion_id, first_char),
-                html! {
-                    <>
-                        <span class={classes!("text-[13px]", "img-letter")}>
-                            {first_char}
-                            <sub>
-                                {
-                                    keyname
-                                        .chars()
-                                        .filter(|c| *c != '_')
-                                        .skip(1)
-                                        .take(3)
-                                        .collect::<String>()
-                                }
-                            </sub>
-                        </span>
-                        {
-                            hover_docs(
-                                STATIC_ABILITY_FORMULAS
-                                    .get()
-                                    .unwrap()
-                                    .get(champion_id)
-                                    .unwrap()
-                                    .get(keyname)
-                                    .unwrap()
-                                    .as_str()
-                                    .into(),
-                            )
-                        }
-                    </>
-                },
-            ),
+            _ => {
+                let hover_provider = STATIC_ABILITY_FORMULAS
+                    .get()
+                    .and_then(|map| map.get(&champion_id.to_string()))
+                    .and_then(|champ_map| champ_map.get(keyname))
+                    .map(|formula| hover_docs(formula.as_str().into()))
+                    .unwrap_or_default();
+                (
+                    url!("/img/abilities/{}{}.avif", champion_id, first_char),
+                    html! {
+                        <>
+                            <span class={classes!("text-[13px]", "img-letter")}>
+                                {first_char}
+                                <sub>
+                                    {
+                                        keyname
+                                            .chars()
+                                            .filter(|c| *c != '_')
+                                            .skip(1)
+                                            .take(3)
+                                            .collect::<String>()
+                                    }
+                                </sub>
+                            </span>
+                            {hover_provider}
+                        </>
+                    },
+                )
+            }
         },
         Instances::Items(keyname) => (
             url!("/img/items/{}.avif", keyname),
-            html! {
-                hover_docs(
-                    STATIC_ITEM_FORMULAS
-                        .get()
-                        .unwrap()
-                        .get(keyname)
-                        .unwrap()
-                        .as_str()
-                        .into(),
-                )
-            },
+            STATIC_ITEM_FORMULAS
+                .get()
+                .and_then(|map| map.get(keyname))
+                .map(|formula| hover_docs(formula.as_str().into()))
+                .unwrap_or_default(),
         ),
         Instances::Runes(keyname) => (
             url!("/img/runes/{}.avif", keyname),
-            html! {
-                hover_docs(
-                    STATIC_RUNE_FORMULAS
-                        .get()
-                        .unwrap()
-                        .get(keyname)
-                        .unwrap()
-                        .as_str()
-                        .into(),
-                )
-            },
+            STATIC_RUNE_FORMULAS
+                .get()
+                .and_then(|map| map.get(keyname))
+                .map(|formula| hover_docs(formula.as_str().into()))
+                .unwrap_or_default(),
         ),
         Instances::Champions(champion_id) => (url!("/img/champions/{}.avif", champion_id), html!()),
     };
