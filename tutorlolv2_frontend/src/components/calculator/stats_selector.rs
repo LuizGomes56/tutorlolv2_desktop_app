@@ -1,4 +1,5 @@
 use crate::{
+    color,
     components::calculator::{ChangeStatsAction, InputGameAction},
     models::calculator::InputGame,
     url,
@@ -15,6 +16,7 @@ struct StatsCellProps<T: ToString + PartialEq> {
     display: &'static str,
     value: T,
     oninput: Callback<InputEvent>,
+    disabled: bool,
 }
 
 #[function_component(StatsCell)]
@@ -32,7 +34,12 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
             <span>{props.display}</span>
             <input
                 type={"number"}
-                class={classes!("text-center", "min-w-0")}
+                class={classes!(
+                    "text-center", "min-w-0",
+                    if props.disabled { color!(text-400) }
+                    else { "text-white" }
+                )}
+                disabled={props.disabled}
                 placeholder={"0"}
                 value={props.value.to_string()}
                 oninput={props.oninput.clone()}
@@ -69,7 +76,8 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             html! {
                 <StatsCell<f64>
                     path={$path}
-                    value={stats.$stat}
+                    disabled={props.input_game.active_player.infer_stats}
+                    value={stats.$stat.round()}
                     display={$display}
                     oninput={stat_cell!(@dispatch $stat)}
                 />
@@ -94,6 +102,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
                         input_game.dispatch(InputGameAction::SetCurrentPlayerLevel(value));
                     })
                 }
+                disabled={false}
             />
             {stat_cell!("attack_damage.avif", attack_damage,  "Attack Damage")}
             {stat_cell!("ability_power.svg", ability_power, "Ability Power")}
@@ -106,7 +115,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             {stat_cell!("magic_penetration.svg", magic_penetration_flat, "Magic Pen Flat")}
             {stat_cell!("magic_penetration.svg", magic_penetration_percent, "Magic Pen %")}
             {stat_cell!("crit_chance.avif", crit_chance, "Crit Chance")}
-            {stat_cell!("crit_damage.avif", crit_damage, "Crit Damage")}
+            {stat_cell!("crit_damage.svg", crit_damage, "Crit Damage")}
             {stat_cell!("attack_speed.avif", attack_speed, "Attack Speed")}
             {stat_cell!("mana.svg", max_mana, "Max Mana")}
             {stat_cell!("mana.svg", current_mana, "Current Mana")}

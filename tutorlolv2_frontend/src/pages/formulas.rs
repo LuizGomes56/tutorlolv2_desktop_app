@@ -83,7 +83,7 @@ fn champion_selector(props: &ChampionSelectorProps) -> Html {
                     {svg!("../../public/svgs/search", "16")}
                 </span>
                 <input
-                    type="text"
+                    type="number"
                     class={classes!(
                         "text-white",
                         "focus:outline-none",

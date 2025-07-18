@@ -42,7 +42,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                     )}>
                         {$img}
                         <input
-                            type={"text"}
+                            type={"number"}
                             class={classes!("w-full", "text-center", "text-sm")}
                             placeholder={"0"}
                             value={data.$field.to_string()}

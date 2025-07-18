@@ -6,10 +6,7 @@ use crate::{
     },
     external::api::{decode_bytes, send_bytes},
     loop_flag,
-    models::{
-        base::Damages,
-        realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
-    },
+    models::realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
     url,
 };
 use rustc_hash::FxHashSet;
@@ -18,7 +15,7 @@ use std::{collections::BTreeMap, rc::Rc};
 use web_sys::{HtmlInputElement, console};
 use yew::{
     Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
-    use_effect_with, use_state, use_state_eq,
+    use_effect_with, use_state,
 };
 
 /*
@@ -135,14 +132,23 @@ pub fn history() -> Html {
                                 game_data.set(Rc::new(Some(Realtime {
                                     current_player: CurrentPlayer {
                                         damaging_abilities: Rc::new(
-                                            req_realtime.current_player.damaging_abilities,
+                                            req_realtime
+                                                .current_player
+                                                .damaging_abilities
+                                                .into_iter()
+                                                .collect(),
                                         ),
-                                        damaging_items: Rc::new(
-                                            req_realtime.current_player.damaging_items,
-                                        ),
-                                        damaging_runes: Rc::new(
-                                            req_realtime.current_player.damaging_runes,
-                                        ),
+                                        damaging_items: req_realtime
+                                            .current_player
+                                            .damaging_items
+                                            .into_iter()
+                                            .collect(),
+
+                                        damaging_runes: req_realtime
+                                            .current_player
+                                            .damaging_runes
+                                            .into_iter()
+                                            .collect(),
                                         riot_id: req_realtime.current_player.riot_id,
                                         level: req_realtime.current_player.level,
                                         team: req_realtime.current_player.team,

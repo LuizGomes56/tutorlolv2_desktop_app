@@ -10,6 +10,7 @@ macro_rules! stats_reducer {
     ($name:ident, $( $stat:ident ),*) => {
         paste! {
             pub enum [<Change $name Action>] {
+                Replace($name),
                 $(
                     [<Set $stat:camel>](f64),
                 )*
@@ -17,6 +18,9 @@ macro_rules! stats_reducer {
 
             fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
                 match action {
+                    [<Change $name Action>]::Replace(value) => {
+                        *stats = value;
+                    }
                     $(
                         [<Change $name Action>]::[<Set $stat:camel>](value) => {
                             stats.$stat = value;

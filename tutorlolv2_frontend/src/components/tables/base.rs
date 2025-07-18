@@ -1,19 +1,15 @@
 use crate::{
     color,
-    components::tables::cells::{ImageCell, Instances, damage_cells},
-    models::base::Damages,
+    components::tables::cells::{ImageCell, Instances},
 };
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    rc::Rc,
-};
+use std::{collections::BTreeSet, rc::Rc};
 use yew::{Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
     pub damaging_abilities: Rc<BTreeSet<String>>,
-    pub damaging_items: Rc<BTreeSet<usize>>,
-    pub damaging_runes: Rc<BTreeSet<usize>>,
+    pub damaging_items: BTreeSet<usize>,
+    pub damaging_runes: BTreeSet<usize>,
     pub champion_id: String,
     pub damages: Html,
 }

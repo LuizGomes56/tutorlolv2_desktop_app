@@ -1,16 +1,36 @@
 use crate::{
-    STATIC_RUNES, color, components::calculator::InputGameAction, models::calculator::InputGame,
-    url,
+    STATIC_ITEMS, STATIC_RUNES, color, components::calculator::InputGameAction,
+    models::calculator::InputGame, url,
 };
 use yew::{Callback, Html, Properties, UseReducerHandle, classes, function_component, html};
 
-#[derive(PartialEq, Properties)]
-pub struct RuneSelectorProps {
-    pub input_game: UseReducerHandle<InputGame>,
+#[derive(Clone, Copy, PartialEq)]
+pub enum StaticIterator {
+    Runes,
+    Items,
 }
 
-#[function_component(RuneSelector)]
-pub fn rune_selector(props: &RuneSelectorProps) -> Html {
+#[derive(PartialEq, Properties)]
+pub struct StaticSelectorProps {
+    pub input_game: UseReducerHandle<InputGame>,
+    pub static_iter: StaticIterator,
+}
+
+#[function_component(StaticSelector)]
+pub fn static_selector(props: &StaticSelectorProps) -> Html {
+    let (owned_values, iterator, path) = match props.static_iter {
+        StaticIterator::Runes => (
+            &props.input_game.active_player.runes,
+            &STATIC_RUNES,
+            "/img/runes",
+        ),
+        StaticIterator::Items => (
+            &props.input_game.active_player.items,
+            &STATIC_ITEMS,
+            "/img/items",
+        ),
+    };
+
     html! {
         <div class={classes!(
             "absolute", "top-1/2", "left-1/2", "translate-x-[50%]", "translate-y-[-50%]",
@@ -21,11 +41,11 @@ pub fn rune_selector(props: &RuneSelectorProps) -> Html {
                 "flex", "flex-col", "gap-2",
             )}>
                 {
-                    for STATIC_RUNES
+                    for iterator
                         .get()
                         .unwrap()
                         .iter()
-                        .map(|(rune_name, rune_id)| {
+                        .map(|(name, id)| {
                             html! {
                                 <button
                                     class={classes!(
@@ -36,19 +56,23 @@ pub fn rune_selector(props: &RuneSelectorProps) -> Html {
                                     )}
                                     onclick={{
                                         let input_game = props.input_game.clone();
+                                        let static_iter = props.static_iter;
                                         Callback::from(move |_| {
-                                            input_game.dispatch(InputGameAction::InsertCurrentPlayerRune(*rune_id));
+                                            input_game.dispatch(match static_iter {
+                                                StaticIterator::Runes => InputGameAction::InsertCurrentPlayerRune(*id),
+                                                StaticIterator::Items => InputGameAction::InsertCurrentPlayerItem(*id),
+                                            });
                                         })
                                     }}
                                 >
                                     <img
                                         class={classes!("w-5", "h-5")}
-                                        src={url!("/img/runes/{}.avif", rune_id)}
+                                        src={url!("{}/{}.avif", path, id)}
                                         alt={""}
                                         loading={"lazy"}
                                     />
                                     <span class={classes!("text-left")}>
-                                        {rune_name}
+                                        {name}
                                     </span>
                                 </button>
                             }
@@ -57,26 +81,27 @@ pub fn rune_selector(props: &RuneSelectorProps) -> Html {
             </div>
             <div class={classes!("flex", "h-fit", "flex-wrap", "gap-2")}>
                 {
-                    for props
-                        .input_game
-                        .active_player
-                        .runes
+                    for owned_values
                         .iter()
                         .enumerate()
-                        .map(|(index, rune_id)| {
+                        .map(|(index, id)| {
                             html! {
                                 <button
                                     class={classes!("cursor-pointer", "select-none")}
                                     onclick={{
                                         let input_game = props.input_game.clone();
+                                        let static_iter = props.static_iter;
                                         Callback::from(move |_| {
-                                            input_game.dispatch(InputGameAction::RemoveCurrentPlayerRune(index));
+                                            input_game.dispatch(match static_iter {
+                                                StaticIterator::Runes => InputGameAction::RemoveCurrentPlayerRune(index),
+                                                StaticIterator::Items => InputGameAction::RemoveCurrentPlayerItem(index),
+                                            });
                                         })
                                     }}
                                 >
                                     <img
                                         class={classes!("w-5", "h-5")}
-                                        src={url!("/img/runes/{}.avif", rune_id)}
+                                        src={url!("{}/{}.avif", path, id)}
                                         alt={""}
                                         loading={"lazy"}
                                     />

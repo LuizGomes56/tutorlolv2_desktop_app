@@ -8,9 +8,9 @@ use std::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReqCurrentPlayer {
-    pub damaging_abilities: BTreeSet<String>,
-    pub damaging_items: BTreeSet<usize>,
-    pub damaging_runes: BTreeSet<usize>,
+    pub damaging_abilities: Vec<String>,
+    pub damaging_items: Vec<usize>,
+    pub damaging_runes: Vec<usize>,
     pub riot_id: String,
     pub level: usize,
     pub team: String,
@@ -69,8 +69,8 @@ pub struct ReqRealtime {
 #[derive(Debug)]
 pub struct CurrentPlayer {
     pub damaging_abilities: Rc<BTreeSet<String>>,
-    pub damaging_items: Rc<BTreeSet<usize>>,
-    pub damaging_runes: Rc<BTreeSet<usize>>,
+    pub damaging_items: BTreeSet<usize>,
+    pub damaging_runes: BTreeSet<usize>,
     pub riot_id: String,
     pub level: usize,
     pub team: String,
