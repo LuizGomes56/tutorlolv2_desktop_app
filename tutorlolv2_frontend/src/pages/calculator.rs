@@ -69,10 +69,40 @@ pub fn calculator() -> Html {
             input_game.dispatch(InputGameAction::SetCurrentPlayerStats(v));
         })
     };
+    let set_current_player_attack_form = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerAttackForm(v));
+        })
+    };
     let set_current_player_level = {
         let input_game = input_game.clone();
         use_callback((), move |v, _| {
             input_game.dispatch(InputGameAction::SetCurrentPlayerLevel(v));
+        })
+    };
+    let set_ally_fire_dragons = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetAllyFireDragons(v));
+        })
+    };
+    let set_ally_earth_dragons = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetAllyEarthDragons(v));
+        })
+    };
+    let set_current_player_stacks = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerStacks(v));
+        })
+    };
+    let set_current_player_infer_stats = {
+        let input_game = input_game.clone();
+        use_callback((), move |v, _| {
+            input_game.dispatch(InputGameAction::SetCurrentPlayerInferStats(v));
         })
     };
 
@@ -81,7 +111,7 @@ pub fn calculator() -> Html {
         let abort_controller = abort_controller.clone();
         let input_game = input_game.clone();
         use_effect_with(input_game.clone(), move |_| {
-            // web_sys::console::log_1(&format!("{:#?}", *input_game).into());
+            web_sys::console::log_1(&format!("{:#?}", *input_game).into());
 
             if let Some(controller) = &*abort_controller {
                 controller.abort();
@@ -125,26 +155,30 @@ pub fn calculator() -> Html {
                 )}>
                     <ChampionBanner
                         champion_id={&current_player_champion_id}
-                        set_callback={set_current_player_champion_id.clone()}
+                        set_callback={set_current_player_champion_id}
                     />
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-x-2",
                     )}>
                         <AbilitySelector
                             ability_levels={input_game.active_player.abilities}
-                            callback={change_ability_level.clone()}
+                            callback={change_ability_level}
                             current_player_champion_id={&current_player_champion_id}
                         />
                         <ExceptionSelector
+                            set_ally_fire_dragons={set_ally_fire_dragons}
+                            set_ally_earth_dragons={set_ally_earth_dragons}
+                            set_current_player_stacks={set_current_player_stacks}
+                            set_current_player_infer_stats={set_current_player_infer_stats}
+                            set_current_player_attack_form={set_current_player_attack_form}
                             current_player_champion_id={&current_player_champion_id}
-                            input_game={input_game.clone()}
                         />
                     </div>
                     <StatsSelector
                         champion_stats={input_game.active_player.champion_stats}
                         infer_stats={input_game.active_player.infer_stats}
-                        set_stats_callback={set_current_player_stats.clone()}
-                        set_level_callback={set_current_player_level.clone()}
+                        set_stats_callback={set_current_player_stats}
+                        set_level_callback={set_current_player_level}
                         level={input_game.active_player.level}
                     />
                 </div>
@@ -203,16 +237,16 @@ pub fn calculator() -> Html {
                 <StaticSelector
                     static_iter={StaticIterator::Items}
                     iterator={input_game.active_player.items.clone()}
-                    insert_callback={insert_current_player_items.clone()}
-                    remove_callback={remove_current_player_items.clone()}
+                    insert_callback={insert_current_player_items}
+                    remove_callback={remove_current_player_items}
                 />
             </div>
             <div class={classes!("hidden")}>
                 <StaticSelector
                     static_iter={StaticIterator::Runes}
                     iterator={input_game.active_player.runes.clone()}
-                    insert_callback={insert_current_player_runes.clone()}
-                    remove_callback={remove_current_player_runes.clone()}
+                    insert_callback={insert_current_player_runes}
+                    remove_callback={remove_current_player_runes}
                 />
             </div>
         </>

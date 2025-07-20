@@ -1,23 +1,25 @@
-use crate::{components::calculator::InputGameAction, models::calculator::InputGame, svg, url};
+use crate::{svg, url};
 use paste::paste;
 use yew::{
-    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, UseReducerHandle, classes,
+    AttrValue, Callback, Event, Html, InputEvent, Properties, TargetCast, classes,
     function_component, html,
 };
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
     pub current_player_champion_id: AttrValue,
-    pub input_game: UseReducerHandle<InputGame>,
+    pub set_ally_fire_dragons: Callback<u8>,
+    pub set_ally_earth_dragons: Callback<u8>,
+    pub set_current_player_stacks: Callback<usize>,
+    pub set_current_player_attack_form: Callback<bool>,
+    pub set_current_player_infer_stats: Callback<bool>,
 }
 
 /// Pending
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
-    let data = &*props.input_game;
-
-    macro_rules! exception_cell {
-        (img $img_path:expr) => {
+    macro_rules! make {
+        (@img $img_path:expr) => {
             html! {
                 <img
                     loading={"lazy"}
@@ -27,13 +29,15 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                 />
             }
         };
-        (svg $svg_path:literal) => {
+        (@svg $svg_path:expr) => {
             html! {
-                <span class={classes!("h-7", "w-7")}>
-                    {svg!($svg_path, "24")}
-                </span>
+                <>
+                    {svg!($svg_path, "28")}
+                </>
             }
         };
+    }
+    macro_rules! exception_cell {
         ($img:expr, $field:ident) => {
             paste! {
                 html! {
@@ -45,18 +49,57 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                             type={"number"}
                             class={classes!("w-full", "text-center", "text-sm")}
                             placeholder={"0"}
-                            value={data.$field.to_string()}
                             oninput={{
-                                let input_game = props.input_game.clone();
+                                let callback = props.$field.clone();
                                 Callback::from(move |e: InputEvent| {
                                     let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                    let value = target.value().parse::<u8>().unwrap_or(0);
-                                    input_game.dispatch(
-                                        InputGameAction::[<Set $field:camel>](value)
-                                    );
+                                    let value = target.value().parse().unwrap_or(0).max(0);
+                                    callback.emit(value);
                                 })
                             }}
                         />
+                    </label>
+                }
+            }
+        };
+        (@bool $img:expr, $field:ident) => {
+            paste! {
+                html! {
+                    <label class={classes!(
+                        "grid", "gap-x-2", "text-white",
+                        "grid-cols-[auto_1fr]", "justify-center",
+                        "cursor-pointer"
+                    )}>
+                        {$img}
+                        <div class={classes!(
+                            "flex", "items-center", "justify-center"
+                        )}>
+                            <div class={classes!("relative")}>
+                                <input
+                                    type={"checkbox"}
+                                    class={"sr-only peer"}
+                                    onchange={{
+                                        let callback = props.$field.clone();
+                                        Callback::from(move |e: Event| {
+                                            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                                            callback.emit(target.checked());
+                                        })
+                                    }}
+                                />
+                                <div class={classes!(
+                                    "w-10", "h-5", "bg-gray-600", "rounded-full",
+                                    "peer-checked:bg-green-500", "transition-colors"
+                                    )}
+                                />
+                                <div class={classes!(
+                                    "absolute", "top-0.5", "left-0.5", "w-4",
+                                    "h-4", "bg-white", "rounded-full",
+                                    "peer-checked:translate-x-5",
+                                    "transition-transform"
+                                    )}
+                                />
+                            </div>
+                        </div>
                     </label>
                 }
             }
@@ -67,8 +110,14 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
         <div class={classes!(
             "flex", "flex-col", "gap-1",
         )}>
-            {exception_cell!(exception_cell!(img url!("/img/other/fire_dragon.avif")), ally_fire_dragons)}
-            {exception_cell!(exception_cell!(img url!("/img/other/earth_dragon.avif")), ally_earth_dragons)}
+            {exception_cell!(
+                make!(@img url!("/img/other/fire_dragon.avif")),
+                set_ally_fire_dragons
+            )}
+            {exception_cell!(
+                make!(@img url!("/img/other/earth_dragon.avif")),
+                set_ally_earth_dragons
+            )}
             {
                 match props.current_player_champion_id.as_str() {
                     "Bard" | "Kindred" | "Sion" | "ChoGath" | "Smolder" |
@@ -80,7 +129,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                                     "flex", "justify-center", "items-center", "relative"
                                 )}
                             >
-                                {exception_cell!(img url!(
+                                {make!(@img url!(
                                     "/img/other/{}_stacks.avif",
                                     &props.current_player_champion_id
                                 ))}
@@ -89,14 +138,16 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         };
                         {exception_cell!(
                             image,
-                            ally_earth_dragons
+                            set_current_player_stacks
                         )}
                     }
                     "Gnar" | "Nidalee" => {
                         html! {
                             <div title={"Shift to melee/ranged"}>
                                 {exception_cell!(
-                                    exception_cell!(svg "../../../public/svgs/shift"), ally_fire_dragons
+                                    @bool
+                                    make!(@svg "../../../public/svgs/shift"),
+                                    set_current_player_attack_form
                                 )}
                             </div>
                         }
@@ -106,9 +157,13 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                     }
                 }
             }
-            // <div title={"Infer Stats"}>
-            //     {exception_cell!(exception_cell!(svg "../../../public/svgs/infer"), ally_fire_dragons)}
-            // </div>
+            <div title={"Infer Stats"}>
+                {exception_cell!(
+                    @bool
+                    make!(@svg "../../../public/svgs/infer"),
+                    set_current_player_infer_stats
+                )}
+            </div>
         </div>
     }
 }

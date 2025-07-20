@@ -39,7 +39,6 @@ stats_reducer!(
     armor_penetration_flat,
     armor_penetration_percent,
     attack_damage,
-    attack_range,
     attack_speed,
     crit_chance,
     crit_damage,
@@ -84,6 +83,7 @@ pub enum InputGameAction {
     SetCurrentPlayerInferStats(bool),
     SetCurrentPlayerStacks(usize),
     SetCurrentPlayerStats(ChangeStatsAction),
+    SetCurrentPlayerAttackForm(bool),
     InsertCurrentPlayerItem(usize),
     RemoveCurrentPlayerItem(usize),
     ClearCurrentPlayerItems,
@@ -94,6 +94,7 @@ pub enum InputGameAction {
     SetEnemyPlayerChampionName(usize, String),
     SetEnemyPlayerStats(usize, ChangeBasicStatsAction),
     SetEnemyPlayerInferStats(usize, bool),
+    SetEnemyPlayerAttackForm(usize, bool),
     InsertEnemyPlayerItem(usize, usize),
     RemoveEnemyPlayerItem(usize, usize),
     ClearEnemyPlayerItems(usize),
@@ -141,6 +142,14 @@ impl Reducible for InputGame {
             }
             InputGameAction::SetCurrentPlayerStats(action) => {
                 change_stats(&mut new_state.active_player.champion_stats, action);
+            }
+            InputGameAction::SetCurrentPlayerAttackForm(value) => {
+                // new_state.active_player.attack_form = value;
+            }
+            InputGameAction::SetEnemyPlayerAttackForm(index, value) => {
+                // if let Some(enemy) = new_state.enemy_players.get_mut(index) {
+                //     enemy.attack_form = value;
+                // }
             }
             InputGameAction::SetEnemyPlayerStats(index, action) => {
                 if let Some(enemy) = new_state.enemy_players.get_mut(index) {

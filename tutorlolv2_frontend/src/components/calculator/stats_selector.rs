@@ -138,7 +138,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
                 }
                 disabled={false}
             />
-            {stat_cell!("attack_damage.avif", attack_damage,  "Attack Damage")}
+            {stat_cell!("attack_damage.svg", attack_damage,  "Attack Damage")}
             {stat_cell!("ability_power.svg", ability_power, "Ability Power")}
             {stat_cell!("health.svg", max_health, "Max Health")}
             {stat_cell!("health.svg", current_health, "Current Health")}
@@ -148,9 +148,9 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             {stat_cell!("magic_resist.svg", magic_resist, "Magic Resist")}
             {stat_cell!("magic_penetration.svg", magic_penetration_flat, "Magic Pen Flat")}
             {stat_cell!("magic_penetration.svg", magic_penetration_percent, "Magic Pen %")}
-            {stat_cell!("crit_chance.avif", crit_chance, "Crit Chance")}
+            {stat_cell!("crit_chance.svg", crit_chance, "Crit Chance")}
             {stat_cell!("crit_damage.svg", crit_damage, "Crit Damage")}
-            {stat_cell!("attack_speed.avif", attack_speed, "Attack Speed")}
+            {stat_cell!("attack_speed.svg", attack_speed, "Attack Speed")}
             {stat_cell!("mana.svg", max_mana, "Max Mana")}
             {stat_cell!("mana.svg", current_mana, "Current Mana")}
         </div>
