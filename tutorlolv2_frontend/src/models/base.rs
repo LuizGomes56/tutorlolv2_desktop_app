@@ -44,23 +44,23 @@ pub struct BasicStats {
 #[derive(Debug, Deserialize)]
 pub struct ComparedItem {
     pub name: String,
-    pub gold_cost: usize,
+    pub gold_cost: u16,
     pub prettified_stats: FxHashMap<String, f64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SimulatedDamages {
     pub abilities: DamageLike<String>,
-    pub items: DamageLike<usize>,
-    pub runes: DamageLike<usize>,
+    pub items: DamageLike<u32>,
+    pub runes: DamageLike<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Damages {
     pub abilities: DamageLike<String>,
-    pub items: DamageLike<usize>,
-    pub runes: DamageLike<usize>,
-    pub compared_items: BTreeMap<usize, SimulatedDamages>,
+    pub items: DamageLike<u32>,
+    pub runes: DamageLike<u32>,
+    pub compared_items: BTreeMap<u32, SimulatedDamages>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -10,7 +10,7 @@ pub struct ExceptionSelectorProps {
     pub current_player_champion_id: AttrValue,
     pub set_ally_fire_dragons: Callback<u8>,
     pub set_ally_earth_dragons: Callback<u8>,
-    pub set_current_player_stacks: Callback<usize>,
+    pub set_current_player_stacks: Callback<u32>,
     pub set_current_player_attack_form: Callback<bool>,
     pub set_current_player_infer_stats: Callback<bool>,
 }

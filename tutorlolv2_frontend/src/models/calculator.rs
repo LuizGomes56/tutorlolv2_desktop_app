@@ -7,16 +7,16 @@ use std::collections::{BTreeMap, BTreeSet};
 pub struct OutputGame {
     pub current_player: OutputCurrentPlayer,
     pub enemies: BTreeMap<String, OutputEnemy>,
-    pub recommended_items: Vec<usize>,
+    pub recommended_items: Vec<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
     pub damaging_abilities: BTreeSet<String>,
-    pub damaging_items: BTreeSet<usize>,
-    pub damaging_runes: BTreeSet<usize>,
-    pub level: usize,
+    pub damaging_items: BTreeSet<u32>,
+    pub damaging_runes: BTreeSet<u32>,
+    pub level: u8,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: Stats,
@@ -25,14 +25,14 @@ pub struct OutputCurrentPlayer {
 #[derive(Debug, Deserialize)]
 pub struct CalculatorDamages {
     pub abilities: DamageLike<String>,
-    pub items: DamageLike<usize>,
-    pub runes: DamageLike<usize>,
+    pub items: DamageLike<u32>,
+    pub runes: DamageLike<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputEnemy {
     pub champion_name: String,
-    pub level: usize,
+    pub level: u8,
     pub damages: CalculatorDamages,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
@@ -46,17 +46,17 @@ pub struct InputActivePlayer {
     pub champion_id: String,
     pub champion_stats: Stats,
     pub abilities: AbilityLevels,
-    pub items: Vec<usize>,
-    pub runes: Vec<usize>,
+    pub items: Vec<u32>,
+    pub runes: Vec<u32>,
     pub level: u8,
-    pub stacks: usize,
+    pub stacks: u32,
     pub infer_stats: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
     pub champion_name: String,
-    pub items: Vec<usize>,
+    pub items: Vec<u32>,
     pub level: u8,
     pub stats: BasicStats,
     pub infer_stats: bool,
@@ -69,7 +69,7 @@ pub struct InputGame {
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
-    pub stack_exceptions: FxHashMap<usize, u8>,
+    pub stack_exceptions: FxHashMap<u32, u32>,
 }
 
 impl Default for InputGame {

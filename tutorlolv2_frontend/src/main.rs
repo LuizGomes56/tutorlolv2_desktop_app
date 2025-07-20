@@ -25,12 +25,12 @@ mod pages;
 pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
 pub static STATIC_ABILITY_FORMULAS: OnceCell<FxHashMap<String, FxHashMap<String, String>>> =
     OnceCell::new();
-pub static STATIC_ITEMS: OnceCell<BTreeMap<String, usize>> = OnceCell::new();
-pub static STATIC_RUNES: OnceCell<BTreeMap<String, usize>> = OnceCell::new();
+pub static STATIC_ITEMS: OnceCell<BTreeMap<String, u32>> = OnceCell::new();
+pub static STATIC_RUNES: OnceCell<BTreeMap<String, u32>> = OnceCell::new();
 pub static STATIC_CHAMPION_FORMULAS: OnceCell<HashMap<String, String>> = OnceCell::new();
-pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
-pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<usize, String>> = OnceCell::new();
-pub static STATIC_COMPARED_ITEMS: OnceCell<FxHashMap<usize, ComparedItem>> = OnceCell::new();
+pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
+pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
+pub static STATIC_COMPARED_ITEMS: OnceCell<FxHashMap<u32, ComparedItem>> = OnceCell::new();
 pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);

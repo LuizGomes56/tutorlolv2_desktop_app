@@ -6,7 +6,7 @@ use crate::{
     },
     external::api::{decode_bytes, send_bytes},
     loop_flag,
-    models::realtime::{CurrentPlayer, Enemy, Realtime, ReqRealtime},
+    models::realtime::Realtime,
     url,
 };
 use rustc_hash::FxHashSet;
@@ -128,64 +128,9 @@ pub fn history() -> Html {
                     .await;
 
                     if let Ok(data) = response {
-                        match decode_bytes::<ReqRealtime>(data).await {
+                        match decode_bytes::<Realtime>(data).await {
                             Ok(req_realtime) => {
-                                game_data.set(Rc::new(Some(Realtime {
-                                    current_player: CurrentPlayer {
-                                        damaging_abilities: req_realtime
-                                            .current_player
-                                            .damaging_abilities
-                                            .into_iter()
-                                            .collect(),
-                                        damaging_items: req_realtime
-                                            .current_player
-                                            .damaging_items
-                                            .into_iter()
-                                            .collect(),
-
-                                        damaging_runes: req_realtime
-                                            .current_player
-                                            .damaging_runes
-                                            .into_iter()
-                                            .collect(),
-                                        riot_id: req_realtime.current_player.riot_id,
-                                        level: req_realtime.current_player.level,
-                                        team: req_realtime.current_player.team,
-                                        champion_id: req_realtime.current_player.champion_id,
-                                        champion_name: req_realtime.current_player.champion_name,
-                                        current_stats: req_realtime.current_player.current_stats,
-                                        base_stats: req_realtime.current_player.base_stats,
-                                        bonus_stats: req_realtime.current_player.bonus_stats,
-                                        position: req_realtime.current_player.position,
-                                    },
-                                    enemies: req_realtime
-                                        .enemies
-                                        .into_iter()
-                                        .map(|(enemy_id, enemy)| {
-                                            (
-                                                AttrValue::from(enemy_id),
-                                                Enemy {
-                                                    riot_id: enemy.riot_id,
-                                                    level: enemy.level,
-                                                    team: enemy.team,
-                                                    champion_name: enemy.champion_name,
-                                                    current_stats: enemy.current_stats,
-                                                    base_stats: enemy.base_stats,
-                                                    bonus_stats: enemy.bonus_stats,
-                                                    position: enemy.position,
-                                                    real_armor: enemy.real_armor,
-                                                    real_magic_resist: enemy.real_magic_resist,
-                                                    damages: Rc::new(enemy.damages),
-                                                },
-                                            )
-                                        })
-                                        .collect(),
-                                    game_information: req_realtime.game_information,
-                                    scoreboard: req_realtime.scoreboard,
-                                    ally_dragon_multipliers: req_realtime.ally_dragon_multipliers,
-                                    enemy_dragon_multipliers: req_realtime.enemy_dragon_multipliers,
-                                    recommended_items: req_realtime.recommended_items,
-                                })));
+                                game_data.set(Rc::new(Some(req_realtime)));
                                 failures = 0;
                             }
                             Err(e) => {
@@ -244,7 +189,7 @@ pub fn history() -> Html {
             </div>
             {
                 if let Some(ref data) = **game_data {
-                    let hidden_set = FxHashSet::from_iter([AttrValue::from("Neeko")]);
+                    let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
 
                     let enemies = data
                         .enemies
@@ -272,7 +217,7 @@ pub fn history() -> Html {
                                                         <ImageCell
                                                             instance={
                                                                 Instances::Champions(
-                                                                    (*enemy_champion_id).clone(),
+                                                                    AttrValue::from((*enemy_champion_id).clone()),
                                                                 )
                                                             }
                                                         />

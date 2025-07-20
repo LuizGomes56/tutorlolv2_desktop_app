@@ -8,8 +8,8 @@ use yew::{AttrValue, Html, Properties, classes, function_component, html, use_me
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
     pub damaging_abilities: BTreeSet<String>,
-    pub damaging_items: BTreeSet<usize>,
-    pub damaging_runes: BTreeSet<usize>,
+    pub damaging_items: BTreeSet<u32>,
+    pub damaging_runes: BTreeSet<u32>,
     pub champion_id: AttrValue,
     pub damages: Html,
 }

@@ -9,9 +9,9 @@ pub enum StaticIterator {
 
 #[derive(PartialEq, Properties)]
 pub struct StaticSelectorProps {
-    pub insert_callback: Callback<usize>,
+    pub insert_callback: Callback<u32>,
     pub remove_callback: Callback<usize>,
-    pub iterator: Vec<usize>,
+    pub iterator: Vec<u32>,
     pub static_iter: StaticIterator,
 }
 

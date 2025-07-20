@@ -51,8 +51,8 @@ fn hover_docs(formula: AttrValue) -> Html {
 #[derive(PartialEq)]
 pub enum Instances {
     Abilities(String, char, AttrValue),
-    Items(usize),
-    Runes(usize),
+    Items(u32),
+    Runes(u32),
     Champions(AttrValue),
 }
 
