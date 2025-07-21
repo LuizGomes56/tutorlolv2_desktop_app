@@ -1,7 +1,5 @@
-use std::collections::BTreeMap;
-
-use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Deserialize)]
 pub struct InstanceDamage {
@@ -45,7 +43,7 @@ pub struct BasicStats {
 pub struct ComparedItem {
     pub name: String,
     pub gold_cost: u16,
-    pub prettified_stats: FxHashMap<String, f64>,
+    pub prettified_stats: BTreeMap<String, f64>,
 }
 
 #[derive(Debug, Deserialize)]

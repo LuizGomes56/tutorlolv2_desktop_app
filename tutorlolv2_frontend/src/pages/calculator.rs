@@ -2,12 +2,14 @@ use crate::{
     STATIC_COMPARED_ITEMS,
     components::{
         calculator::*,
+        hover::item_stats::ItemStatsHover,
         tables::{
             BaseTable,
             cells::{ImageCell, Instances, damage_cells},
         },
     },
     external::api::{decode_bytes, send_bytes},
+    macros::STATS_URL,
     models::calculator::{InputGame, OutputGame},
     url,
 };
@@ -198,6 +200,8 @@ pub fn calculator() -> Html {
 
                             html! {
                                 <div>
+                                    <ItemStatsHover item_id={4645} />
+                                    <ItemStatsHover item_id={224403} />
                                     <BaseTable
                                         damaging_abilities={output_game.current_player.damaging_abilities.clone()}
                                         damaging_items={output_game.current_player.damaging_items.clone()}
@@ -229,27 +233,6 @@ pub fn calculator() -> Html {
                                                 .collect::<Html>()
                                         }
                                     />
-                                    {
-                                        // phf
-                                        STATIC_COMPARED_ITEMS
-                                            .get()
-                                            .and_then(|items| items.get(&224403))
-                                            .and_then(|item| {
-                                                item.prettified_stats
-                                                    .iter()
-                                                    .map(|(key, val)| {
-                                                        Some(
-                                                            html! {
-                                                                <div>
-                                                                    {format!("{}: {}", key, val)}
-                                                                </div>
-                                                            }
-                                                        )
-                                                    })
-                                                    .collect::<Option<Html>>()
-                                            })
-                                            .unwrap_or_default()
-                                    }
                                 </div>
                             }
                         } else {

@@ -86,7 +86,7 @@ impl Default for InputGame {
                 },
                 level: 15,
                 infer_stats: false,
-                items: Default::default(),
+                items: vec![3115],
                 runes: Default::default(),
                 stacks: Default::default(),
             },

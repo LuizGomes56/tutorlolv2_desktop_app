@@ -1,5 +1,8 @@
-use crate::{STATIC_ABILITY_FORMULAS, STATIC_ITEM_FORMULAS, STATIC_RUNE_FORMULAS, color, url};
-use yew::{AttrValue, Html, Properties, classes, function_component, html, virtual_dom::VNode};
+use crate::{
+    STATIC_ABILITY_FORMULAS, STATIC_ITEM_FORMULAS, STATIC_RUNE_FORMULAS,
+    components::hover::docs::hover_docs, url,
+};
+use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">BASIC_ATTACK</span><span class="punctuation"> = {
     <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Basic Attack"</span>,
@@ -21,32 +24,6 @@ const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intr
     },
     <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0f64</span>,
 };</pre>"#;
-
-fn hover_docs(formula: AttrValue) -> Html {
-    html! {
-        <div class={classes!(
-            "hidden", "group-hover:flex", "fixed",
-            "border", color!(bg-900), "leading-6",
-            "transform", "max-w-md",
-            "translate-x-[calc(50%-16px)]",
-            "translate-y-[calc(50%+20px)]",
-            "overflow-auto",
-            "max-h-96", "hover-docs",
-            color!(border-800), "z-50"
-        )}>
-            {
-                html! {
-                    <code class={classes!(
-                        "text-[#D4D4D4]", "font-normal",
-                        "text-left", "p-2", "text-wrap"
-                    )}>
-                        { VNode::from_html_unchecked(formula) }
-                    </code>
-                }
-            }
-        </div>
-    }
-}
 
 #[derive(PartialEq)]
 pub enum Instances {
