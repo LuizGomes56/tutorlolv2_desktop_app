@@ -1,4 +1,5 @@
 use crate::{
+    STATIC_COMPARED_ITEMS,
     components::{
         calculator::*,
         tables::{
@@ -159,6 +160,7 @@ pub fn calculator() -> Html {
                     />
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-x-2",
+                        "px-4"
                     )}>
                         <AbilitySelector
                             ability_levels={input_game.active_player.abilities}
@@ -195,37 +197,60 @@ pub fn calculator() -> Html {
                                 .collect::<BTreeMap<_, _>>();
 
                             html! {
-                                <BaseTable
-                                    damaging_abilities={output_game.current_player.damaging_abilities.clone()}
-                                    damaging_items={output_game.current_player.damaging_items.clone()}
-                                    damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                    champion_id={&current_player_champion_id}
-                                    damages={
-                                        enemies
-                                            .iter()
-                                            .map(|(enemy_champion_id, enemy)| {
-                                                html! {
-                                                    <tr class={classes!(
-                                                        // color!(odd:bg-900), color!(even:bg-800)
-                                                    )}>
-                                                        <td class={classes!("w-10", "h-10")}>
-                                                            <ImageCell
-                                                                instance={
-                                                                    Instances::Champions(
-                                                                        AttrValue::from((*enemy_champion_id).clone()),
-                                                                    )
-                                                                }
-                                                            />
-                                                        </td>
-                                                        {damage_cells(&enemy.damages.abilities)}
-                                                        {damage_cells(&enemy.damages.items)}
-                                                        {damage_cells(&enemy.damages.runes)}
-                                                    </tr>
-                                                }
+                                <div>
+                                    <BaseTable
+                                        damaging_abilities={output_game.current_player.damaging_abilities.clone()}
+                                        damaging_items={output_game.current_player.damaging_items.clone()}
+                                        damaging_runes={output_game.current_player.damaging_runes.clone()}
+                                        champion_id={&current_player_champion_id}
+                                        damages={
+                                            enemies
+                                                .iter()
+                                                .map(|(enemy_champion_id, enemy)| {
+                                                    html! {
+                                                        <tr class={classes!(
+                                                            // color!(odd:bg-900), color!(even:bg-800)
+                                                        )}>
+                                                            <td class={classes!("w-10", "h-10")}>
+                                                                <ImageCell
+                                                                    instance={
+                                                                        Instances::Champions(
+                                                                            AttrValue::from((*enemy_champion_id).clone()),
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </td>
+                                                            {damage_cells(&enemy.damages.abilities)}
+                                                            {damage_cells(&enemy.damages.items)}
+                                                            {damage_cells(&enemy.damages.runes)}
+                                                        </tr>
+                                                    }
+                                                })
+                                                .collect::<Html>()
+                                        }
+                                    />
+                                    {
+                                        // phf
+                                        STATIC_COMPARED_ITEMS
+                                            .get()
+                                            .and_then(|items| items.get(&224403))
+                                            .and_then(|item| {
+                                                item.prettified_stats
+                                                    .iter()
+                                                    .map(|(key, val)| {
+                                                        Some(
+                                                            html! {
+                                                                <div>
+                                                                    {format!("{}: {}", key, val)}
+                                                                </div>
+                                                            }
+                                                        )
+                                                    })
+                                                    .collect::<Option<Html>>()
                                             })
-                                            .collect::<Html>()
+                                            .unwrap_or_default()
                                     }
-                                />
+                                </div>
                             }
                         } else {
                             html! {}

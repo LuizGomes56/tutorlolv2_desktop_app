@@ -66,11 +66,11 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     let (img_path, content) = match &props.instance {
         Instances::Abilities(keyname, first_char, champion_id) => match first_char {
             'A' => (
-                url!("/img/abilities/{}.avif", first_char),
+                url!("/img/other/basic_attack.png").to_string(),
                 html! { hover_docs(BASIC_ATTACK_FORMULA.into()) },
             ),
             'C' => (
-                url!("/img/abilities/{}.avif", first_char),
+                url!("/img/stats/crit_chance.svg").to_string(),
                 html! { hover_docs(CRITICAL_STRIKE_FORMULA.into()) },
             ),
             _ => {

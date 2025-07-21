@@ -1,7 +1,6 @@
 pub mod ability_selector;
 pub mod calculator_utils;
 pub mod champion_banner;
-pub mod champion_selector;
 pub mod exception_selector;
 pub mod static_selector;
 pub mod stats_selector;
