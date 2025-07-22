@@ -1,5 +1,5 @@
 use crate::{
-    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
+    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL, color,
     components::tables::{
         BaseTable,
         cells::{ImageCell, Instances, damage_cells},
@@ -172,11 +172,11 @@ pub fn history() -> Html {
                 }</span>
                 <input
                     class={classes!(
-                        "bg-zinc-800", "py-2", "px-4", "rounded-lg",
+                        color!(bg-800), "py-2", "px-4", "rounded-lg",
                         "w-48"
                     )}
-                    type="text"
-                    placeholder="ABC123"
+                    type={"text"}
+                    placeholder={"ABC123"}
                     oninput={{
                         let game_code = game_code.clone();
                         move |e: InputEvent| {

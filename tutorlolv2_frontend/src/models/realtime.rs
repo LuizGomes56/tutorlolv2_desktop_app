@@ -1,4 +1,4 @@
-use super::base::{BasicStats, Damages, DragonMultipliers, Stats};
+use super::base::{BasicStats, Damages, DragonMultipliers, Stats, ord_abilities_vec};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,7 +22,8 @@ pub struct Scoreboard {
 
 #[derive(Deserialize, Debug)]
 pub struct CurrentPlayer {
-    pub damaging_abilities: BTreeSet<String>,
+    #[serde(deserialize_with = "ord_abilities_vec")]
+    pub damaging_abilities: Vec<String>,
     pub damaging_items: BTreeSet<u32>,
     pub damaging_runes: BTreeSet<u32>,
     pub riot_id: String,

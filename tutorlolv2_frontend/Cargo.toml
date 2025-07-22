@@ -20,7 +20,10 @@ yew = { version = "0.21.0", features = ["csr"] }
 yew-router = "0.18.0"
 rustc-hash = "2.1.1"
 once_cell = "1.21.3"
-web-sys = { version = "0.3.77", features = ["AbortController"] }
+web-sys = { version = "0.3.77", features = [
+    "AbortController",
+    "HtmlSelectElement",
+] }
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
 gloo-timers = "0.3.0"

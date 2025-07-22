@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use rustc_hash::FxHashMap;
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Deserialize)]
@@ -48,14 +49,16 @@ pub struct ComparedItem {
 
 #[derive(Debug, Deserialize)]
 pub struct SimulatedDamages {
-    pub abilities: DamageLike<String>,
+    #[serde(deserialize_with = "ord_abilities_map")]
+    pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Damages {
-    pub abilities: DamageLike<String>,
+    #[serde(deserialize_with = "ord_abilities_map")]
+    pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
     pub compared_items: BTreeMap<u32, SimulatedDamages>,
@@ -79,4 +82,67 @@ pub struct AbilityLevels {
 #[derive(Debug, Deserialize)]
 pub struct ApiError {
     pub message: String,
+}
+
+const ABILITY_ORDER: [char; 7] = ['A', 'C', 'P', 'Q', 'W', 'E', 'R'];
+
+fn build_priority_map() -> FxHashMap<char, usize> {
+    ABILITY_ORDER
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, c)| (c, i))
+        .collect()
+}
+
+pub(super) fn ord_abilities_vec<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let mut items: Vec<String> = Vec::deserialize(deserializer)?;
+    let priority = build_priority_map();
+
+    items.sort_by(|a, b| {
+        let pa = a
+            .chars()
+            .next()
+            .and_then(|c| priority.get(&c).copied())
+            .unwrap_or(usize::MAX);
+        let pb = b
+            .chars()
+            .next()
+            .and_then(|c| priority.get(&c).copied())
+            .unwrap_or(usize::MAX);
+        pa.cmp(&pb).then_with(|| a.cmp(b))
+    });
+
+    Ok(items)
+}
+
+pub(super) fn ord_abilities_map<'de, D>(
+    deserializer: D,
+) -> Result<Vec<(String, InstanceDamage)>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let priority = build_priority_map();
+    let raw_map: FxHashMap<String, InstanceDamage> = FxHashMap::deserialize(deserializer)?;
+    let mut items: Vec<_> = raw_map.into_iter().collect();
+
+    items.sort_by(|(ka, _), (kb, _)| {
+        let pa = ka
+            .chars()
+            .next()
+            .and_then(|c| priority.get(&c).copied())
+            .unwrap_or(usize::MAX);
+        let pb = kb
+            .chars()
+            .next()
+            .and_then(|c| priority.get(&c).copied())
+            .unwrap_or(usize::MAX);
+
+        pa.cmp(&pb).then_with(|| ka.cmp(kb))
+    });
+
+    Ok(items)
 }

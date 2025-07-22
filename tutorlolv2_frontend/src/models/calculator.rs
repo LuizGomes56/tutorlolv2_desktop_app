@@ -1,4 +1,7 @@
-use super::base::{AbilityLevels, BasicStats, DamageLike, Stats};
+use super::base::{
+    AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats, ord_abilities_map,
+    ord_abilities_vec,
+};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -13,7 +16,8 @@ pub struct OutputGame {
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    pub damaging_abilities: BTreeSet<String>,
+    #[serde(deserialize_with = "ord_abilities_vec")]
+    pub damaging_abilities: Vec<String>,
     pub damaging_items: BTreeSet<u32>,
     pub damaging_runes: BTreeSet<u32>,
     pub level: u8,
@@ -24,7 +28,8 @@ pub struct OutputCurrentPlayer {
 
 #[derive(Debug, Deserialize)]
 pub struct CalculatorDamages {
-    pub abilities: DamageLike<String>,
+    #[serde(deserialize_with = "ord_abilities_map")]
+    pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
 }
@@ -85,7 +90,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: false,
+                infer_stats: true,
                 items: vec![3115],
                 runes: Default::default(),
                 stacks: Default::default(),

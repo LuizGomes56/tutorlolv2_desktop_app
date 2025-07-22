@@ -1,4 +1,4 @@
-use crate::{STATIC_COMPARED_ITEMS, macros::STATS_URL};
+use crate::{STATIC_COMPARED_ITEMS, color, macros::STATS_URL};
 use yew::{Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]
@@ -8,48 +8,45 @@ pub struct ItemStatsHoverProps {
 
 #[function_component(ItemStatsHover)]
 pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
+    let item = match STATIC_COMPARED_ITEMS
+        .get()
+        .and_then(|map| map.get(&props.item_id))
+    {
+        Some(item) => item,
+        None => return html! {},
+    };
+
+    if item.prettified_stats.is_empty() {
+        return html! {};
+    }
+
     html! {
         <div class={classes!(
-            "grid", "grid-cols-[auto_auto_1fr_auto_auto_1fr]", "gap-x-2",
-            "items-center", "text-xs", "max-w-md", "bg-zinc-900", "hover-docs",
-            "border-zinc-800", "z-30", "border", "py-2", "px-3", "gap-y-0.5"
+            "grid", "gap-x-2", "items-center",
+            "max-w-md", color!(bg-900), "hover-docs",
+            "z-30", "gap-y-2", "leading-none", "text-sm"
         )}>
             {
-                STATIC_COMPARED_ITEMS
-                    .get()
-                    .and_then(|items| items.get(&props.item_id))
-                    .and_then(|item| {
-                    item.prettified_stats
-                    .iter()
-                    .map(|(key, val)| {
-                    STATS_URL
-                    .get(key)
-                    .and_then(|&stat_url| {
-                        Some(
-                            html! {
-                                <>
-                                    <img
-                                        loading={"lazy"}
-                                        class={classes!("w-3", "h-3")}
-                                        src={stat_url}
-                                        alt={""}
-                                    />
-                                    <span class={classes!(
-                                        "font-medium", "text-zinc-300",
-                                    )}>
-                                        {val}
-                                    </span>
-                                    <span class={classes!("text-zinc-400")}>
-                                        {key}
-                                    </span>
-                                </>
-                            }
-                        )
+                for item.prettified_stats.iter().filter_map(|(key, val)| {
+                    STATS_URL.get(key).map(|&stat_url| {
+                        html! {
+                            <div class={classes!("flex","items-center","gap-2")}>
+                                <img
+                                    loading={"lazy"}
+                                    class={classes!("w-3","h-3")}
+                                    src={stat_url}
+                                    alt={""}
+                                />
+                                <span class={classes!(color!(text-300),"font-medium")}>
+                                    { val }
+                                </span>
+                                <span class={classes!(color!(text-400),"font-normal")}>
+                                    { key }
+                                </span>
+                            </div>
+                        }
                     })
-                    })
-                    .collect::<Option<Html>>()
-                    })
-                    .unwrap_or_default()
+                })
             }
         </div>
     }

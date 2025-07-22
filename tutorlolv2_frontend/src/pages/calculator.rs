@@ -1,15 +1,13 @@
 use crate::{
-    STATIC_COMPARED_ITEMS,
+    color,
     components::{
         calculator::*,
-        hover::item_stats::ItemStatsHover,
         tables::{
             BaseTable,
             cells::{ImageCell, Instances, damage_cells},
         },
     },
     external::api::{decode_bytes, send_bytes},
-    macros::STATS_URL,
     models::calculator::{InputGame, OutputGame},
     url,
 };
@@ -158,7 +156,6 @@ pub fn calculator() -> Html {
                 )}>
                     <ChampionBanner
                         champion_id={&current_player_champion_id}
-                        set_callback={set_current_player_champion_id}
                     />
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-x-2",
@@ -200,8 +197,6 @@ pub fn calculator() -> Html {
 
                             html! {
                                 <div>
-                                    <ItemStatsHover item_id={4645} />
-                                    <ItemStatsHover item_id={224403} />
                                     <BaseTable
                                         damaging_abilities={output_game.current_player.damaging_abilities.clone()}
                                         damaging_items={output_game.current_player.damaging_items.clone()}
@@ -226,7 +221,7 @@ pub fn calculator() -> Html {
                                                             </td>
                                                             {damage_cells(&enemy.damages.abilities)}
                                                             {damage_cells(&enemy.damages.items)}
-                                                            {damage_cells(&enemy.damages.runes)}
+                                                            {damage_cells(&enemy.damages.runes )}
                                                         </tr>
                                                     }
                                                 })
@@ -241,22 +236,13 @@ pub fn calculator() -> Html {
                     }
                 </div>
             </div>
-            <div class={classes!("hidden")}>
-                <StaticSelector
-                    static_iter={StaticIterator::Items}
-                    iterator={input_game.active_player.items.clone()}
-                    insert_callback={insert_current_player_items}
-                    remove_callback={remove_current_player_items}
-                />
-            </div>
-            <div class={classes!("hidden")}>
-                <StaticSelector
-                    static_iter={StaticIterator::Runes}
-                    iterator={input_game.active_player.runes.clone()}
-                    insert_callback={insert_current_player_runes}
-                    remove_callback={remove_current_player_runes}
-                />
-            </div>
+            <MainSelector
+                set_current_player_champion_callback={set_current_player_champion_id}
+                insert_item_callback={insert_current_player_items}
+                remove_item_callback={remove_current_player_items}
+                insert_rune_callback={insert_current_player_runes}
+                remove_rune_callback={remove_current_player_runes}
+            />
         </>
     }
 }

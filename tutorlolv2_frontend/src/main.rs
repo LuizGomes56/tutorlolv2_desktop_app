@@ -1,5 +1,6 @@
 use crate::{
     components::sidebar::Sidebar,
+    context::SettingsProvider,
     external::{api::decode_bytes, invoke},
     models::base::ComparedItem,
     pages::*,
@@ -16,6 +17,7 @@ use yew::{Html, classes, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
 
 mod components;
+mod context;
 mod external;
 mod hooks;
 mod macros;
@@ -91,19 +93,21 @@ pub enum Route {
 #[function_component(App)]
 fn app() -> Html {
     html! {
-        <BrowserRouter>
-            <div class={classes!(
-                "flex", "w-full"
-            )}>
-                <Sidebar />
+        <SettingsProvider>
+            <BrowserRouter>
                 <div class={classes!(
-                    "flex", "flex-1",
-                    color!(bg-900)
+                    "flex", "w-full"
                 )}>
-                    <Switch<Route> render={switch} />
+                    <Sidebar />
+                    <div class={classes!(
+                        "flex", "flex-1",
+                        color!(bg-900)
+                    )}>
+                        <Switch<Route> render={switch} />
+                    </div>
                 </div>
-            </div>
-        </BrowserRouter>
+            </BrowserRouter>
+        </SettingsProvider>
     }
 }
 

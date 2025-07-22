@@ -1,13 +1,10 @@
-use crate::{
-    color,
-    components::tables::cells::{ImageCell, Instances},
-};
+use crate::components::tables::cells::{ImageCell, Instances};
 use std::collections::BTreeSet;
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
-    pub damaging_abilities: BTreeSet<String>,
+    pub damaging_abilities: Vec<String>,
     pub damaging_items: BTreeSet<u32>,
     pub damaging_runes: BTreeSet<u32>,
     pub champion_id: AttrValue,
@@ -24,46 +21,44 @@ pub fn base_table(props: &BaseTableProps) -> Html {
         use_memo((abilities, items, runes, champion_id), move |_| {
             html! {
                 <thead>
-                    <tr class={classes!(
-                        color!(odd:bg-950),
-                    )}>
-                    <th class={classes!("h-10")}></th>
-                    {
-                        for props.damaging_abilities.iter().map(|key| {
-                            let first_char = key.chars().next().unwrap_or_default();
-                            html! {
-                                <th class={classes!("group", "min-w-10")}>
-                                    <ImageCell
-                                        instance={
-                                            Instances::Abilities(
-                                                key.clone(),
-                                                first_char,
-                                                props.champion_id.clone()
-                                            )
-                                        }
-                                    />
-                                </th>
-                            }
-                        })
-                    }
-                    {
-                        for props.damaging_items.iter().map(|key| {
-                            html! {
-                                <th class={classes!("group", "min-w-10")}>
-                                    <ImageCell instance={Instances::Items(*key)} />
-                                </th>
-                            }
-                        })
-                    }
-                    {
-                        for props.damaging_runes.iter().map(|key| {
-                            html! {
-                                <th class={classes!("group", "min-w-10")}>
-                                    <ImageCell instance={Instances::Runes(*key)} />
-                                </th>
-                            }
-                        })
-                    }
+                    <tr>
+                        <th class={classes!("h-10")}></th>
+                        {
+                            for props.damaging_abilities.iter().map(|key| {
+                                let first_char = key.chars().next().unwrap_or_default();
+                                html! {
+                                    <th class={classes!("group", "min-w-10")}>
+                                        <ImageCell
+                                            instance={
+                                                Instances::Abilities(
+                                                    key.clone(),
+                                                    first_char,
+                                                    props.champion_id.clone()
+                                                )
+                                            }
+                                        />
+                                    </th>
+                                }
+                            })
+                        }
+                        {
+                            for props.damaging_items.iter().map(|key| {
+                                html! {
+                                    <th class={classes!("group", "min-w-10")}>
+                                        <ImageCell instance={Instances::Items(*key)} />
+                                    </th>
+                                }
+                            })
+                        }
+                        {
+                            for props.damaging_runes.iter().map(|key| {
+                                html! {
+                                    <th class={classes!("group", "min-w-10")}>
+                                        <ImageCell instance={Instances::Runes(*key)} />
+                                    </th>
+                                }
+                            })
+                        }
                     </tr>
                 </thead>
             }
