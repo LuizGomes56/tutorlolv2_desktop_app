@@ -1,5 +1,5 @@
 use crate::{
-    components::{Sprite, SpriteType, calculator::ChangeAbilityLevelsAction},
+    components::{Image, ImageType, calculator::ChangeAbilityLevelsAction},
     models::base::AbilityLevels,
 };
 use paste::paste;
@@ -24,9 +24,9 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
         )}>
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
                 <span class={classes!("text-[13px]", "img-letter")}>{props.text}</span>
-                <Sprite
+                <Image
                     size={28}
-                    source={SpriteType::Abilities(
+                    source={ImageType::Abilities(
                         format!(
                             "{}{}",
                             &props.current_player_champion_id,

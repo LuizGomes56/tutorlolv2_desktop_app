@@ -1,7 +1,7 @@
 use crate::{
     STATIC_ABILITY_FORMULAS, STATIC_ITEM_FORMULAS, STATIC_RUNE_FORMULAS, color,
     components::{
-        Sprite, SpriteType,
+        Image, ImageType,
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
     },
     context::{HoverDocs, SettingsContext},
@@ -52,14 +52,14 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     let (img_path, content) = match &props.instance {
         Instances::Abilities(keyname, first_char, champion_id) => match first_char {
             'A' => (
-                SpriteType::Other(url!("/img/other/basic_attack.png").to_string()),
+                ImageType::Other(url!("/img/other/basic_attack.png").to_string()),
                 match hover_settings {
                     HoverDocs::Full => html! { hover_docs(BASIC_ATTACK_FORMULA.into(), true) },
                     _ => html!(),
                 },
             ),
             'C' => (
-                SpriteType::Other(url!("/img/stats/crit_chance.svg").to_string()),
+                ImageType::Other(url!("/img/stats/crit_chance.svg").to_string()),
                 match hover_settings {
                     HoverDocs::Full => html! { hover_docs(CRITICAL_STRIKE_FORMULA.into(), true) },
                     _ => html!(),
@@ -76,7 +76,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                     _ => html!(),
                 };
                 (
-                    SpriteType::Abilities(format!("{}{}", champion_id, first_char)),
+                    ImageType::Abilities(format!("{}{}", champion_id, first_char)),
                     html! {
                         <>
                             <span class={classes!("text-[13px]", "img-letter")}>
@@ -99,7 +99,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             }
         },
         Instances::Items(keyname) => (
-            SpriteType::Items(*keyname),
+            ImageType::Items(*keyname),
             STATIC_ITEM_FORMULAS
                 .get()
                 .and_then(|map| map.get(keyname))
@@ -135,7 +135,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 .unwrap_or_default(),
         ),
         Instances::Runes(keyname) => (
-            SpriteType::Other(url!("/img/runes/{}.avif", keyname)),
+            ImageType::Other(url!("/img/runes/{}.avif", keyname)),
             match hover_settings {
                 HoverDocs::Full => STATIC_RUNE_FORMULAS
                     .get()
@@ -146,7 +146,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             },
         ),
         Instances::Champions(champion_id) => (
-            SpriteType::Other(url!("/img/champions/{}.avif", champion_id)),
+            ImageType::Other(url!("/img/champions/{}.avif", champion_id)),
             html!(),
         ),
     };
@@ -157,7 +157,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 "flex", "items-center", "justify-center",
                 "relative", "cell"
             )}>
-                <Sprite size={28} source={img_path} />
+                <Image size={28} source={img_path} />
                 { content }
             </div>
         </>

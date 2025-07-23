@@ -1,6 +1,6 @@
 use crate::{
     STATIC_CHAMPIONS, color,
-    components::{Sprite, SpriteType},
+    components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
     svg,
 };
@@ -157,7 +157,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 props.callback.reform(move |_| champion_id.to_string())
             }}
         >
-            <Sprite size={20} source={SpriteType::Champions(props.champion_id.to_string())} />
+            <Image size={20} source={ImageType::Champions(props.champion_id.to_string())} />
             <span>{&props.champion_name}</span>
         </button>
     }

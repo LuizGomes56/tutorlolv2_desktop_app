@@ -136,7 +136,7 @@ fn main() {
         let _ = STATIC_ITEMS.set(load_static(url!("/api/static/items")).await);
         let _ = STATIC_RUNES.set(load_static(url!("/api/static/runes")).await);
         let _ = STATIC_ITEMS_DEF.set(load_static(url!("/api/static/items_def")).await);
-        let _ = STATIC_SPRITE_MAP.set(load_static(url!("/api/static/sprite_map")).await);
+        // let _ = STATIC_SPRITE_MAP.set(load_static(url!("/api/static/sprite_map")).await);
         let _ = STATIC_CHAMPION_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
         let _ = STATIC_ITEM_FORMULAS.set(load_static(url!("/api/formulas/items")).await);
         let _ = STATIC_RUNE_FORMULAS.set(load_static(url!("/api/formulas/runes")).await);

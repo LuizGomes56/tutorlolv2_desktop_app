@@ -1,7 +1,7 @@
 use crate::{
     STATIC_ITEM_FORMULAS, STATIC_ITEMS, STATIC_RUNE_FORMULAS, STATIC_RUNES, color,
     components::{
-        Sprite, SpriteType,
+        Image, ImageType,
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
     },
     context::{HoverDocs, SettingsContext},
@@ -41,12 +41,12 @@ pub fn static_event(props: &StaticEventProps) -> Html {
                                     })
                                 }}
                             >
-                                <Sprite
+                                <Image
                                     size={28}
                                     source={
                                         match props.static_iter {
-                                            StaticIterator::Runes => SpriteType::Other(url!("/img/runes/{}.avif", id)),
-                                            StaticIterator::Items => SpriteType::Items(*id),
+                                            StaticIterator::Runes => ImageType::Other(url!("/img/runes/{}.avif", id)),
+                                            StaticIterator::Items => ImageType::Items(*id),
                                         }
                                     }
                                 />
@@ -108,13 +108,13 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                                 })
                                             }}
                                         >
-                                            <Sprite
+                                            <Image
                                                 size={28}
                                                 source={
                                                     if props.static_iter == StaticIterator::Items {
-                                                        SpriteType::Items(*id)
+                                                        ImageType::Items(*id)
                                                     } else {
-                                                        SpriteType::Other(url!("/img/runes/{}.avif", id))
+                                                        ImageType::Other(url!("/img/runes/{}.avif", id))
                                                     }
                                                 }
                                                 class={classes!(

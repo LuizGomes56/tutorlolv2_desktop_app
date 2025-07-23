@@ -1,8 +1,8 @@
-use crate::{STATIC_SPRITE_MAP, svg, url};
+use crate::{/* STATIC_SPRITE_MAP, svg, */ url};
 use yew::{Classes, Html, Properties, function_component, html};
 
 #[derive(PartialEq)]
-pub enum SpriteType {
+pub enum ImageType {
     Abilities(String),
     Champions(String),
     Items(u32),
@@ -10,17 +10,36 @@ pub enum SpriteType {
 }
 
 #[derive(PartialEq, Properties)]
-pub struct SpriteProps {
-    pub source: SpriteType,
+pub struct ImageProps {
+    pub source: ImageType,
     pub size: u32,
     #[prop_or_default]
     pub class: Classes,
 }
 
-#[function_component(Sprite)]
-pub fn sprite(props: &SpriteProps) -> Html {
-    let /* mut */ class_attr = props.class.clone();
-    // class_attr.push("deferred"); impl lazy loading
+#[function_component(Image)]
+pub fn image(props: &ImageProps) -> Html {
+    let class_attr = props.class.clone();
+
+    let url = match &props.source {
+        ImageType::Abilities(v) => url!("/img/abilities/{}.avif", v),
+        ImageType::Champions(v) => url!("/img/champions/{}.avif", v),
+        ImageType::Items(v) => url!("/img/items/{}.avif", v),
+        ImageType::Other(v) => v.clone(),
+    };
+
+    html! {
+        <img
+            loading={"lazy"}
+            class={class_attr}
+            src={url}
+            alt={""}
+            width={props.size.to_string()}
+            height={props.size.to_string()}
+        />
+    }
+
+    /*
 
     if let SpriteType::Other(src) = &props.source {
         return html! {
@@ -61,14 +80,17 @@ pub fn sprite(props: &SpriteProps) -> Html {
         let style = format!(
             "width: {size}px; \
             height: {size}px; \
-            background-image: url('{sprite_url}'); \
             background-position: -{x_off}px -{y_off}px; \
             background-size: {bg_width}px auto;",
             size = props.size,
         );
 
         html! {
-            <div class={class_attr} style={style} />
+            <div
+                data-sprite={format!("url('{sprite_url}')")}
+                class={class_attr}
+                style={style}
+            />
         }
     } else {
         html! {
@@ -77,4 +99,6 @@ pub fn sprite(props: &SpriteProps) -> Html {
             </div>
         }
     }
+
+    */
 }

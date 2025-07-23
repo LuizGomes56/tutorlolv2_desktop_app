@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::{
         calculator::*,
         tables::{
@@ -22,7 +21,7 @@ use yew::{
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
     let input_game = use_reducer(InputGame::default);
-    let output_game = use_state(|| None::<Rc<OutputGame>>);
+    let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
 
     let current_player_champion_id =
@@ -134,7 +133,7 @@ pub fn calculator() -> Html {
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
-                            output_game.set(Some(Rc::new(data)));
+                            output_game.set(Some(data));
                         }
                         Err(e) => {
                             web_sys::console::log_1(&format!("{:#?}", e).into());
@@ -207,16 +206,12 @@ pub fn calculator() -> Html {
                                                 .iter()
                                                 .map(|(enemy_champion_id, enemy)| {
                                                     html! {
-                                                        <tr class={classes!(
-                                                            // color!(odd:bg-900), color!(even:bg-800)
-                                                        )}>
+                                                        <tr>
                                                             <td class={classes!("w-10", "h-10")}>
                                                                 <ImageCell
-                                                                    instance={
-                                                                        Instances::Champions(
-                                                                            AttrValue::from((*enemy_champion_id).clone()),
-                                                                        )
-                                                                    }
+                                                                    instance={Instances::Champions(
+                                                                        AttrValue::from((*enemy_champion_id).clone()),
+                                                                    )}
                                                                 />
                                                             </td>
                                                             {damage_cells(&enemy.damages.abilities)}
