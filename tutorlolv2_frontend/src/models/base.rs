@@ -41,7 +41,7 @@ pub struct BasicStats {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ComparedItem {
+pub struct ItemDef {
     pub name: String,
     pub gold_cost: u16,
     pub prettified_stats: BTreeMap<String, f64>,
@@ -145,4 +145,20 @@ where
     });
 
     Ok(items)
+}
+
+#[derive(Debug, Deserialize, Copy, Clone)]
+pub struct SpriteInner {
+    pub f: u8,
+    pub w: u32,
+    pub h: u32,
+    pub x: u32,
+    pub y: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpriteMap {
+    pub abilities: FxHashMap<String, SpriteInner>,
+    pub champions: FxHashMap<String, SpriteInner>,
+    pub items: FxHashMap<u32, SpriteInner>,
 }

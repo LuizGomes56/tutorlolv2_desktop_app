@@ -1,4 +1,7 @@
-use crate::{components::calculator::ChangeAbilityLevelsAction, models::base::AbilityLevels, url};
+use crate::{
+    components::{Sprite, SpriteType, calculator::ChangeAbilityLevelsAction},
+    models::base::AbilityLevels,
+};
 use paste::paste;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
@@ -21,15 +24,15 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
         )}>
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
                 <span class={classes!("text-[13px]", "img-letter")}>{props.text}</span>
-                <img
-                    loading={"lazy"}
-                    class={classes!("h-7", "w-7")}
-                    src={url!(
-                        "/img/abilities/{}{}.avif",
-                        &props.current_player_champion_id,
-                        props.text
+                <Sprite
+                    size={28}
+                    source={SpriteType::Abilities(
+                        format!(
+                            "{}{}",
+                            &props.current_player_champion_id,
+                            props.text
+                        )
                     )}
-                    alt={""}
                 />
             </div>
             <input

@@ -2,7 +2,7 @@ use crate::{
     components::sidebar::Sidebar,
     context::SettingsProvider,
     external::{api::decode_bytes, invoke},
-    models::base::ComparedItem,
+    models::base::{ItemDef, SpriteMap},
     pages::*,
 };
 use once_cell::sync::OnceCell;
@@ -32,7 +32,8 @@ pub static STATIC_RUNES: OnceCell<BTreeMap<String, u32>> = OnceCell::new();
 pub static STATIC_CHAMPION_FORMULAS: OnceCell<HashMap<String, String>> = OnceCell::new();
 pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
 pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
-pub static STATIC_COMPARED_ITEMS: OnceCell<FxHashMap<u32, ComparedItem>> = OnceCell::new();
+pub static STATIC_ITEMS_DEF: OnceCell<FxHashMap<u32, ItemDef>> = OnceCell::new();
+pub static STATIC_SPRITE_MAP: OnceCell<SpriteMap> = OnceCell::new();
 pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
@@ -134,7 +135,8 @@ fn main() {
         let _ = STATIC_CHAMPIONS.set(load_static(url!("/api/static/champions")).await);
         let _ = STATIC_ITEMS.set(load_static(url!("/api/static/items")).await);
         let _ = STATIC_RUNES.set(load_static(url!("/api/static/runes")).await);
-        let _ = STATIC_COMPARED_ITEMS.set(load_static(url!("/api/static/compared_items")).await);
+        let _ = STATIC_ITEMS_DEF.set(load_static(url!("/api/static/items_def")).await);
+        let _ = STATIC_SPRITE_MAP.set(load_static(url!("/api/static/sprite_map")).await);
         let _ = STATIC_CHAMPION_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
         let _ = STATIC_ITEM_FORMULAS.set(load_static(url!("/api/formulas/items")).await);
         let _ = STATIC_RUNE_FORMULAS.set(load_static(url!("/api/formulas/runes")).await);

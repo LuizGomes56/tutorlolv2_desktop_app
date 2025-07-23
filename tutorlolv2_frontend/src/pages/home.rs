@@ -1,3 +1,4 @@
+use crate::components::sprite::{Sprite, SpriteType};
 use yew::{Html, classes, function_component, html};
 
 #[function_component(Home)]
@@ -13,6 +14,7 @@ pub fn home() -> Html {
                     {"Automated damage evaluation"}
                 </h1>
             </div>
+            <Sprite size={28} source={SpriteType::Items(224403)} />
         </div>
     }
 }

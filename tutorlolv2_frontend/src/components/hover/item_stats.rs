@@ -1,4 +1,4 @@
-use crate::{STATIC_COMPARED_ITEMS, color, macros::STATS_URL};
+use crate::{STATIC_ITEMS_DEF, color, macros::STATS_URL};
 use yew::{Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]
@@ -8,16 +8,16 @@ pub struct ItemStatsHoverProps {
 
 #[function_component(ItemStatsHover)]
 pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
-    let item = match STATIC_COMPARED_ITEMS
+    let item = match STATIC_ITEMS_DEF
         .get()
         .and_then(|map| map.get(&props.item_id))
     {
         Some(item) => item,
-        None => return html! {},
+        None => return html!(),
     };
 
     if item.prettified_stats.is_empty() {
-        return html! {};
+        return html!();
     }
 
     html! {

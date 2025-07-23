@@ -1,6 +1,9 @@
 use crate::{
     STATIC_ITEM_FORMULAS, STATIC_ITEMS, STATIC_RUNE_FORMULAS, STATIC_RUNES, color,
-    components::hover::{docs::hover_docs, item_stats::ItemStatsHover},
+    components::{
+        Sprite, SpriteType,
+        hover::{docs::hover_docs, item_stats::ItemStatsHover},
+    },
     context::{HoverDocs, SettingsContext},
     url,
 };
@@ -21,11 +24,6 @@ pub struct StaticEventProps {
 
 #[function_component(StaticEvent)]
 pub fn static_event(props: &StaticEventProps) -> Html {
-    let path = match props.static_iter {
-        StaticIterator::Runes => "/img/runes",
-        StaticIterator::Items => "/img/items",
-    };
-
     html! {
         <div class={classes!("flex", "h-fit", "flex-wrap", "gap-2")}>
             {
@@ -43,11 +41,14 @@ pub fn static_event(props: &StaticEventProps) -> Html {
                                     })
                                 }}
                             >
-                                <img
-                                    class={classes!("w-7", "h-7")}
-                                    src={url!("{}/{}.avif", path, id)}
-                                    alt={""}
-                                    loading={"lazy"}
+                                <Sprite
+                                    size={28}
+                                    source={
+                                        match props.static_iter {
+                                            StaticIterator::Runes => SpriteType::Other(url!("/img/runes/{}.avif", id)),
+                                            StaticIterator::Items => SpriteType::Items(*id),
+                                        }
+                                    }
                                 />
                             </button>
                         }
@@ -65,9 +66,9 @@ pub struct StaticSelectorProps {
 
 #[function_component(StaticSelector)]
 pub fn static_selector(props: &StaticSelectorProps) -> Html {
-    let (static_iterator, static_formulas, path) = match props.static_iter {
-        StaticIterator::Items => (&STATIC_ITEMS, &STATIC_ITEM_FORMULAS, "/img/items"),
-        StaticIterator::Runes => (&STATIC_RUNES, &STATIC_RUNE_FORMULAS, "/img/runes"),
+    let (static_iterator, static_formulas) = match props.static_iter {
+        StaticIterator::Items => (&STATIC_ITEMS, &STATIC_ITEM_FORMULAS),
+        StaticIterator::Runes => (&STATIC_RUNES, &STATIC_RUNE_FORMULAS),
     };
 
     let hover_settings = use_context::<SettingsContext>()
@@ -107,17 +108,22 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                                 })
                                             }}
                                         >
-                                            <img
+                                            <Sprite
+                                                size={28}
+                                                source={
+                                                    if props.static_iter == StaticIterator::Items {
+                                                        SpriteType::Items(*id)
+                                                    } else {
+                                                        SpriteType::Other(url!("/img/runes/{}.avif", id))
+                                                    }
+                                                }
                                                 class={classes!(
                                                     match hover_settings {
                                                         HoverDocs::Partial | HoverDocs::None => "peer",
                                                         _ => "",
                                                     },
-                                                    "w-7", "h-7", "cursor-pointer"
+                                                    "cursor-pointer"
                                                 )}
-                                                src={url!("{}/{}.avif", path, id)}
-                                                alt={""}
-                                                loading={"lazy"}
                                             />
                                             {
                                                 static_formulas

@@ -1,4 +1,9 @@
-use crate::{STATIC_CHAMPIONS, color, hooks::mouseout::use_mouseout, svg, url};
+use crate::{
+    STATIC_CHAMPIONS, color,
+    components::{Sprite, SpriteType},
+    hooks::mouseout::use_mouseout,
+    svg,
+};
 use std::borrow::Cow;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
@@ -152,12 +157,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 props.callback.reform(move |_| champion_id.to_string())
             }}
         >
-            <img
-                loading={"lazy"}
-                src={url!("/img/champions/{}.avif", props.champion_id)}
-                alt={""}
-                class={classes!("w-5", "h-5")}
-            />
+            <Sprite size={20} source={SpriteType::Champions(props.champion_id.to_string())} />
             <span>{&props.champion_name}</span>
         </button>
     }
