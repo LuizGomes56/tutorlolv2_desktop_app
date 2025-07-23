@@ -100,39 +100,43 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
         },
         Instances::Items(keyname) => (
             ImageType::Items(*keyname),
-            STATIC_ITEM_FORMULAS
-                .get()
-                .and_then(|map| map.get(keyname))
-                .map(|formula| match hover_settings {
-                    HoverDocs::Full | HoverDocs::Partial => html! {
-                        <div class={classes!(
-                            "hidden", "group-hover:flex", "flex-col",
-                            "fixed", "translate-x-[calc(50%-16px)]",
-                            "translate-y-[calc(50%+20px)]", "z-50",
-                            "py-3", "border", color!(border-800), "gap-y-2",
-                            "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
-                            "hover-docs"
-                        )}>
-                            {
-                                match hover_settings {
-                                    HoverDocs::Full => {
-                                        html! {
-                                            <>
-                                                <ItemStatsHover item_id={keyname} />
-                                                {hover_docs(formula.as_str().into(), false)}
-                                            </>
-                                        }
-                                    },
-                                    _ => {
-                                        html! { <ItemStatsHover item_id={keyname} /> }
-                                    },
-                                }
+            match hover_settings {
+                HoverDocs::None => html!(),
+                _ => STATIC_ITEM_FORMULAS
+                    .get()
+                    .and_then(|map| map.get(keyname))
+                    .map(|formula| match hover_settings {
+                        HoverDocs::Full => {
+                            html! {
+                                <div class={classes!(
+                                    "group-hover:opacity-100", "group-hover:pointer-events-auto",
+                                    "opacity-0", "pointer-events-none", "transition-opacity",
+                                    "duration-200", "delay-700", "flex-col", "flex", "fixed",
+                                    "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
+                                    "z-50", "py-3", "border", color!(border-800), "gap-y-2",
+                                    "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
+                                    "hover-docs"
+                                )}>
+                                    <ItemStatsHover item_id={keyname} />
+                                    {hover_docs(formula.as_str().into(), false)}
+                                </div>
                             }
-                        </div>
-                    },
-                    _ => html!(),
-                })
-                .unwrap_or_default(),
+                        }
+                        _ => {
+                            html! {
+                                <div class={classes!(
+                                    "group-hover:flex", "flex-col", "fixed", "hover-docs", "hidden",
+                                    "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
+                                    "z-50", "py-3", "border", color!(border-800), "gap-y-2",
+                                    "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
+                                )}>
+                                    <ItemStatsHover item_id={keyname} />
+                                </div>
+                            }
+                        }
+                    })
+                    .unwrap_or_default(),
+            },
         ),
         Instances::Runes(keyname) => (
             ImageType::Other(url!("/img/runes/{}.avif", keyname)),

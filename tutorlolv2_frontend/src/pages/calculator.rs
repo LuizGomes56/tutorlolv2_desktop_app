@@ -11,7 +11,7 @@ use crate::{
     url,
 };
 use rustc_hash::FxHashSet;
-use std::{collections::BTreeMap, rc::Rc};
+use std::collections::BTreeMap;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,

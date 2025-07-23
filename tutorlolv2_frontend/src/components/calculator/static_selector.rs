@@ -143,13 +143,23 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                                                 html! {
                                                                     <div class={classes!(
                                                                         match hover_settings {
-                                                                            HoverDocs::Full => "group-hover:flex",
-                                                                            _ => "peer-hover:flex",
+                                                                            HoverDocs::Full => {
+                                                                                vec![
+                                                                                    "group-hover:opacity-100",
+                                                                                    "group-hover:pointer-events-auto",
+                                                                                    "opacity-0",
+                                                                                    "pointer-events-none",
+                                                                                    "transition-opacity",
+                                                                                    "duration-200",
+                                                                                    "delay-700",
+                                                                                    "flex",
+                                                                                ]
+                                                                            },
+                                                                            _ => vec!["hidden", "peer-hover:flex"],
                                                                         },
-                                                                        "hidden", "flex-col",
-                                                                        "fixed", "z-50", "py-3", "border",
+                                                                        "flex-col", "fixed", "z-50", "py-3",
                                                                         color!(border-800), "gap-y-3", "overflow-auto",
-                                                                        "max-h-96", "px-3.5", color!(bg-900),
+                                                                        "max-h-96", "px-3.5", color!(bg-900), "border",
                                                                         match hover_settings {
                                                                             HoverDocs::Full => {
                                                                                 format!("-translate-x-[calc(1px+37.6*{}px)]", index % 10)

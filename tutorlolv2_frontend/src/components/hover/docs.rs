@@ -6,7 +6,9 @@ pub fn hover_docs(formula: AttrValue, single: bool) -> Html {
         <div class={
             if single {
                 classes!(
-                    "hidden", "group-hover:flex", "fixed",
+                    "group-hover:opacity-100", "group-hover:pointer-events-auto",
+                    "opacity-0", "pointer-events-none", "transition-opacity",
+                    "duration-200", "delay-700", "flex-col", "flex", "fixed",
                     "border", color!(bg - 900), "leading-6",
                     "transform", "max-w-md", "p-2",
                     "translate-x-[calc(50%-16px)]",
