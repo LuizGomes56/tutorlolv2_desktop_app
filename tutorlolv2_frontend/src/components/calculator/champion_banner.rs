@@ -1,4 +1,4 @@
-use crate::{STATIC_CHAMPIONS, url};
+use crate::{build_imports::CHAMPION_ID_TO_NAME, url};
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]
@@ -17,14 +17,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                 alt={""}
             />
             <span class={classes!("img-letter", "left-2", "bottom-1", "text-sm")}>
-                {
-                    STATIC_CHAMPIONS
-                        .get()
-                        .and_then(|champions| champions.get(&props.champion_id.to_string()))
-                        .map(|champ| champ)
-                        .and_then(|champ| Some(champ.as_str()))
-                        .unwrap_or("Unknown")
-                }
+                {*CHAMPION_ID_TO_NAME.get(&props.champion_id).unwrap_or(&"Unknown")}
             </span>
         </div>
     }

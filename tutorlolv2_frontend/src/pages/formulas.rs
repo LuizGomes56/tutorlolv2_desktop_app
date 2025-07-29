@@ -3,7 +3,7 @@ use yew::{Html, classes, function_component, html, use_callback, use_state};
 
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
-    let current_champion = use_state(|| String::from("Aatrox"));
+    let current_champion = use_state(|| "Aatrox");
     let callback = {
         let current_champion = current_champion.clone();
         use_callback((), move |v, _| {
@@ -25,10 +25,10 @@ pub fn formulas() -> Html {
                 </h1>
                 <ChampionSelector
                     callback={callback.clone()}
-                    current_champion={(*current_champion).clone()}
+                    current_champion={*current_champion}
                 />
             </div>
-            <SourceCode champion_id={(*current_champion).clone()} />
+            <SourceCode champion_id={*current_champion} />
         </div>
     }
 }

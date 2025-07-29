@@ -9,7 +9,7 @@ use yew::{
 
 #[derive(PartialEq, Properties)]
 pub struct MainSelectorProps {
-    pub set_current_player_champion_callback: Callback<String>,
+    pub set_current_player_champion_id_callback: Callback<&'static str>,
     pub insert_item_callback: Callback<u32>,
     pub remove_item_callback: Callback<usize>,
     pub insert_rune_callback: Callback<u32>,
@@ -64,7 +64,7 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
 
     html! {
         <div class={classes!(
-            // "hidden",
+            "hidden",
             "absolute", "top-1/2", "left-1/2",
             "-translate-x-1/2", "-translate-y-1/2",
             "max-w-2xl", "w-full", "h-2/3",

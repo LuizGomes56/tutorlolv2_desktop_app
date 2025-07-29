@@ -1,5 +1,6 @@
 use crate::{
-    STATIC_ITEM_FORMULAS, STATIC_ITEMS, STATIC_RUNE_FORMULAS, STATIC_RUNES, color,
+    build_imports::{ITEM_FORMULAS, ITEM_NAME_TO_ID, RUNE_FORMULAS, RUNE_NAME_TO_ID},
+    color,
     components::{
         Image, ImageType,
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
@@ -7,7 +8,9 @@ use crate::{
     context::{HoverDocs, SettingsContext},
     url,
 };
-use yew::{Callback, Html, Properties, classes, function_component, html, use_context, use_memo};
+use yew::{
+    AttrValue, Callback, Html, Properties, classes, function_component, html, use_context, use_memo,
+};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum StaticIterator {
@@ -67,8 +70,8 @@ pub struct StaticSelectorProps {
 #[function_component(StaticSelector)]
 pub fn static_selector(props: &StaticSelectorProps) -> Html {
     let (static_iterator, static_formulas) = match props.static_iter {
-        StaticIterator::Items => (&STATIC_ITEMS, &STATIC_ITEM_FORMULAS),
-        StaticIterator::Runes => (&STATIC_RUNES, &STATIC_RUNE_FORMULAS),
+        StaticIterator::Items => (&ITEM_NAME_TO_ID, &ITEM_FORMULAS),
+        StaticIterator::Runes => (&RUNE_NAME_TO_ID, &RUNE_FORMULAS),
     };
 
     let hover_settings = use_context::<SettingsContext>()
@@ -76,154 +79,148 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
         .unwrap_or_default();
 
     let selector_memo = use_memo((), |_| {
-        let static_cell = static_iterator.get().and_then(|v| Some(v));
-        match static_cell {
-            Some(static_cell) => {
-                let len = static_cell.len();
-                html! {
-                    <div class={classes!(
-                        "grid", "gap-2", "grid-cols-10",
-                    )}>
-                        {
-                            for static_cell
-                                .iter()
-                                .enumerate()
-                                .map(|(index, (name, id))| {
-                                    html! {
-                                        <button
-                                            class={classes!(
-                                                "items-center", "gap-2", "text-sm",
-                                                color!(hover:bg-800), "select-none",
-                                                "border", "relative", color!(border-700),
-                                                "cursor-default",
+        let len = static_iterator.len();
+        html! {
+            <div class={classes!(
+                "grid", "gap-2", "grid-cols-10",
+            )}>
+                {
+                    for static_iterator
+                        .entries()
+                        .enumerate()
+                        .map(|(index, (name, id))| {
+                            html! {
+                                <button
+                                    class={classes!(
+                                        "items-center", "gap-2", "text-sm",
+                                        color!(hover:bg-800), "select-none",
+                                        "border", "relative", color!(border-700),
+                                        "cursor-default",
+                                        match hover_settings {
+                                            HoverDocs::Full => "group",
+                                            _ => "",
+                                        },
+                                    )}
+                                    onclick={{
+                                        let insert_callback = props.insert_callback.clone();
+                                        Callback::from(move |_| {
+                                            insert_callback.emit(*id);
+                                        })
+                                    }}
+                                >
+                                    <Image
+                                        size={28}
+                                        source={
+                                            if props.static_iter == StaticIterator::Items {
+                                                ImageType::Items(*id)
+                                            } else {
+                                                ImageType::Other(url!("/img/runes/{}.avif", id))
+                                            }
+                                        }
+                                        class={classes!(
+                                            match hover_settings {
+                                                HoverDocs::Partial | HoverDocs::None => "peer",
+                                                _ => "",
+                                            },
+                                            "cursor-pointer"
+                                        )}
+                                    />
+                                    {
+                                        static_formulas
+                                            .get(id)
+                                            .and_then(|formula| {
+                                                let name_hover = html! {
+                                                    <span class={classes!(
+                                                        "text-left", "font-medium", "text-lg",
+                                                        "text-white", "leading-none", "max-w-52",
+                                                    )}>
+                                                        {name}
+                                                    </span>
+                                                };
                                                 match hover_settings {
-                                                    HoverDocs::Full => "group",
-                                                    _ => "",
-                                                },
-                                            )}
-                                            onclick={{
-                                                let insert_callback = props.insert_callback.clone();
-                                                Callback::from(move |_| {
-                                                    insert_callback.emit(*id);
-                                                })
-                                            }}
-                                        >
-                                            <Image
-                                                size={28}
-                                                source={
-                                                    if props.static_iter == StaticIterator::Items {
-                                                        ImageType::Items(*id)
-                                                    } else {
-                                                        ImageType::Other(url!("/img/runes/{}.avif", id))
-                                                    }
-                                                }
-                                                class={classes!(
-                                                    match hover_settings {
-                                                        HoverDocs::Partial | HoverDocs::None => "peer",
-                                                        _ => "",
-                                                    },
-                                                    "cursor-pointer"
-                                                )}
-                                            />
-                                            {
-                                                static_formulas
-                                                    .get()
-                                                    .and_then(|map| map.get(id))
-                                                    .map(|formula| {
-                                                        let name_hover = html! {
-                                                            <span class={classes!(
-                                                                "text-left", "font-medium", "text-lg",
-                                                                "text-white", "leading-none", "max-w-52",
+                                                    HoverDocs::Full | HoverDocs::Partial => {
+                                                        Some(html! {
+                                                            <div class={classes!(
+                                                                match hover_settings {
+                                                                    HoverDocs::Full => {
+                                                                        vec![
+                                                                            "group-hover:visible",
+                                                                            "group-hover:opacity-100",
+                                                                            "group-hover:pointer-events-auto",
+                                                                            "opacity-0", "invisible",
+                                                                            "pointer-events-none",
+                                                                            "transition-[visibility,opacity]",
+                                                                            "duration-200",
+                                                                            "group-hover:delay-1000",
+                                                                            "flex",
+                                                                        ]
+                                                                    },
+                                                                    _ => vec!["hidden", "peer-hover:flex"],
+                                                                },
+                                                                "flex-col", "fixed", "z-50", "py-3",
+                                                                color!(border-800), "gap-y-3", "overflow-auto",
+                                                                "max-h-96", "px-3.5", color!(bg-900), "border",
+                                                                match hover_settings {
+                                                                    HoverDocs::Full => {
+                                                                        format!("-translate-x-[calc(1px+37.6*{}px)]", index % 10)
+                                                                    }
+                                                                    _ => {
+                                                                        if index % 10 > 4 {
+                                                                            "-translate-x-[calc(100%-29px)]".to_string()
+                                                                        } else { "-translate-x-[calc(1px)]".to_string() }
+                                                                    }
+                                                                },
+                                                                if index > len.div_ceil(2) && index > 100 {
+                                                                    "-translate-y-[calc(100%+29px)]"
+                                                                } else { "translate-y-[1px]" }
                                                             )}>
-                                                                {name}
-                                                            </span>
-                                                        };
-                                                        match hover_settings {
-                                                            HoverDocs::Full | HoverDocs::Partial => {
-                                                                html! {
-                                                                    <div class={classes!(
-                                                                        match hover_settings {
-                                                                            HoverDocs::Full => {
-                                                                                vec![
-                                                                                    "group-hover:opacity-100",
-                                                                                    "group-hover:pointer-events-auto",
-                                                                                    "opacity-0",
-                                                                                    "pointer-events-none",
-                                                                                    "transition-opacity",
-                                                                                    "duration-200",
-                                                                                    "delay-700",
-                                                                                    "flex",
-                                                                                ]
-                                                                            },
-                                                                            _ => vec!["hidden", "peer-hover:flex"],
+                                                                {
+                                                                    match hover_settings {
+                                                                        HoverDocs::Full => html! {
+                                                                            <>
+                                                                                {name_hover}
+                                                                                <ItemStatsHover item_id={id} />
+                                                                                {hover_docs(AttrValue::Static(formula), false)}
+                                                                            </>
                                                                         },
-                                                                        "flex-col", "fixed", "z-50", "py-3",
-                                                                        color!(border-800), "gap-y-3", "overflow-auto",
-                                                                        "max-h-96", "px-3.5", color!(bg-900), "border",
-                                                                        match hover_settings {
-                                                                            HoverDocs::Full => {
-                                                                                format!("-translate-x-[calc(1px+37.6*{}px)]", index % 10)
-                                                                            }
-                                                                            _ => {
-                                                                                if index % 10 > 4 {
-                                                                                    "-translate-x-[calc(100%-29px)]".to_string()
-                                                                                } else { "-translate-x-[calc(1px)]".to_string() }
-                                                                            }
+                                                                        _ => html! {
+                                                                            <>
+                                                                                {name_hover}
+                                                                                <ItemStatsHover item_id={id} />
+                                                                            </>
                                                                         },
-                                                                        if index > len.div_ceil(2) && index > 100 {
-                                                                            "-translate-y-[calc(100%+29px)]"
-                                                                        } else { "translate-y-[1px]" }
-                                                                    )}>
-                                                                        {
-                                                                            match hover_settings {
-                                                                                HoverDocs::Full => html! {
-                                                                                    <>
-                                                                                        {name_hover}
-                                                                                        <ItemStatsHover item_id={id} />
-                                                                                        {hover_docs(formula.as_str().into(), false)}
-                                                                                    </>
-                                                                                },
-                                                                                _ => html! {
-                                                                                    <>
-                                                                                        {name_hover}
-                                                                                        <ItemStatsHover item_id={id} />
-                                                                                    </>
-                                                                                },
-                                                                            }
-                                                                        }
-                                                                    </div>
+                                                                    }
                                                                 }
-                                                            }
-                                                            HoverDocs::None => {
-                                                                html! {
-                                                                    <div class={classes!(
-                                                                        "hidden", "flex-col", "peer-hover:flex",
-                                                                        "fixed", "z-50", "py-3", "border",
-                                                                        color!(border-800), "gap-y-3", "overflow-auto",
-                                                                        "max-h-96", "px-3.5", color!(bg-900),
-                                                                        if index % 10 > 5 {
-                                                                            "-translate-x-[calc(100%-29px)]"
-                                                                        } else { "" },
-                                                                        if index > len.div_ceil(2) && index > 100 {
-                                                                            "-translate-y-[calc(100%+29px)]"
-                                                                        } else { "translate-y-[1px]" }
-                                                                    )}>
-                                                                        {name_hover}
-                                                                    </div>
-                                                                }
-                                                            },
-                                                        }
-                                                    })
-                                                    .unwrap_or_default()
+                                                            </div>
+                                                        })
+                                                    }
+                                                    HoverDocs::None => {
+                                                        Some(html! {
+                                                            <div class={classes!(
+                                                                "hidden", "flex-col", "peer-hover:flex",
+                                                                "fixed", "z-50", "py-3", "border",
+                                                                color!(border-800), "gap-y-3", "overflow-auto",
+                                                                "max-h-96", "px-3.5", color!(bg-900),
+                                                                if index % 10 > 5 {
+                                                                    "-translate-x-[calc(100%-29px)]"
+                                                                } else { "" },
+                                                                if index > len.div_ceil(2) && index > 100 {
+                                                                    "-translate-y-[calc(100%+29px)]"
+                                                                } else { "translate-y-[1px]" }
+                                                            )}>
+                                                                {name_hover}
+                                                            </div>
+                                                        })
+                                                    },
                                                 }
-                                        </button>
-                                    }
-                                })
-                        }
-                    </div>
+                                            })
+                                            .unwrap_or_default()
+                                        }
+                                </button>
+                            }
+                        })
                 }
-            }
-            None => html!(),
+            </div>
         }
     });
 

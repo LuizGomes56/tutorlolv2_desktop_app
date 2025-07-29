@@ -80,7 +80,7 @@ macro_rules! ability_level_reducer {
 ability_level_reducer!(ChangeAbilityLevelsAction, q, w, e, r);
 
 pub enum InputGameAction {
-    SetCurrentPlayerChampionId(String),
+    SetCurrentPlayerChampionId(&'static str),
     SetCurrentPlayerLevel(u8),
     SetCurrentPlayerInferStats(bool),
     SetCurrentPlayerStacks(u32),
@@ -93,7 +93,7 @@ pub enum InputGameAction {
     RemoveCurrentPlayerRune(usize),
     ClearCurrentPlayerRunes,
     SetAbilityLevels(ChangeAbilityLevelsAction),
-    SetEnemyPlayerChampionName(usize, String),
+    SetEnemyPlayerChampionName(usize, &'static str),
     SetEnemyPlayerStats(usize, ChangeBasicStatsAction),
     SetEnemyPlayerInferStats(usize, bool),
     SetEnemyPlayerAttackForm(usize, bool),

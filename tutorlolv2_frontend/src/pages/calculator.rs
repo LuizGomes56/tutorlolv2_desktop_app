@@ -24,8 +24,7 @@ pub fn calculator() -> Html {
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
 
-    let current_player_champion_id =
-        AttrValue::from((*input_game).active_player.champion_id.clone());
+    let current_player_champion_id = AttrValue::Static((*input_game).active_player.champion_id);
 
     let set_current_player_champion_id = {
         let input_game = input_game.clone();
@@ -232,7 +231,7 @@ pub fn calculator() -> Html {
                 </div>
             </div>
             <MainSelector
-                set_current_player_champion_callback={set_current_player_champion_id}
+                set_current_player_champion_id_callback={set_current_player_champion_id}
                 insert_item_callback={insert_current_player_items}
                 remove_item_callback={remove_current_player_items}
                 insert_rune_callback={insert_current_player_runes}

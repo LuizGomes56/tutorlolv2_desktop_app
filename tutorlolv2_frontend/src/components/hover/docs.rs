@@ -6,16 +6,17 @@ pub fn hover_docs(formula: AttrValue, single: bool) -> Html {
         <div class={
             if single {
                 classes!(
-                    "group-hover:opacity-100", "group-hover:pointer-events-auto",
-                    "opacity-0", "pointer-events-none", "transition-opacity",
-                    "duration-200", "delay-700", "flex-col", "flex", "fixed",
-                    "border", color!(bg - 900), "leading-6",
-                    "transform", "max-w-md", "p-2",
+                    "opacity-0", "invisible", "pointer-events-none",
+                    "group-hover:opacity-100", "group-hover:visible",
+                    "group-hover:pointer-events-auto",
+                    "transition-[visibility,opacity]",
+                    "duration-200", "group-hover:delay-1000",
+                    "flex", "flex-col", "fixed", "max-w-md",
+                    "max-h-96", "overflow-auto", "p-2", "leading-6",
+                    "text-base", "z-50", "hover-docs",
                     "translate-x-[calc(50%-16px)]",
                     "translate-y-[calc(50%+20px)]",
-                    "overflow-auto", "max-h-96", "z-50",
-                    "hover-docs", color!(border - 800),
-                    "text-base"
+                    "border", color!(border-800), color!(bg-900),
                 )
             } else {
                 classes!("leading-6", "text-base")

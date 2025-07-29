@@ -1,21 +1,13 @@
 use crate::{
-    components::sidebar::Sidebar,
-    context::SettingsProvider,
-    external::{api::decode_bytes, invoke},
-    models::base::{ItemDef, SpriteMap},
-    pages::*,
+    components::sidebar::Sidebar, context::SettingsProvider, external::invoke,
+    models::base::SpriteMap, pages::*,
 };
 use once_cell::sync::OnceCell;
-use rustc_hash::FxHashMap;
-use serde::de::DeserializeOwned;
-use std::{
-    collections::{BTreeMap, HashMap},
-    sync::atomic::AtomicBool,
-};
-use web_sys::console;
+use std::sync::atomic::AtomicBool;
 use yew::{Html, classes, function_component, html, platform::spawn_local};
 use yew_router::{BrowserRouter, Routable, Switch};
 
+mod build_imports;
 mod components;
 mod context;
 mod external;
@@ -24,15 +16,6 @@ mod macros;
 mod models;
 mod pages;
 
-pub static STATIC_CHAMPIONS: OnceCell<BTreeMap<String, String>> = OnceCell::new();
-pub static STATIC_ABILITY_FORMULAS: OnceCell<FxHashMap<String, FxHashMap<String, String>>> =
-    OnceCell::new();
-pub static STATIC_ITEMS: OnceCell<BTreeMap<String, u32>> = OnceCell::new();
-pub static STATIC_RUNES: OnceCell<BTreeMap<String, u32>> = OnceCell::new();
-pub static STATIC_CHAMPION_FORMULAS: OnceCell<HashMap<String, String>> = OnceCell::new();
-pub static STATIC_ITEM_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
-pub static STATIC_RUNE_FORMULAS: OnceCell<FxHashMap<u32, String>> = OnceCell::new();
-pub static STATIC_ITEMS_DEF: OnceCell<FxHashMap<u32, ItemDef>> = OnceCell::new();
 pub static STATIC_SPRITE_MAP: OnceCell<SpriteMap> = OnceCell::new();
 pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
@@ -56,17 +39,6 @@ macro_rules! loop_flag {
     (realtime) => {
         crate::REALTIME_LOOP_FLAG.load(std::sync::atomic::Ordering::SeqCst)
     };
-}
-
-async fn load_static<T: DeserializeOwned>(url: &'static str) -> T {
-    let request = reqwasm::http::Request::new(url).send().await;
-    match request {
-        Ok(response) => decode_bytes::<T>(response).await.unwrap(),
-        Err(e) => {
-            console::log_1(&format!("Error sending request for {}: {:#?}", url, e).into());
-            panic!();
-        }
-    }
 }
 
 #[derive(Clone, Routable, PartialEq)]
@@ -132,15 +104,7 @@ fn switch(routes: Route) -> Html {
 
 fn main() {
     spawn_local(async move {
-        let _ = STATIC_CHAMPIONS.set(load_static(url!("/api/static/champions")).await);
-        let _ = STATIC_ITEMS.set(load_static(url!("/api/static/items")).await);
-        let _ = STATIC_RUNES.set(load_static(url!("/api/static/runes")).await);
-        let _ = STATIC_ITEMS_DEF.set(load_static(url!("/api/static/items_def")).await);
         // let _ = STATIC_SPRITE_MAP.set(load_static(url!("/api/static/sprite_map")).await);
-        let _ = STATIC_CHAMPION_FORMULAS.set(load_static(url!("/api/formulas/champions")).await);
-        let _ = STATIC_ITEM_FORMULAS.set(load_static(url!("/api/formulas/items")).await);
-        let _ = STATIC_RUNE_FORMULAS.set(load_static(url!("/api/formulas/runes")).await);
-        let _ = STATIC_ABILITY_FORMULAS.set(load_static(url!("/api/formulas/abilities")).await);
         let _ = IS_DEKTOP_PLATFORM.set(invoke::invoke_checkup());
 
         yew::Renderer::<App>::new().render();

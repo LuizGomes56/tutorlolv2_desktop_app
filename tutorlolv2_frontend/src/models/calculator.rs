@@ -48,7 +48,7 @@ pub struct OutputEnemy {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputActivePlayer {
-    pub champion_id: String,
+    pub champion_id: &'static str,
     pub champion_stats: Stats,
     pub abilities: AbilityLevels,
     pub items: Vec<u32>,
@@ -60,7 +60,7 @@ pub struct InputActivePlayer {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
-    pub champion_name: String,
+    pub champion_name: &'static str,
     pub items: Vec<u32>,
     pub level: u8,
     pub stats: BasicStats,
@@ -81,7 +81,7 @@ impl Default for InputGame {
     fn default() -> Self {
         Self {
             active_player: InputActivePlayer {
-                champion_id: "Neeko".into(),
+                champion_id: "Neeko",
                 champion_stats: Default::default(),
                 abilities: AbilityLevels {
                     q: 5,
@@ -96,7 +96,7 @@ impl Default for InputGame {
                 stacks: Default::default(),
             },
             enemy_players: Vec::from_iter([InputEnemyPlayers {
-                champion_name: "Gwen".into(),
+                champion_name: "Gwen",
                 level: 15,
                 infer_stats: true,
                 items: Default::default(),

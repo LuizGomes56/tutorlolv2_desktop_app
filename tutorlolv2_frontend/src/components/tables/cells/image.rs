@@ -1,5 +1,6 @@
 use crate::{
-    STATIC_ABILITY_FORMULAS, STATIC_ITEM_FORMULAS, STATIC_RUNE_FORMULAS, color,
+    build_imports::{CHAMPION_ABILITIES, ITEM_FORMULAS, RUNE_FORMULAS},
+    color,
     components::{
         Image, ImageType,
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
@@ -15,7 +16,7 @@ const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrins
     <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span><span class="punctuation">: </span>&amp;<span class="type">EvalContext</span><span class="punctuation">|</span> {
         <span class="variable">ctx.ad</span> * <span class="variable">ctx.physical_multiplier</span>
     },
-    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0f64</span>,
+    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0</span>,
 };</pre>"#;
 
 const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">CRITICAL_STRIKE</span><span class="punctuation"> = {
@@ -25,9 +26,9 @@ const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intr
         <span class="variable">ctx.ad</span>
         <span class="punctuation"> * </span><span class="variable">ctx.physical_multiplier</span>
         <span class="punctuation"> * </span><span class="variable">ctx.crit_damage</span>
-        <span class="punctuation"> / </span><span class="float">100.0f64</span>
+        <span class="punctuation"> / </span><span class="float">100.0</span>
     },
-    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0f64</span>,
+    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0</span>,
 };</pre>"#;
 
 #[derive(PartialEq)]
@@ -66,14 +67,23 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 },
             ),
             _ => {
-                let hover_provider = match hover_settings {
-                    HoverDocs::Full => STATIC_ABILITY_FORMULAS
-                        .get()
-                        .and_then(|map| map.get(&champion_id.to_string()))
-                        .and_then(|champ_map| champ_map.get(keyname))
-                        .map(|formula| hover_docs(formula.as_str().into(), true))
-                        .unwrap_or_default(),
-                    _ => html!(),
+                let hover_provider = {
+                    match hover_settings {
+                        HoverDocs::Full => CHAMPION_ABILITIES
+                            .get(&champion_id)
+                            .and_then(|&phf_formula_map| {
+                                phf_formula_map.get(keyname).and_then(|&formula| {
+                                    match hover_settings {
+                                        HoverDocs::Full => {
+                                            Some(hover_docs(AttrValue::Static(formula), true))
+                                        }
+                                        _ => None,
+                                    }
+                                })
+                            })
+                            .unwrap_or_default(),
+                        _ => html!(),
+                    }
                 };
                 (
                     ImageType::Abilities(format!("{}{}", champion_id, first_char)),
@@ -102,38 +112,40 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             ImageType::Items(*keyname),
             match hover_settings {
                 HoverDocs::None => html!(),
-                _ => STATIC_ITEM_FORMULAS
-                    .get()
-                    .and_then(|map| map.get(keyname))
-                    .map(|formula| match hover_settings {
-                        HoverDocs::Full => {
-                            html! {
-                                <div class={classes!(
-                                    "group-hover:opacity-100", "group-hover:pointer-events-auto",
-                                    "opacity-0", "pointer-events-none", "transition-opacity",
-                                    "duration-200", "delay-700", "flex-col", "flex", "fixed",
-                                    "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
-                                    "z-50", "py-3", "border", color!(border-800), "gap-y-2",
-                                    "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
-                                    "hover-docs"
-                                )}>
-                                    <ItemStatsHover item_id={keyname} />
-                                    {hover_docs(formula.as_str().into(), false)}
-                                </div>
-                            }
-                        }
-                        _ => {
-                            html! {
-                                <div class={classes!(
-                                    "group-hover:flex", "flex-col", "fixed", "hover-docs", "hidden",
-                                    "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
-                                    "z-50", "py-3", "border", color!(border-800), "gap-y-2",
-                                    "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
-                                )}>
-                                    <ItemStatsHover item_id={keyname} />
-                                </div>
-                            }
-                        }
+                _ => ITEM_FORMULAS
+                    .get(keyname)
+                    .and_then(|formula| match hover_settings {
+                        HoverDocs::Full => Some(html! {
+                            <div class={classes!(
+                                "group-hover:visible",
+                                "group-hover:opacity-100",
+                                "group-hover:pointer-events-auto",
+                                "opacity-0", "invisible",
+                                "pointer-events-none",
+                                "transition-[visibility,opacity]",
+                                "duration-200",
+                                "group-hover:delay-1000",
+                                "flex-col", "flex", "fixed",
+                                "translate-x-[calc(50%-16px)]",
+                                "translate-y-[calc(50%+20px)]",
+                                "z-50", "py-3", "hover-docs", "gap-y-2",
+                                "border", color!(border-800), color!(bg-900),
+                                "overflow-auto", "max-h-96", "px-3.5",
+                            )}>
+                                <ItemStatsHover item_id={keyname} />
+                                {hover_docs(AttrValue::Static(formula), false)}
+                            </div>
+                        }),
+                        _ => Some(html! {
+                            <div class={classes!(
+                                "group-hover:flex", "flex-col", "fixed", "hover-docs", "hidden",
+                                "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
+                                "z-50", "py-3", "border", color!(border-800), "gap-y-2",
+                                "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
+                            )}>
+                                <ItemStatsHover item_id={keyname} />
+                            </div>
+                        }),
                     })
                     .unwrap_or_default(),
             },
@@ -141,10 +153,9 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
         Instances::Runes(keyname) => (
             ImageType::Other(url!("/img/runes/{}.avif", keyname)),
             match hover_settings {
-                HoverDocs::Full => STATIC_RUNE_FORMULAS
-                    .get()
-                    .and_then(|map| map.get(keyname))
-                    .map(|formula| hover_docs(formula.as_str().into(), true))
+                HoverDocs::Full => RUNE_FORMULAS
+                    .get(keyname)
+                    .and_then(|formula| Some(hover_docs(AttrValue::Static(formula), true)))
                     .unwrap_or_default(),
                 _ => html!(),
             },

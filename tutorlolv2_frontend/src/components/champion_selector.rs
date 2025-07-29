@@ -1,19 +1,20 @@
 use crate::{
-    STATIC_CHAMPIONS, color,
+    build_imports::CHAMPION_ID_TO_NAME,
+    color,
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
     svg,
 };
 use std::borrow::Cow;
 use yew::{
-    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
-    html, use_callback, use_memo, use_node_ref, use_state,
+    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
+    use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
-    pub callback: Callback<String>,
-    pub current_champion: AttrValue,
+    pub callback: Callback<&'static str>,
+    pub current_champion: &'static str,
 }
 
 #[derive(Clone, PartialEq)]
@@ -26,17 +27,11 @@ struct ChampionItem<'a> {
 pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
     let is_open = use_state(|| false);
     let search_query = use_state(|| String::new());
-    let name_selected = use_state(|| props.current_champion.to_string());
     let callback = {
         let original_callback = props.callback.clone();
-        let name_selected = name_selected.clone();
-        use_callback(
-            (original_callback, name_selected),
-            |v: String, (original_callback, name_selected)| {
-                name_selected.set(v.clone());
-                original_callback.emit(v);
-            },
-        )
+        use_callback(original_callback, |v, original_callback| {
+            original_callback.emit(v);
+        })
     };
 
     let dropdown_ref = use_node_ref();
@@ -64,18 +59,15 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
     };
 
     let all_champions = use_memo(callback, |callback| {
-        STATIC_CHAMPIONS
-            .get()
-            .unwrap()
-            .iter()
+        CHAMPION_ID_TO_NAME
+            .entries()
             .enumerate()
             .map(|(index, (champion_id, champion_name))| {
                 let html = html! {
                     <ChampionOptions
                         key={index}
                         callback={callback}
-                        champion_id={champion_id.clone()}
-                        champion_name={champion_name.clone()}
+                        champion_id={*champion_id}
                     />
                 };
 
@@ -116,7 +108,7 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                         "text-white", "focus:outline-none", "w-full", "ml-1"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={(*name_selected).clone()}
+                    placeholder={*CHAMPION_ID_TO_NAME.get(props.current_champion).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -138,9 +130,8 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionOptionsProps {
-    pub callback: Callback<String>,
-    pub champion_id: AttrValue,
-    pub champion_name: AttrValue,
+    pub callback: Callback<&'static str>,
+    pub champion_id: &'static str,
 }
 
 #[function_component(ChampionOptions)]
@@ -153,12 +144,12 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 "text-sm", "select-none"
             )}
             onclick={{
-                let champion_id = props.champion_id.clone();
-                props.callback.reform(move |_| champion_id.to_string())
+                let champion_id = props.champion_id;
+                props.callback.reform(move |_| champion_id)
             }}
         >
             <Image size={20} source={ImageType::Champions(props.champion_id.to_string())} />
-            <span>{&props.champion_name}</span>
+            <span>{CHAMPION_ID_TO_NAME.get(props.champion_id).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }
