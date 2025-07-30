@@ -29,7 +29,7 @@ pub struct Stats {
     pub current_mana: f64,
 }
 
-pub type DamageLike<T> = BTreeMap<T, InstanceDamage>;
+pub type DamageLike<T> = Vec<(T, InstanceDamage)>;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Default)]
 pub struct BasicStats {
@@ -41,15 +41,8 @@ pub struct BasicStats {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ItemDef {
-    pub name: String,
-    pub gold_cost: u16,
-    pub prettified_stats: BTreeMap<String, f64>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct SimulatedDamages {
-    #[serde(deserialize_with = "ord_abilities_map")]
+    // #[serde(deserialize_with = "ord_abilities_map")]
     pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
@@ -57,7 +50,7 @@ pub struct SimulatedDamages {
 
 #[derive(Debug, Deserialize)]
 pub struct Damages {
-    #[serde(deserialize_with = "ord_abilities_map")]
+    // #[serde(deserialize_with = "ord_abilities_map")]
     pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,

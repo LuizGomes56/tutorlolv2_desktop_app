@@ -1,12 +1,11 @@
 use crate::components::tables::cells::{ImageCell, Instances};
-use std::collections::BTreeSet;
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
     pub damaging_abilities: Vec<String>,
-    pub damaging_items: BTreeSet<u32>,
-    pub damaging_runes: BTreeSet<u32>,
+    pub damaging_items: Vec<u32>,
+    pub damaging_runes: Vec<u32>,
     pub champion_id: AttrValue,
     pub damages: Html,
 }

@@ -1,25 +1,20 @@
-use super::base::{
-    AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats, ord_abilities_map,
-    ord_abilities_vec,
-};
-use rustc_hash::FxHashMap;
+use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Deserialize)]
 pub struct OutputGame {
     pub current_player: OutputCurrentPlayer,
-    pub enemies: BTreeMap<String, OutputEnemy>,
+    pub enemies: Vec<(String, OutputEnemy)>,
     pub recommended_items: Vec<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    #[serde(deserialize_with = "ord_abilities_vec")]
+    // #[serde(deserialize_with = "ord_abilities_vec")]
     pub damaging_abilities: Vec<String>,
-    pub damaging_items: BTreeSet<u32>,
-    pub damaging_runes: BTreeSet<u32>,
+    pub damaging_items: Vec<u32>,
+    pub damaging_runes: Vec<u32>,
     pub level: u8,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
@@ -28,7 +23,7 @@ pub struct OutputCurrentPlayer {
 
 #[derive(Debug, Deserialize)]
 pub struct CalculatorDamages {
-    #[serde(deserialize_with = "ord_abilities_map")]
+    // #[serde(deserialize_with = "ord_abilities_map")]
     pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
@@ -74,7 +69,7 @@ pub struct InputGame {
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
-    pub stack_exceptions: FxHashMap<u32, u32>,
+    // pub stack_exceptions: FxHashMap<u32, u32>,
 }
 
 impl Default for InputGame {
@@ -90,7 +85,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: true,
+                infer_stats: false,
                 items: vec![3115],
                 runes: Default::default(),
                 stacks: Default::default(),
@@ -105,7 +100,7 @@ impl Default for InputGame {
             ally_earth_dragons: 0,
             ally_fire_dragons: 0,
             enemy_earth_dragons: 0,
-            stack_exceptions: Default::default(),
+            // stack_exceptions: Default::default(),
         }
     }
 }

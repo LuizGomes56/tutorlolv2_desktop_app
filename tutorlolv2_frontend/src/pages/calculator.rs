@@ -189,7 +189,7 @@ pub fn calculator() -> Html {
                             let enemies = output_game
                                 .enemies
                                 .iter()
-                                .filter(|(keyname, _)| !hidden_set.contains(*keyname))
+                                .filter(|(keyname, _)| !hidden_set.contains(keyname))
                                 .map(|(key, val)| (key, val))
                                 .collect::<BTreeMap<_, _>>();
 

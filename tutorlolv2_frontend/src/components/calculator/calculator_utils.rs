@@ -146,14 +146,14 @@ impl Reducible for InputGame {
                 change_stats(&mut new_state.active_player.champion_stats, action);
             }
             InputGameAction::SetCurrentPlayerAttackForm(value) => {
-                new_state
-                    .stack_exceptions
-                    .insert(u32::MAX - 1, u32::from(value));
+                // new_state
+                //     .stack_exceptions
+                //     .insert(u32::MAX - 1, u32::from(value));
             }
             InputGameAction::SetEnemyPlayerAttackForm(index, value) => {
-                new_state
-                    .stack_exceptions
-                    .insert(u32::MAX - 1 - index as u32, u32::from(value));
+                // new_state
+                //     .stack_exceptions
+                //     .insert(u32::MAX - 1 - index as u32, u32::from(value));
             }
             InputGameAction::SetEnemyPlayerStats(index, action) => {
                 if let Some(enemy) = new_state.enemy_players.get_mut(index) {

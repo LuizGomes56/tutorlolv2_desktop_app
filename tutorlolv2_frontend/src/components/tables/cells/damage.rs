@@ -1,7 +1,7 @@
 use crate::models::base::InstanceDamage;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
-use yew::{Html, classes, html};
+use yew::{AttrValue, Html, classes, html};
 
 pub trait ValuesRef<U> {
     type Iter<'a>: Iterator<Item = &'a U>
@@ -65,12 +65,15 @@ pub fn damage_cells<'a, T: ValuesRef<InstanceDamage>>(instances: T) -> Html {
         {
             for instances.values().map(|value| {
                 let text = if value.maximum_damage != 0.0 {
-                    format!("{} - {}", value.minimum_damage.round(), value.maximum_damage.round())
+                    let mut s = value.minimum_damage.round().to_string();
+                    s.push_str(" - ");
+                    s.push_str(&value.maximum_damage.round().to_string());
+                    AttrValue::from(s)
                 } else {
-                    value.minimum_damage.round().to_string()
+                    AttrValue::from(value.minimum_damage.round().to_string())
                 };
                 html! {
-                    <td class={classes!{
+                    <td title={&text} class={classes!{
                         "text-center", "text-sm", "px-2", match value.damage_type.as_str() {
                             "PHYSICAL_DAMAGE" => "text-orange-500",
                             "MAGIC_DAMAGE" => "text-sky-500",
@@ -78,7 +81,8 @@ pub fn damage_cells<'a, T: ValuesRef<InstanceDamage>>(instances: T) -> Html {
                             "ADAPTATIVE_DAMAGE" => "text-pink-500",
                             "MIXED" => "text-violet-500",
                             _ => "text-emerald-500"
-                        }
+                        },
+                        "max-w-16", "truncate",
                     }}>
                         {text}
                     </td>
