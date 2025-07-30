@@ -4,7 +4,7 @@ use yew::{Classes, Html, Properties, function_component, html};
 #[derive(PartialEq)]
 pub enum ImageType {
     Abilities(String),
-    Champions(String),
+    Champions(&'static str),
     Items(u32),
     Other(String),
 }

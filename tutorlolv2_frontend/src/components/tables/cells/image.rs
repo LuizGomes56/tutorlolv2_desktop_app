@@ -13,7 +13,7 @@ use yew::{AttrValue, Html, Properties, classes, function_component, html, use_co
 const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">BASIC_ATTACK</span><span class="punctuation"> = {
     <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Basic Attack"</span>,
     <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
-    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span><span class="punctuation">: </span>&amp;<span class="type">EvalContext</span><span class="punctuation">|</span> {
+    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span>|</span> {
         <span class="variable">ctx.ad</span> * <span class="variable">ctx.physical_multiplier</span>
     },
     <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0</span>,
@@ -22,7 +22,7 @@ const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrins
 const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">CRITICAL_STRIKE</span><span class="punctuation"> = {
     <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Critical Strike"</span>,
     <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
-    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span><span class="punctuation">: </span>&amp;<span class="type">EvalContext</span><span class="punctuation">|</span> {
+    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span>|</span> {
         <span class="variable">ctx.ad</span>
         <span class="punctuation"> * </span><span class="variable">ctx.physical_multiplier</span>
         <span class="punctuation"> * </span><span class="variable">ctx.crit_damage</span>

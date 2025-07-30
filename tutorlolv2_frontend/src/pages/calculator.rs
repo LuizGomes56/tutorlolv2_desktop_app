@@ -11,7 +11,6 @@ use crate::{
     url,
 };
 use rustc_hash::FxHashSet;
-use std::collections::BTreeMap;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -191,7 +190,7 @@ pub fn calculator() -> Html {
                                 .iter()
                                 .filter(|(keyname, _)| !hidden_set.contains(keyname))
                                 .map(|(key, val)| (key, val))
-                                .collect::<BTreeMap<_, _>>();
+                                .collect::<Vec<_>>();
 
                             html! {
                                 <div>

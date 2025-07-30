@@ -5,7 +5,7 @@ use crate::{
         cells::{ImageCell, Instances, damage_cells},
     },
     external::api::{decode_bytes, send_bytes},
-    loop_flag,
+    global_bool,
     models::realtime::Realtime,
     url,
 };
@@ -98,18 +98,18 @@ pub fn history() -> Html {
         let game_data = game_data.clone();
         let game_code = game_code.clone();
         use_effect_with(game_code.clone(), move |_| {
-            loop_flag!(history true);
+            global_bool!(set HISTORY_LOOP_FLAG, true);
             if (*game_code).len() != 6 {
                 return;
             }
 
-            loop_flag!(history false);
+            global_bool!(set HISTORY_LOOP_FLAG, false);
 
             spawn_local(async move {
                 let mut failures = 0usize;
 
                 loop {
-                    if loop_flag!(history) {
+                    if global_bool!(get HISTORY_LOOP_FLAG) {
                         break;
                     }
 

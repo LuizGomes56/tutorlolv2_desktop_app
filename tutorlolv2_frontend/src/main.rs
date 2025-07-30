@@ -1,10 +1,6 @@
-use crate::{
-    components::sidebar::Sidebar, context::SettingsProvider, external::invoke,
-    models::base::SpriteMap, pages::*,
-};
-use once_cell::sync::OnceCell;
+use crate::{components::sidebar::Sidebar, context::SettingsProvider, external::invoke, pages::*};
 use std::sync::atomic::AtomicBool;
-use yew::{Html, classes, function_component, html, platform::spawn_local};
+use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
 mod build_imports;
@@ -16,8 +12,7 @@ mod macros;
 mod models;
 mod pages;
 
-pub static STATIC_SPRITE_MAP: OnceCell<SpriteMap> = OnceCell::new();
-pub static IS_DEKTOP_PLATFORM: OnceCell<bool> = OnceCell::new();
+pub static IS_DEKTOP_PLATFORM: AtomicBool = AtomicBool::new(false);
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 
@@ -26,18 +21,12 @@ pub const RETRY_INTERVAL: u64 = 60; /* Seconds */
 pub const REFRESH_RATE: u64 = 1_000_000; /* Millis */
 
 #[macro_export]
-macro_rules! loop_flag {
-    (history $boolean:literal) => {
-        crate::HISTORY_LOOP_FLAG.store($boolean, std::sync::atomic::Ordering::SeqCst);
+macro_rules! global_bool {
+    (set $varname:ident, $boolean:expr) => {
+        crate::$varname.store($boolean, std::sync::atomic::Ordering::SeqCst)
     };
-    (history) => {
-        crate::HISTORY_LOOP_FLAG.load(std::sync::atomic::Ordering::SeqCst)
-    };
-    (realtime $boolean:literal) => {
-        crate::REALTIME_LOOP_FLAG.store($boolean, std::sync::atomic::Ordering::SeqCst);
-    };
-    (realtime) => {
-        crate::REALTIME_LOOP_FLAG.load(std::sync::atomic::Ordering::SeqCst)
+    (get $varname:ident) => {
+        crate::$varname.load(std::sync::atomic::Ordering::SeqCst)
     };
 }
 
@@ -85,11 +74,11 @@ fn app() -> Html {
 }
 
 fn switch(routes: Route) -> Html {
-    loop_flag!(history true);
+    global_bool!(set HISTORY_LOOP_FLAG, true);
     match routes {
         Route::Home => html! { <Home /> },
         Route::History => {
-            loop_flag!(history false);
+            global_bool!(set HISTORY_LOOP_FLAG, false);
             html! { <History /> }
         }
         Route::Formulas => html! { <Formulas /> },
@@ -103,10 +92,6 @@ fn switch(routes: Route) -> Html {
 }
 
 fn main() {
-    spawn_local(async move {
-        // let _ = STATIC_SPRITE_MAP.set(load_static(url!("/api/static/sprite_map")).await);
-        let _ = IS_DEKTOP_PLATFORM.set(invoke::invoke_checkup());
-
-        yew::Renderer::<App>::new().render();
-    });
+    let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
+    yew::Renderer::<App>::new().render();
 }

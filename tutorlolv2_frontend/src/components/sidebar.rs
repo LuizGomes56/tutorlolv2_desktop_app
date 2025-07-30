@@ -6,13 +6,14 @@ use crate::{
 use yew::{Callback, Event, Html, TargetCast, classes, function_component, html, use_context};
 use yew_router::components::Link;
 
-const ICON_SIZE: &'static str = "24";
+const ICON_SIZE: &'static str = "22";
+
 #[function_component(Sidebar)]
 pub fn sidebar() -> Html {
     let sidebar_classes = classes!(
         "flex",
         "items-center",
-        "gap-2",
+        "gap-3",
         color!(text - 400),
         "font-semibold",
         "w-full",
@@ -29,7 +30,7 @@ pub fn sidebar() -> Html {
         <div class={classes!(
             "bg-[#141417]", "h-screen", "p-4",
             "flex", "flex-col", "w-fit",
-            "border-r-2", color!(border-800),
+            "border-r", color!(border-800),
             "overflow-y-auto", "flex-shrink-0"
         )}>
             <div class={classes!(

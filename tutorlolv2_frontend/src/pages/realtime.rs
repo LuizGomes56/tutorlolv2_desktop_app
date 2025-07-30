@@ -1,10 +1,10 @@
-use crate::{IS_DEKTOP_PLATFORM, external::invoke};
+use crate::{external::invoke, global_bool};
 use web_sys::console;
 use yew::{Html, classes, function_component, html, platform::spawn_local};
 
 #[function_component(Realtime)]
 pub fn realtime() -> Html {
-    if !IS_DEKTOP_PLATFORM.get_or_init(|| false) {
+    if !global_bool!(get IS_DEKTOP_PLATFORM) {
         return html! {
             <div class={classes!(
                 "p-6", "flex-1", "h-screen", "overflow-y-auto",

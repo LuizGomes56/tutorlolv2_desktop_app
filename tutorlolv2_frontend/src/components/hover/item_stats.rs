@@ -19,28 +19,36 @@ pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
 
     html! {
         <div class={classes!(
-            "grid", "gap-x-2", "items-center",
-            "max-w-md", color!(bg-900), "hover-docs",
-            "z-30", "gap-y-2", "leading-none", "text-sm"
+            "grid", "grid-cols-[auto_auto_1fr]", "gap-y-0.5",
+            "gap-x-2", color!(bg-900), "hover-docs", "z-30",
+            "text-sm", "text-left", "items-center",
         )}>
             {
                 for item.prettified_stats.iter().filter_map(|(key, val)| {
                     STATS_URL.get(key).map(|&stat_url| {
                         html! {
-                            <div class={classes!("flex","items-center","gap-2")}>
+                            <>
                                 <img
                                     loading={"lazy"}
-                                    class={classes!("w-3","h-3")}
+                                    class={classes!(
+                                        "min-w-3", "max-w-3", "aspect-square",
+                                    )}
                                     src={stat_url}
                                     alt={""}
                                 />
-                                <span class={classes!(color!(text-300),"font-medium")}>
+                                <span class={classes!(
+                                    color!(text-300), "font-medium",
+                                    "text-nowrap"
+                                )}>
                                     { val }
                                 </span>
-                                <span class={classes!(color!(text-400),"font-normal")}>
+                                <span class={classes!(
+                                    color!(text-400), "font-normal",
+                                    "text-nowrap",
+                                )}>
                                     { key }
                                 </span>
-                            </div>
+                            </>
                         }
                     })
                 })

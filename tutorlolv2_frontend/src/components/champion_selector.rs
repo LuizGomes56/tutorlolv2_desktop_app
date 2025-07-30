@@ -148,7 +148,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 props.callback.reform(move |_| champion_id)
             }}
         >
-            <Image size={20} source={ImageType::Champions(props.champion_id.to_string())} />
+            <Image size={20} source={ImageType::Champions(props.champion_id)} />
             <span>{CHAMPION_ID_TO_NAME.get(props.champion_id).unwrap_or(&"Unknown")}</span>
         </button>
     }

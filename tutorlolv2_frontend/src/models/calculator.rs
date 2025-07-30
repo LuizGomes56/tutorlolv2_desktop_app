@@ -11,7 +11,6 @@ pub struct OutputGame {
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    // #[serde(deserialize_with = "ord_abilities_vec")]
     pub damaging_abilities: Vec<String>,
     pub damaging_items: Vec<u32>,
     pub damaging_runes: Vec<u32>,
@@ -23,7 +22,6 @@ pub struct OutputCurrentPlayer {
 
 #[derive(Debug, Deserialize)]
 pub struct CalculatorDamages {
-    // #[serde(deserialize_with = "ord_abilities_map")]
     pub abilities: Vec<(String, InstanceDamage)>,
     pub items: DamageLike<u32>,
     pub runes: DamageLike<u32>,
@@ -85,7 +83,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: false,
+                infer_stats: true,
                 items: vec![3115],
                 runes: Default::default(),
                 stacks: Default::default(),
