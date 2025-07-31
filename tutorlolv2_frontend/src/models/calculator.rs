@@ -11,7 +11,6 @@ pub struct OutputGame {
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
     pub champion_id: String,
-    pub damaging_abilities: Vec<String>,
     pub damaging_items: Vec<u32>,
     pub damaging_runes: Vec<u32>,
     pub level: u8,
@@ -83,7 +82,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: true,
+                infer_stats: false,
                 items: vec![3115],
                 runes: Default::default(),
                 stacks: Default::default(),

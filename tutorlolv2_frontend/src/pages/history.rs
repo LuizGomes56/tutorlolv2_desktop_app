@@ -131,7 +131,6 @@ pub fn history() -> Html {
                     html! {
                         <div>
                             <BaseTable
-                                damaging_abilities={data.current_player.damaging_abilities.clone()}
                                 damaging_items={data.current_player.damaging_items.clone()}
                                 damaging_runes={data.current_player.damaging_runes.clone()}
                                 champion_id={data.current_player.champion_id.clone()}

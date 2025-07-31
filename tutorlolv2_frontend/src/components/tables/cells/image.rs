@@ -33,7 +33,7 @@ const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intr
 
 #[derive(PartialEq)]
 pub enum Instances {
-    Abilities(String, char, AttrValue),
+    Abilities(AttrValue),
     Items(u32),
     Runes(u32),
     Champions(AttrValue),
@@ -50,65 +50,134 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
         .and_then(|ctx| Some((*ctx).docs))
         .unwrap_or_default();
 
-    let (img_path, content) = match &props.instance {
-        Instances::Abilities(keyname, first_char, champion_id) => match first_char {
-            'A' => (
-                ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
-                match hover_settings {
-                    HoverDocs::Full => html! { hover_docs(BASIC_ATTACK_FORMULA.into(), true) },
-                    _ => html!(),
-                },
-            ),
-            'C' => (
-                ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
-                match hover_settings {
-                    HoverDocs::Full => html! { hover_docs(CRITICAL_STRIKE_FORMULA.into(), true) },
-                    _ => html!(),
-                },
-            ),
-            _ => {
-                let hover_provider = {
-                    match hover_settings {
-                        HoverDocs::Full => CHAMPION_ABILITIES
-                            .get(&champion_id)
-                            .and_then(|&phf_formula_map| {
-                                phf_formula_map.get(keyname).and_then(|&formula| {
-                                    match hover_settings {
-                                        HoverDocs::Full => {
-                                            Some(hover_docs(AttrValue::Static(formula), true))
-                                        }
-                                        _ => None,
-                                    }
-                                })
+    let base_content = |img_path, content| {
+        html! {
+            <div class={classes!(
+                "flex", "items-center", "justify-center",
+                "relative", "cell"
+            )}>
+                <Image class={classes!("w-7", "h-7")} source={img_path} />
+                { content }
+            </div>
+        }
+    };
+
+    let chain_th = |content: Html| {
+        html! {
+            <th class={classes!("group", "min-w-10")}>
+                {content}
+            </th>
+        }
+    };
+
+    match &props.instance {
+        Instances::Abilities(champion_id) => {
+            html! {
+                CHAMPION_ABILITIES
+                    .get(champion_id)
+                    .and_then(|phf_formula_map| {
+                        Some(phf_formula_map
+                            .entries()
+                            .map(|(ability_id, formula)| {
+                                let first_char = ability_id.chars().next().unwrap();
+                                chain_th(
+                                    base_content(
+                                        ImageType::Abilities(format!("{}{}", champion_id, first_char)),
+                                        html! {
+                                            <>
+                                                <span class={classes!("text-[13px]", "img-letter")}>
+                                                    {first_char}
+                                                    <sub>
+                                                        {
+                                                            ability_id
+                                                                .chars()
+                                                                .filter(|c| *c != '_')
+                                                                .skip(1)
+                                                                .take(3)
+                                                                .collect::<String>()
+                                                        }
+                                                    </sub>
+                                                </span>
+                                                {
+                                                    match hover_settings {
+                                                        HoverDocs::Full => hover_docs(
+                                                            AttrValue::Static(formula),
+                                                            true
+                                                        ),
+                                                        _ => html!(),
+                                                    }
+                                                }
+                                            </>
+                                        },
+                                    )
+                                )
                             })
-                            .unwrap_or_default(),
-                        _ => html!(),
-                    }
-                };
-                (
-                    ImageType::Abilities(format!("{}{}", champion_id, first_char)),
-                    html! {
-                        <>
-                            <span class={classes!("text-[13px]", "img-letter")}>
-                                {first_char}
-                                <sub>
-                                    {
-                                        keyname
-                                            .chars()
-                                            .filter(|c| *c != '_')
-                                            .skip(1)
-                                            .take(3)
-                                            .collect::<String>()
-                                    }
-                                </sub>
-                            </span>
-                            {hover_provider}
-                        </>
-                    },
-                )
+                            .chain(std::iter::once(
+                                chain_th(base_content(
+                                    ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
+                                    match hover_settings {
+                                        HoverDocs::Full => html! { hover_docs(BASIC_ATTACK_FORMULA.into(), true) },
+                                        _ => html!(),
+                                    },
+                                ))
+                            ))
+                            .chain(std::iter::once(
+                                chain_th(base_content(
+                                    ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
+                                    match hover_settings {
+                                        HoverDocs::Full => html! { hover_docs(CRITICAL_STRIKE_FORMULA.into(), true) },
+                                        _ => html!(),
+                                    },
+                                ))
+                            ))
+                            .collect::<Html>()
+                        )
+                    })
+                    .unwrap_or_default()
             }
-        },
-        Instances::Items(keyname) => (
+            // _ => {
+            //     let hover_provider = {
+            //         match hover_settings {
+            //             HoverDocs::Full => CHAMPION_ABILITIES
+            //                 .get(&champion_id)
+            //                 .and_then(|&phf_formula_map| {
+            //                     phf_formula_map.get(keyname).and_then(|&formula| {
+            //                         match hover_settings {
+            //                             HoverDocs::Full => {
+            //                                 Some(hover_docs(AttrValue::Static(formula), true))
+            //                             }
+            //                             _ => None,
+            //                         }
+            //                     })
+            //                 })
+            //                 .unwrap_or_default(),
+            //             _ => html!(),
+            //         }
+            //     };
+            //     (
+            //         ImageType::Abilities(format!("{}{}", champion_id, first_char)),
+            //         html! {
+            //             <>
+            //                 <span class={classes!("text-[13px]", "img-letter")}>
+            //                     {first_char}
+            //                     <sub>
+            //                         {
+            //                             keyname
+            //                                 .chars()
+            //                                 .filter(|c| *c != '_')
+            //                                 .skip(1)
+            //                                 .take(3)
+            //                                 .collect::<String>()
+            //                         }
+            //                     </sub>
+            //                 </span>
+            //                 {hover_provider}
+            //             </>
+            //         },
+            //     )
+            // }
+        }
+        Instances::Items(keyname) => base_content(
             ImageType::Items(*keyname),
             match hover_settings {
                 HoverDocs::None => html!(),
@@ -150,7 +219,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                     .unwrap_or_default(),
             },
         ),
-        Instances::Runes(keyname) => (
+        Instances::Runes(keyname) => base_content(
             ImageType::Runes(*keyname),
             match hover_settings {
                 HoverDocs::Full => RUNE_FORMULAS
@@ -160,18 +229,8 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 _ => html!(),
             },
         ),
-        Instances::Champions(champion_id) => (ImageType::Champions(champion_id.clone()), html!()),
-    };
-
-    html! {
-        <>
-            <div class={classes!(
-                "flex", "items-center", "justify-center",
-                "relative", "cell"
-            )}>
-                <Image class={classes!("w-7", "h-7")} source={img_path} />
-                { content }
-            </div>
-        </>
+        Instances::Champions(champion_id) => {
+            base_content(ImageType::Champions(champion_id.clone()), html!())
+        }
     }
 }

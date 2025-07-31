@@ -22,7 +22,6 @@ pub struct Scoreboard {
 
 #[derive(Deserialize, Debug)]
 pub struct CurrentPlayer {
-    pub damaging_abilities: Vec<String>,
     pub damaging_items: Vec<u32>,
     pub damaging_runes: Vec<u32>,
     pub riot_id: String,

@@ -195,7 +195,6 @@ pub fn calculator() -> Html {
                             html! {
                                 <div>
                                     <BaseTable
-                                        damaging_abilities={output_game.current_player.damaging_abilities.clone()}
                                         damaging_items={output_game.current_player.damaging_items.clone()}
                                         damaging_runes={output_game.current_player.damaging_runes.clone()}
                                         champion_id={&current_player_champion_id}
