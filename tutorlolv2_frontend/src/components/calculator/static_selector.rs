@@ -2,7 +2,6 @@ use crate::{
     build_imports::{ITEM_NAME_TO_ID, RUNE_NAME_TO_ID},
     color,
     components::{Image, ImageType, hover::item_stats::ItemStatsHover},
-    url,
 };
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
@@ -22,7 +21,10 @@ pub struct StaticEventProps {
 #[function_component(StaticEvent)]
 pub fn static_event(props: &StaticEventProps) -> Html {
     html! {
-        <div class={classes!("flex", "h-fit", "flex-wrap", "gap-2")}>
+        <div class={classes!(
+            "grid", "gap-4", "grid-cols-8",
+            "h-fit", "w-fit"
+        )}>
             {
                 for props.iterator
                     .iter()
@@ -30,7 +32,11 @@ pub fn static_event(props: &StaticEventProps) -> Html {
                     .map(|(index, id)| {
                         html! {
                             <button
-                                class={classes!("cursor-pointer", "select-none")}
+                                class={classes!(
+                                    "items-center", "gap-2", "text-sm",
+                                    "select-none", "border", "relative",
+                                    color!(border-700), "cursor-pointer"
+                                )}
                                 onclick={{
                                     let remove_callback = props.remove_callback.clone();
                                     Callback::from(move |_| {
@@ -39,10 +45,10 @@ pub fn static_event(props: &StaticEventProps) -> Html {
                                 }}
                             >
                                 <Image
-                                    size={28}
+                                    class={classes!("h-10", "w-10")}
                                     source={
                                         match props.static_iter {
-                                            StaticIterator::Runes => ImageType::Other(url!("/img/runes/{}.avif", id)),
+                                            StaticIterator::Runes => ImageType::Runes(*id),
                                             StaticIterator::Items => ImageType::Items(*id),
                                         }
                                     }
@@ -71,7 +77,7 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
     let selector_memo = use_memo((), |_| {
         html! {
             <div class={classes!(
-                "grid", "gap-2", "grid-cols-10",
+                "grid", "gap-4", "grid-cols-12",
             )}>
                 {
                     for static_iterator
@@ -79,21 +85,12 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                         .enumerate()
                         .map(|(index, (name, id))| {
                             let len = static_iterator.len();
-                            let name_hover = html! {
-                                <span class={classes!(
-                                    "text-left", "font-medium", "text-lg",
-                                    "text-white", "text-nowrap",
-                                    "max-w-64", "truncate",
-                                )}>
-                                    {name}
-                                </span>
-                            };
                             html! {
                                 <button
                                     class={classes!(
                                         "items-center", "gap-2", "text-sm",
                                         "select-none", "border", "relative",
-                                        color!(border-700), "cursor-default"
+                                        color!(border-700),
                                     )}
                                     onclick={{
                                         let insert_callback = props.insert_callback.clone();
@@ -103,29 +100,34 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                     }}
                                 >
                                     <Image
-                                        size={28}
                                         source={
                                             if props.static_iter == StaticIterator::Items {
                                                 ImageType::Items(*id)
                                             } else {
-                                                ImageType::Other(url!("/img/runes/{}.avif", id))
+                                                ImageType::Runes(*id)
                                             }
                                         }
-                                        class={classes!("cursor-pointer", "peer")}
+                                        class={classes!("h-10", "w-10", "peer")}
                                     />
                                     <div class={classes!(
                                         "hidden", "flex-col", "peer-hover:flex",
-                                        "fixed", "z-50", "pt-2", "pb-3", "border",
-                                        color!(border-800), "gap-y-3", "overflow-auto",
+                                        "fixed", "z-50", "py-2", "border",
+                                        color!(border-800), "gap-y-1.5", "overflow-auto",
                                         "max-h-96", "px-3.5", color!(bg-900),
-                                        if index % 10 > 5 {
-                                            "-translate-x-[calc(100%-29px)]"
-                                        } else { "" },
+                                        if index % 12 > 6 {
+                                            "-translate-x-[calc(100%-41px)]"
+                                        } else { "-translate-x-[1px]" },
                                         if index > len.div_ceil(2) && index > 100 {
-                                            "-translate-y-[calc(100%+29px)]"
+                                            "-translate-y-[calc(100%+41px)]"
                                         } else { "translate-y-[1px]" },
                                     )}>
-                                        {name_hover}
+                                        <span class={classes!(
+                                            "text-left", "font-medium", "text-lg",
+                                            "text-white", "text-nowrap",
+                                            "max-w-64", "truncate",
+                                        )}>
+                                            {name}
+                                        </span>
                                         {
                                             if props.static_iter == StaticIterator::Items {
                                                 html! {

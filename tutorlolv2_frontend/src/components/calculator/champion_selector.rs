@@ -3,7 +3,7 @@ use crate::{
     color,
     components::{Image, ImageType},
 };
-use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
+use yew::{AttrValue, Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
@@ -15,12 +15,15 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
     let selector_memo = use_memo((), |_| {
         html! {
             <div class={classes!(
-                "grid", "gap-2", "grid-cols-10",
+                "grid", "gap-4", "grid-cols-12",
+                "w-fit"
             )}>
                 {
                     for CHAMPION_ID_TO_NAME
-                        .keys()
-                        .map(|id| {
+                        .entries()
+                        .enumerate()
+                        .map(|(index, (id, name))| {
+                            let len = CHAMPION_ID_TO_NAME.len();
                             html! {
                                 <button
                                     class={classes!(
@@ -37,10 +40,29 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                                     }}
                                 >
                                     <Image
-                                        size={28}
-                                        source={ImageType::Champions(*id)}
-                                        class={classes!("cursor-pointer")}
+                                        source={ImageType::Champions(AttrValue::Static(*id))}
+                                        class={classes!("h-10", "w-10", "peer")}
                                     />
+                                    <div class={classes!(
+                                        "hidden", "flex-col", "peer-hover:flex",
+                                        "fixed", "z-50", "py-2", "border",
+                                        color!(border-800), "gap-y-1.5", "overflow-auto",
+                                        "max-h-96", "px-3.5", color!(bg-900),
+                                        if index % 12 > 6 {
+                                            "-translate-x-[calc(100%-41px)]"
+                                        } else { "-translate-x-[1px]" },
+                                        if index > len.div_ceil(2) && index > 100 {
+                                            "-translate-y-[calc(100%+41px)]"
+                                        } else { "translate-y-[1px]" },
+                                    )}>
+                                        <span class={classes!(
+                                            "text-left", "font-medium", "text-lg",
+                                            "text-white", "text-nowrap",
+                                            "max-w-64", "truncate",
+                                        )}>
+                                            {name}
+                                        </span>
+                                    </div>
                                 </button>
                             }
                         })

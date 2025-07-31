@@ -7,8 +7,8 @@ use crate::{
 };
 use std::borrow::Cow;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
-    use_callback, use_memo, use_node_ref, use_state,
+    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
+    html, use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
@@ -148,7 +148,7 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 props.callback.reform(move |_| champion_id)
             }}
         >
-            <Image size={20} source={ImageType::Champions(props.champion_id)} />
+            <Image class={classes!("w-5", "h-5")} source={ImageType::Champions(AttrValue::Static(props.champion_id))} />
             <span>{CHAMPION_ID_TO_NAME.get(props.champion_id).unwrap_or(&"Unknown")}</span>
         </button>
     }

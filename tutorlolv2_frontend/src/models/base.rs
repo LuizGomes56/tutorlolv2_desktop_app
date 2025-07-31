@@ -72,12 +72,3 @@ pub struct AbilityLevels {
 pub struct ApiError {
     pub message: String,
 }
-
-#[derive(Debug, Deserialize, Copy, Clone)]
-pub struct SpriteInner {
-    pub f: u8,
-    pub w: u32,
-    pub h: u32,
-    pub x: u32,
-    pub y: u32,
-}

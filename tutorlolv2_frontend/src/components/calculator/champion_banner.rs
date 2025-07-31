@@ -1,7 +1,7 @@
 use crate::{
     build_imports::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME},
     color,
-    components::hover::docs::hover_docs,
+    components::{Image, ImageType, hover::docs::hover_docs},
     context::{HoverDocs, SettingsContext},
     url,
 };
@@ -23,11 +23,9 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
             HoverDocs::Full => "group",
             _ => "",
         })}>
-            <img
-                loading={"lazy"}
+            <Image
                 class={classes!("w-full", "img-clipped", "h-16")}
-                src={url!("/img/centered/{}_0.avif", props.champion_id)}
-                alt={""}
+                source={ImageType::Other(url!("/img/centered/{}_0.avif", props.champion_id).into())}
             />
             <span class={classes!("img-letter", "left-2", "bottom-1", "text-sm")}>
                 {*CHAMPION_ID_TO_NAME.get(&props.champion_id).unwrap_or(&"Unknown")}
@@ -46,7 +44,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                                     "pointer-events-none",
                                     "transition-[visibility,opacity]",
                                     "duration-200", "group-hover:delay-1000",
-                                    "translate-x-[-1px]", "flex", "flex-col",
+                                    "-translate-x-[1px]", "flex", "flex-col",
                                     "fixed", "z-50", "py-3", color!(border-800),
                                     "gap-y-3", "overflow-auto", "max-h-96",
                                     "px-3.5", color!(bg-900), "border",

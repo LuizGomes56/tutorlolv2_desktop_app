@@ -53,14 +53,14 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     let (img_path, content) = match &props.instance {
         Instances::Abilities(keyname, first_char, champion_id) => match first_char {
             'A' => (
-                ImageType::Other(url!("/img/other/basic_attack.png").to_string()),
+                ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
                 match hover_settings {
                     HoverDocs::Full => html! { hover_docs(BASIC_ATTACK_FORMULA.into(), true) },
                     _ => html!(),
                 },
             ),
             'C' => (
-                ImageType::Other(url!("/img/stats/crit_chance.svg").to_string()),
+                ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
                 match hover_settings {
                     HoverDocs::Full => html! { hover_docs(CRITICAL_STRIKE_FORMULA.into(), true) },
                     _ => html!(),
@@ -151,7 +151,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             },
         ),
         Instances::Runes(keyname) => (
-            ImageType::Other(url!("/img/runes/{}.avif", keyname)),
+            ImageType::Runes(*keyname),
             match hover_settings {
                 HoverDocs::Full => RUNE_FORMULAS
                     .get(keyname)
@@ -160,10 +160,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 _ => html!(),
             },
         ),
-        Instances::Champions(champion_id) => (
-            ImageType::Other(url!("/img/champions/{}.avif", champion_id)),
-            html!(),
-        ),
+        Instances::Champions(champion_id) => (ImageType::Champions(champion_id.clone()), html!()),
     };
 
     html! {
@@ -172,7 +169,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 "flex", "items-center", "justify-center",
                 "relative", "cell"
             )}>
-                <Image size={28} source={img_path} />
+                <Image class={classes!("w-7", "h-7")} source={img_path} />
                 { content }
             </div>
         </>

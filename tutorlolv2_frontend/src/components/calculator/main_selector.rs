@@ -1,8 +1,8 @@
 use super::*;
 use crate::color;
 use yew::{
-    Callback, Html, Properties, classes, function_component, html, use_callback, use_memo,
-    use_state,
+    AttrValue, Callback, Html, Properties, classes, function_component, html, use_callback,
+    use_memo, use_state,
 };
 
 #[derive(PartialEq, Properties)]
@@ -12,6 +12,9 @@ pub struct MainSelectorProps {
     pub remove_item_callback: Callback<usize>,
     pub insert_rune_callback: Callback<u32>,
     pub remove_rune_callback: Callback<usize>,
+    pub items_iterator: Vec<u32>,
+    pub runes_iterator: Vec<u32>,
+    pub current_player_champion_id: AttrValue,
 }
 
 #[derive(PartialEq)]
@@ -62,46 +65,50 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
 
     html! {
         <div class={classes!(
-            // "hidden",
+            "hidden",
             "absolute", "top-1/2", "left-1/2",
             "-translate-x-1/2", "-translate-y-1/2",
-            "max-w-2xl", "w-full", "h-2/3",
-            "overflow-y-auto", color!(bg-900),
-            "flex", "flex-col", "gap-4", "p-4",
+            "w-full", "h-full", "overflow-y-auto",
+            color!(bg-900), "flex", "flex-col",
+            "gap-4", "p-4",
         )}>
             {(*tab_buttons).clone()}
             <div class={classes!(
-                if *selected_tab == SelectedTab::Champions {
-                    "block"
-                } else {
-                    "hidden"
-                })}>
+                if *selected_tab == SelectedTab::Champions { "block" }
+                else { "hidden" }
+            )}>
                 <ChampionSelector
-                    set_champion_callback={
-                        props.set_current_player_champion_id_callback.clone()
-                    }
+                    set_champion_callback={props.set_current_player_champion_id_callback.clone()}
                 />
             </div>
             <div class={classes!(
-                if *selected_tab == SelectedTab::Items {
-                    "block"
-                } else {
-                    "hidden"
-                })}>
+                if *selected_tab == SelectedTab::Items { "block" }
+                else { "hidden" },
+                "grid", "grid-cols-[auto_1fr]", "gap-4",
+            )}>
                 <StaticSelector
                     static_iter={StaticIterator::Items}
                     insert_callback={props.insert_item_callback.clone()}
                 />
+                <StaticEvent
+                    iterator={props.items_iterator.clone()}
+                    remove_callback={props.remove_item_callback.clone()}
+                    static_iter={StaticIterator::Items}
+                />
             </div>
             <div class={classes!(
-                if *selected_tab == SelectedTab::Runes {
-                    "block"
-                } else {
-                    "hidden"
-                })}>
+                if *selected_tab == SelectedTab::Runes { "block" }
+                else { "hidden" },
+                "grid", "grid-cols-[auto_1fr]", "gap-4",
+            )}>
                 <StaticSelector
                     static_iter={StaticIterator::Runes}
                     insert_callback={props.insert_rune_callback.clone()}
+                />
+                <StaticEvent
+                    iterator={props.runes_iterator.clone()}
+                    remove_callback={props.remove_rune_callback.clone()}
+                    static_iter={StaticIterator::Runes}
                 />
             </div>
         </div>

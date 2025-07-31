@@ -1,4 +1,7 @@
-use crate::{svg, url};
+use crate::{
+    components::{Image, ImageType},
+    svg, url,
+};
 use std::str::FromStr;
 use yew::{
     AttrValue, Callback, Event, Html, InputEvent, Properties, TargetCast, classes,
@@ -40,11 +43,9 @@ pub struct ExceptionField<T: Numeric> {
 #[function_component(NumericField)]
 pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
     let img_html = html! {
-        <img
-            loading={"lazy"}
+        <Image
             class={classes!("h-7", "w-7")}
-            src={&props.img_url}
-            alt={""}
+            source={ImageType::Other(props.img_url.clone())}
         />
     };
 

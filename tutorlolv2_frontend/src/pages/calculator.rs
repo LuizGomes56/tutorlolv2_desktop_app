@@ -235,6 +235,9 @@ pub fn calculator() -> Html {
                 remove_item_callback={remove_current_player_items}
                 insert_rune_callback={insert_current_player_runes}
                 remove_rune_callback={remove_current_player_runes}
+                items_iterator={input_game.active_player.items.clone()}
+                runes_iterator={input_game.active_player.runes.clone()}
+                current_player_champion_id={current_player_champion_id}
             />
         </>
     }

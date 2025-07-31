@@ -1,4 +1,9 @@
-use crate::{color, components::calculator::ChangeStatsAction, models::base::Stats, url};
+use crate::{
+    color,
+    components::{Image, ImageType, calculator::ChangeStatsAction},
+    models::base::Stats,
+    url,
+};
 use paste::paste;
 use rustc_hash::FxHashMap;
 use yew::{
@@ -19,11 +24,10 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
     html! {
         <>
             <span class={classes!("flex", "items-center", "justify-center", "relative")}>
-                <img
-                    loading={"lazy"}
+
+                <Image
                     class={classes!("h-3.5", "w-3.5")}
-                    src={url!("/img/stats/{}", props.path)}
-                    alt={""}
+                    source={ImageType::Other(url!("/img/stats/{}", props.path).into())}
                 />
             </span>
             <span>{props.display}</span>

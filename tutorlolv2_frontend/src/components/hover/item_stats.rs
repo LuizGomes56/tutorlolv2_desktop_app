@@ -1,5 +1,10 @@
-use crate::{build_imports::ITEM_DESCRIPTIONS, color, macros::STATS_URL};
-use yew::{Html, Properties, classes, function_component, html};
+use crate::{
+    build_imports::ITEM_DESCRIPTIONS,
+    color,
+    components::{Image, ImageType},
+    macros::STATS_URL,
+};
+use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]
 pub struct ItemStatsHoverProps {
@@ -28,13 +33,9 @@ pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
                     STATS_URL.get(key).map(|&stat_url| {
                         html! {
                             <>
-                                <img
-                                    loading={"lazy"}
-                                    class={classes!(
-                                        "min-w-3", "max-w-3", "aspect-square",
-                                    )}
-                                    src={stat_url}
-                                    alt={""}
+                                <Image
+                                    class={classes!("min-w-3", "max-w-3", "aspect-square")}
+                                    source={ImageType::Other(AttrValue::Static(stat_url))}
                                 />
                                 <span class={classes!(
                                     color!(text-300), "font-medium",
