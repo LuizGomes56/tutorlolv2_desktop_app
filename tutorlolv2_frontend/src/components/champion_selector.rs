@@ -1,10 +1,10 @@
 use crate::{
-    build_imports::{CHAMPION_ID_TO_NAME, CHAMPION_NAME_TO_ID},
     color,
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
     svg,
 };
+use generated_code::{CHAMPION_ID_TO_NAME, CHAMPION_NAME_TO_ID};
 use std::borrow::Cow;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,

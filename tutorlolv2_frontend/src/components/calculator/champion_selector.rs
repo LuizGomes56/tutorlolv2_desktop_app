@@ -1,8 +1,8 @@
 use crate::{
-    build_imports::CHAMPION_NAME_TO_ID,
     color,
     components::{Image, ImageType},
 };
+use generated_code::CHAMPION_NAME_TO_ID;
 use yew::{AttrValue, Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]

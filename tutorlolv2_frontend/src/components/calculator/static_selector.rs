@@ -1,8 +1,8 @@
 use crate::{
-    build_imports::{ITEM_NAME_TO_ID, RUNE_NAME_TO_ID},
     color,
     components::{Image, ImageType, hover::item_stats::ItemStatsHover},
 };
+use generated_code::{ITEM_NAME_TO_ID, RUNE_NAME_TO_ID};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Clone, Copy, PartialEq)]

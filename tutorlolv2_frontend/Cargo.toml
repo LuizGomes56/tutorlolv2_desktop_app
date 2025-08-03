@@ -13,6 +13,7 @@ debug = false
 incremental = false
 
 [dependencies]
+generated_code = { path = "generated_code" }
 bincode = { version = "2.0.1", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
 reqwasm = { version = "0.5.0", default-features = false, features = ["http"] }

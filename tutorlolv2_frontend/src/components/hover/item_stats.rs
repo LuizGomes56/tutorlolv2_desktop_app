@@ -1,9 +1,9 @@
 use crate::{
-    build_imports::ITEM_DESCRIPTIONS,
     color,
     components::{Image, ImageType},
     macros::STATS_URL,
 };
+use generated_code::ITEM_DESCRIPTIONS;
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]

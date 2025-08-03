@@ -1,10 +1,11 @@
 use crate::{
-    build_imports::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, FromBrotliBytes},
     color,
     components::{Image, ImageType, hover::docs::hover_docs},
     context::{HoverDocs, SettingsContext},
     url,
+    utils::FromBrotliBytes,
 };
+use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};
 
 #[derive(Properties, PartialEq)]
@@ -49,7 +50,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                                     "gap-y-3", "overflow-auto", "max-h-96",
                                     "px-3.5", color!(bg-900), "border",
                                 )}>
-                                    {hover_docs(AttrValue::from(formula.to_string()), false)}
+                                    {hover_docs(AttrValue::Static(formula.as_str()), false)}
                                 </div>
                             })
                         }

@@ -3,7 +3,6 @@ use std::sync::atomic::AtomicBool;
 use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
-mod build_imports;
 mod components;
 mod context;
 mod external;
@@ -11,6 +10,7 @@ mod hooks;
 mod macros;
 mod models;
 mod pages;
+mod utils;
 
 pub static IS_DEKTOP_PLATFORM: AtomicBool = AtomicBool::new(false);
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
