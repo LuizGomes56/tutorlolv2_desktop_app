@@ -1,5 +1,5 @@
 use crate::{
-    build_imports::CHAMPION_ID_TO_NAME,
+    build_imports::{CHAMPION_ID_TO_NAME, CHAMPION_NAME_TO_ID},
     color,
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
@@ -59,10 +59,10 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
     };
 
     let all_champions = use_memo(callback, |callback| {
-        CHAMPION_ID_TO_NAME
+        CHAMPION_NAME_TO_ID
             .entries()
             .enumerate()
-            .map(|(index, (champion_id, champion_name))| {
+            .map(|(index, (champion_name, champion_id))| {
                 let html = html! {
                     <ChampionOptions
                         key={index}

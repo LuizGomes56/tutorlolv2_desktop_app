@@ -1,5 +1,5 @@
 use crate::{
-    build_imports::CHAMPION_ID_TO_NAME,
+    build_imports::CHAMPION_NAME_TO_ID,
     color,
     components::{Image, ImageType},
 };
@@ -19,11 +19,11 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                 "w-fit"
             )}>
                 {
-                    for CHAMPION_ID_TO_NAME
+                    for CHAMPION_NAME_TO_ID
                         .entries()
                         .enumerate()
-                        .map(|(index, (id, name))| {
-                            let len = CHAMPION_ID_TO_NAME.len();
+                        .map(|(index, (name, id))| {
+                            let len = CHAMPION_NAME_TO_ID.len();
                             html! {
                                 <button
                                     class={classes!(

@@ -1,5 +1,5 @@
 use crate::{
-    build_imports::{CHAMPION_ABILITIES, ITEM_FORMULAS, RUNE_FORMULAS},
+    build_imports::{CHAMPION_ABILITIES, FromBrotliBytes, ITEM_FORMULAS, RUNE_FORMULAS},
     color,
     components::{
         Image, ImageType,
@@ -101,7 +101,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                                 {
                                                     match hover_settings {
                                                         HoverDocs::Full => hover_docs(
-                                                            AttrValue::Static(formula),
+                                                            AttrValue::from(formula.to_string()),
                                                             true
                                                         ),
                                                         _ => html!(),
@@ -144,7 +144,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             //                     phf_formula_map.get(keyname).and_then(|&formula| {
             //                         match hover_settings {
             //                             HoverDocs::Full => {
-            //                                 Some(hover_docs(AttrValue::Static(formula), true))
+            //                                 Some(hover_docs(AttrValue::from(formula.to_string()), true))
             //                             }
             //                             _ => None,
             //                         }
@@ -202,7 +202,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 "overflow-auto", "max-h-96", "px-3.5",
                             )}>
                                 <ItemStatsHover item_id={keyname} />
-                                {hover_docs(AttrValue::Static(formula), false)}
+                                {hover_docs(AttrValue::from(formula.to_string()), false)}
                             </div>
                         }),
                         _ => Some(html! {
@@ -224,7 +224,9 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             match hover_settings {
                 HoverDocs::Full => RUNE_FORMULAS
                     .get(keyname)
-                    .and_then(|formula| Some(hover_docs(AttrValue::Static(formula), true)))
+                    .and_then(|formula| {
+                        Some(hover_docs(AttrValue::from(formula.to_string()), true))
+                    })
                     .unwrap_or_default(),
                 _ => html!(),
             },
