@@ -157,6 +157,8 @@ pub struct ExceptionSelectorProps {
     pub set_current_player_infer_stats: Callback<bool>,
 }
 
+const SIZE_SVG: &'static str = "32";
+
 /// Pending
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
@@ -196,7 +198,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         html! {
                             <BooleanField
                                 callback={props.set_current_player_attack_form.clone()}
-                                image_html={svg!("../../../public/svgs/shift", "28")}
+                                image_html={svg!("../../../public/svgs/shift", SIZE_SVG)}
                                 title={"Toggle if this champion is melee or ranged"}
                             />
                         }
@@ -208,7 +210,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             }
             <BooleanField
                 callback={props.set_current_player_infer_stats.clone()}
-                image_html={svg!("../../../public/svgs/infer", "28")}
+                image_html={svg!("../../../public/svgs/infer", SIZE_SVG)}
                 title={"Determine if this champion's stats will be based on its items, or manually inserted"}
             />
         </div>

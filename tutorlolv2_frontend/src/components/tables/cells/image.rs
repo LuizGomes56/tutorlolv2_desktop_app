@@ -6,7 +6,7 @@ use crate::{
     },
     context::{HoverDocs, SettingsContext},
     url,
-    utils::FromBrotliBytes,
+    utils::{FromBrotliBytes, StringExt},
 };
 use generated_code::{CHAMPION_ABILITIES, ITEM_FORMULAS, RUNE_FORMULAS};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};
@@ -80,24 +80,17 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                         Some(phf_formula_map
                             .entries()
                             .map(|(ability_name, formula)| {
-                                let first_char = ability_name.chars().next().unwrap();
+                                let first_char = ability_name.first_char();
                                 chain_th(
                                     base_content(
-                                        ImageType::Abilities(format!("{}{}", champion_id, first_char)),
+                                        ImageType::Abilities(
+                                            champion_id.concat_char(first_char),
+                                        ),
                                         html! {
                                             <>
                                                 <span class={classes!("text-sm", "img-letter")}>
                                                     {first_char}
-                                                    <sub>
-                                                        {
-                                                            ability_name
-                                                                .chars()
-                                                                .filter(|c| *c != '_')
-                                                                .skip(1)
-                                                                .take(3)
-                                                                .collect::<String>()
-                                                        }
-                                                    </sub>
+                                                    <sub>{ ability_name.padding_chars() }</sub>
                                                 </span>
                                                 {
                                                     match hover_settings {

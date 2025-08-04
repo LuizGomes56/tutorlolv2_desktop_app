@@ -1,12 +1,13 @@
 body {
     color: #ffffff;
-    font-family: Oxanium, Roboto, sans-serif, arial, helvetica, serif;
+    font-family: Oxanium, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 .img-letter {
     position: absolute;
     color: white;
     font-weight: 700;
+    font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     filter: drop-shadow(1.25px 1.25px 0px black);
     text-shadow: 0px 0px 4px black;
 }

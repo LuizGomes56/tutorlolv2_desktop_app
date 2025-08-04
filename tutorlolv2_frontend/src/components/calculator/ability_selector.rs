@@ -1,6 +1,7 @@
 use crate::{
     components::{Image, ImageType, calculator::ChangeAbilityLevelsAction},
     models::base::AbilityLevels,
+    utils::StringExt,
 };
 use paste::paste;
 use yew::{
@@ -10,7 +11,7 @@ use yew::{
 
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorContainerProps {
-    pub text: &'static str,
+    pub text: char,
     pub current_player_champion_id: AttrValue,
     pub value: u8,
     pub oninput: Callback<InputEvent>,
@@ -27,11 +28,9 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
                 <Image
                     class={classes!("w-8", "h-8")}
                     source={ImageType::Abilities(
-                        format!(
-                            "{}{}",
-                            &props.current_player_champion_id,
-                            props.text
-                        )
+                        props.current_player_champion_id
+                            .as_str()
+                            .concat_char(props.text),
                     )}
                 />
             </div>
@@ -56,12 +55,12 @@ pub struct AbilitySelectorProps {
 #[function_component(AbilitySelector)]
 pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
     macro_rules! ability_cell {
-        ($field:ident) => {
+        ($field:ident, $char:literal) => {
             paste! {
                 html! {
                     <AbilitySelectorContainer
                         value={props.ability_levels.$field}
-                        text={stringify!([<$field:upper>])}
+                        text={$char}
                         current_player_champion_id={props.current_player_champion_id.clone()}
                         oninput={{
                             let callback = props.callback.clone();
@@ -85,10 +84,10 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
         <div class={classes!(
             "flex", "flex-col", "gap-2",
         )}>
-            {ability_cell!(q)}
-            {ability_cell!(w)}
-            {ability_cell!(e)}
-            {ability_cell!(r)}
+            {ability_cell!(q, 'Q')}
+            {ability_cell!(w, 'W')}
+            {ability_cell!(e, 'E')}
+            {ability_cell!(r, 'R')}
         </div>
     }
 }
