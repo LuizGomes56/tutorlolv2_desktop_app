@@ -220,6 +220,7 @@ pub fn calculator() -> Html {
                                                 .collect::<Html>()
                                         }
                                     />
+                                    <DamageStackSelector champion_id={&current_player_champion_id} />
                                 </div>
                             }
                         } else {

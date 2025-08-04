@@ -24,7 +24,6 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
     html! {
         <>
             <span class={classes!("flex", "items-center", "justify-center", "relative")}>
-
                 <Image
                     class={classes!("h-3.5", "w-3.5")}
                     source={ImageType::Other(url!("/img/stats/{}", props.path).into())}
@@ -126,7 +125,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
     html! {
         <div class={classes!(
             "grid", "grid-cols-[auto_auto_1fr]", "text-white", "items-center",
-            "gap-x-3", "text-sm", "gap-y-1", "px-4"
+            "gap-x-3", "gap-y-0.5", "px-4"
         )}>
             <StatsCell<u8>
                 path={"level.svg"}

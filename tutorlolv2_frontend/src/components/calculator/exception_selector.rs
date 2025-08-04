@@ -44,7 +44,7 @@ pub struct ExceptionField<T: Numeric> {
 pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
     let img_html = html! {
         <Image
-            class={classes!("h-7", "w-7")}
+            class={classes!("h-8", "w-8")}
             source={ImageType::Other(props.img_url.clone())}
         />
     };
@@ -69,7 +69,7 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
                             >
                                 {img_html}
                                 <span class={classes!(
-                                    "text-[13px]", "img-letter"
+                                    "text-sm", "img-letter"
                                 )}>
                                     {"S"}
                                 </span>

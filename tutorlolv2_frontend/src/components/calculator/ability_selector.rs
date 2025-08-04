@@ -23,9 +23,9 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
             "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
         )}>
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
-                <span class={classes!("text-[13px]", "img-letter")}>{props.text}</span>
+                <span class={classes!("text-sm", "img-letter")}>{props.text}</span>
                 <Image
-                    class={classes!("w-7", "h-7")}
+                    class={classes!("w-8", "h-8")}
                     source={ImageType::Abilities(
                         format!(
                             "{}{}",

@@ -57,7 +57,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 "flex", "items-center", "justify-center",
                 "relative", "cell"
             )}>
-                <Image class={classes!("w-7", "h-7")} source={img_path} />
+                <Image class={classes!("w-8", "h-8")} source={img_path} />
                 { content }
             </div>
         }
@@ -79,18 +79,18 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                     .and_then(|phf_formula_map| {
                         Some(phf_formula_map
                             .entries()
-                            .map(|(ability_id, formula)| {
-                                let first_char = ability_id.chars().next().unwrap();
+                            .map(|(ability_name, formula)| {
+                                let first_char = ability_name.chars().next().unwrap();
                                 chain_th(
                                     base_content(
                                         ImageType::Abilities(format!("{}{}", champion_id, first_char)),
                                         html! {
                                             <>
-                                                <span class={classes!("text-[13px]", "img-letter")}>
+                                                <span class={classes!("text-sm", "img-letter")}>
                                                     {first_char}
                                                     <sub>
                                                         {
-                                                            ability_id
+                                                            ability_name
                                                                 .chars()
                                                                 .filter(|c| *c != '_')
                                                                 .skip(1)
@@ -136,47 +136,6 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                     })
                     .unwrap_or_default()
             }
-            // _ => {
-            //     let hover_provider = {
-            //         match hover_settings {
-            //             HoverDocs::Full => CHAMPION_ABILITIES
-            //                 .get(&champion_id)
-            //                 .and_then(|&phf_formula_map| {
-            //                     phf_formula_map.get(keyname).and_then(|&formula| {
-            //                         match hover_settings {
-            //                             HoverDocs::Full => {
-            //                                 Some(hover_docs(AttrValue::Static(formula.as_str()), true))
-            //                             }
-            //                             _ => None,
-            //                         }
-            //                     })
-            //                 })
-            //                 .unwrap_or_default(),
-            //             _ => html!(),
-            //         }
-            //     };
-            //     (
-            //         ImageType::Abilities(format!("{}{}", champion_id, first_char)),
-            //         html! {
-            //             <>
-            //                 <span class={classes!("text-[13px]", "img-letter")}>
-            //                     {first_char}
-            //                     <sub>
-            //                         {
-            //                             keyname
-            //                                 .chars()
-            //                                 .filter(|c| *c != '_')
-            //                                 .skip(1)
-            //                                 .take(3)
-            //                                 .collect::<String>()
-            //                         }
-            //                     </sub>
-            //                 </span>
-            //                 {hover_provider}
-            //             </>
-            //         },
-            //     )
-            // }
         }
         Instances::Items(keyname) => base_content(
             ImageType::Items(*keyname),
