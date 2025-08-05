@@ -219,7 +219,11 @@ pub fn calculator() -> Html {
                                                 .collect::<Html>()
                                         }
                                     />
-                                    <DamageStackSelector champion_id={&current_player_champion_id} />
+                                    <DamageStackSelector
+                                        items={output_game.current_player.damaging_items.clone()}
+                                        runes={output_game.current_player.damaging_runes.clone()}
+                                        champion_id={&current_player_champion_id}
+                                    />
                                 </div>
                             }
                         } else {

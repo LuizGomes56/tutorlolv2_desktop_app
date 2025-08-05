@@ -1,8 +1,5 @@
 use crate::{color, hooks::mouseout::use_mouseout, svg};
-use yew::{
-    Callback, Html, Properties, classes, function_component, html, use_callback, use_node_ref,
-    use_state,
-};
+use yew::{Callback, Html, Properties, classes, function_component, html, use_node_ref, use_state};
 
 #[derive(Properties, PartialEq)]
 pub struct DropdownProps<const N: usize> {
@@ -25,7 +22,10 @@ pub fn dropdown<const N: usize>(props: &DropdownProps<N>) -> Html {
         )
     };
 
-    let onclick = use_callback(is_open.clone(), move |_, is_open| is_open.set(!**is_open));
+    let onclick = {
+        let is_open = is_open.clone();
+        Callback::from(move |_| is_open.set(!*is_open))
+    };
 
     html! {
         <div class={classes!("relative")}>

@@ -12,6 +12,16 @@ macro_rules! color {
     ($property:ident-$weight:literal) => {
         concat!(stringify!($property), "-", color!(@inner), "-", $weight)
     };
+    (checked:$property:ident-$weight:literal) => {
+        concat!(
+            "has-[:checked]:",
+            stringify!($property),
+            "-",
+            color!(@inner),
+            "-",
+            $weight
+        )
+    };
     ($property:ident-$alignment:ident-$weight:literal) => {
         concat!(
             stringify!($property),

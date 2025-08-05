@@ -1,4 +1,7 @@
-use crate::{components::sidebar::Sidebar, context::SettingsProvider, external::invoke, pages::*};
+use crate::{
+    components::sidebar::Sidebar, context::SettingsProvider, external::invoke, pages::*,
+    utils::init_cache,
+};
 use std::sync::atomic::AtomicBool;
 use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
@@ -95,6 +98,7 @@ fn switch(routes: Route) -> Html {
 }
 
 fn main() {
+    init_cache();
     let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
     yew::Renderer::<App>::new().render();
 }

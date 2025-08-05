@@ -1,4 +1,4 @@
-use crate::utils::FromBrotliBytes;
+use crate::utils::ComptimeCache;
 use generated_code::CHAMPION_FORMULAS;
 use yew::{AttrValue, Html, Properties, classes, function_component, html, virtual_dom::VNode};
 

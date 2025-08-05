@@ -6,7 +6,7 @@ use crate::{
     },
     context::{HoverDocs, SettingsContext},
     url,
-    utils::{FromBrotliBytes, StringExt},
+    utils::{ComptimeCache, StringExt},
 };
 use generated_code::{CHAMPION_ABILITIES, ITEM_FORMULAS, RUNE_FORMULAS};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};

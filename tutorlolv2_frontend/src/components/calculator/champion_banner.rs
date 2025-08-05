@@ -3,7 +3,7 @@ use crate::{
     components::{Image, ImageType, hover::docs::hover_docs},
     context::{HoverDocs, SettingsContext},
     url,
-    utils::FromBrotliBytes,
+    utils::ComptimeCache,
 };
 use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};

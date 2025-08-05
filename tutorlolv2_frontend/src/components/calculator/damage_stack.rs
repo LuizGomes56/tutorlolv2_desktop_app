@@ -4,7 +4,7 @@ use crate::{
     utils::{BytesExt, StringExt},
 };
 use generated_code::CHAMPION_ABILITIES;
-use std::{fmt::Debug, rc::Rc};
+use std::rc::Rc;
 use yew::{
     AttrValue, Callback, Html, Properties, Reducible, classes, function_component, html,
     use_callback, use_effect_with, use_memo, use_reducer,
@@ -13,11 +13,6 @@ use yew::{
 #[function_component(DamageStackTable)]
 pub fn damage_stack_table() -> Html {
     html! {}
-}
-
-#[derive(Properties, PartialEq)]
-pub struct DamageStackSelectorProps {
-    pub champion_id: AttrValue,
 }
 
 const ABILITY_STR_SIZE: usize = 15;
@@ -82,6 +77,13 @@ impl std::fmt::Debug for StackValue {
     }
 }
 
+#[derive(Properties, PartialEq)]
+pub struct DamageStackSelectorProps {
+    pub champion_id: AttrValue,
+    pub items: Vec<u32>,
+    pub runes: Vec<u32>,
+}
+
 #[function_component(DamageStackSelector)]
 pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
     let damage_stack = use_reducer(Stack::default);
@@ -129,7 +131,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
                             push_callback.emit(StackValue::BasicAttack)
                         })
                     },
-                    html!(),
+                    None,
                 )}
                 {base_content(
                     ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
@@ -139,7 +141,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
                             push_callback.emit(StackValue::CriticalStrike)
                         })
                     },
-                    html!(),
+                    None,
                 )}
             </>
         }
@@ -148,40 +150,82 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
     let abilities_memo = use_memo(
         (props.champion_id.clone(), push_callback.clone()),
         move |(champion_id, push_callback)| {
-            {
-                CHAMPION_ABILITIES
-                    .get(champion_id)
-                    .and_then(|value| {
-                        Some(
-                            value
-                                .keys()
-                                .map(|ability_name| {
-                                    let first_char = ability_name.first_char();
-                                    base_content(
-                                        ImageType::Abilities(
-                                            props.champion_id.as_str().concat_char(first_char),
-                                        ),
-                                        {
-                                            let push_callback = push_callback.clone();
-                                            Callback::from(move |_| {
-                                                push_callback.emit(StackValue::Ability(
-                                                    ability_name
-                                                        .to_sized_slice::<ABILITY_STR_SIZE>(),
-                                                ));
-                                            })
-                                        },
-                                        html! {
-                                            <span class={classes!("text-sm", "img-letter")}>
-                                                {first_char}
-                                                <sub>{ ability_name.padding_chars() }</sub>
-                                            </span>
-                                        },
-                                    )
-                                })
-                                .collect::<Html>(),
-                        )
-                    })
-                    .unwrap_or_default()
+            html! {
+                <>
+                    {
+                        CHAMPION_ABILITIES
+                            .get(champion_id)
+                            .and_then(|value| {
+                                Some(
+                                    value
+                                        .keys()
+                                        .map(|ability_name| {
+                                            let first_char = ability_name.first_char();
+                                            base_content(
+                                                ImageType::Abilities(
+                                                    props.champion_id.as_str().concat_char(first_char),
+                                                ),
+                                                {
+                                                    let push_callback = push_callback.clone();
+                                                    Callback::from(move |_| {
+                                                        push_callback.emit(StackValue::Ability(
+                                                            ability_name
+                                                                .to_sized_slice::<ABILITY_STR_SIZE>(),
+                                                        ));
+                                                    })
+                                                },
+                                                Some(html! {
+                                                    <span class={classes!("text-sm", "img-letter")}>
+                                                        {first_char}
+                                                        <sub>{ ability_name.padding_chars() }</sub>
+                                                    </span>
+                                                }),
+                                            )
+                                        })
+                                        .collect::<Html>(),
+                                )
+                            })
+                            .unwrap_or_default()
+                    }
+                    {
+                        props
+                            .items
+                            .iter()
+                            .map(|item_id| {
+                                base_content(
+                                    ImageType::Items(*item_id),
+                                    {
+                                        let push_callback = push_callback.clone();
+                                        let item_id = *item_id;
+                                        Callback::from(move |_| {
+                                            push_callback.emit(StackValue::Item(item_id))
+                                        })
+                                    },
+                                    None,
+                                )
+                            })
+                            .collect::<Html>()
+                    }
+                    {
+                        props
+                            .runes
+                            .iter()
+                            .map(|rune_id| {
+                                base_content(
+                                    ImageType::Runes(*rune_id),
+                                    {
+                                        let push_callback = push_callback.clone();
+                                        let rune_id = *rune_id;
+                                        Callback::from(move |_| {
+                                            push_callback.emit(StackValue::Rune(rune_id))
+                                        })
+                                    },
+                                    None,
+                                )
+                            })
+                            .collect::<Html>()
+                    }
+                </>
             }
         },
     );
