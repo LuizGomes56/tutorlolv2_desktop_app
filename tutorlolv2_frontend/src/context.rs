@@ -6,10 +6,20 @@ use yew::{
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub enum HoverDocs {
+    None = 0,
+    Partial = 1,
     #[default]
-    Full,
-    Partial,
-    None,
+    Full = 2,
+}
+
+impl From<usize> for HoverDocs {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => HoverDocs::None,
+            1 => HoverDocs::Partial,
+            _ => HoverDocs::Full,
+        }
+    }
 }
 
 #[derive(PartialEq, Default, Copy, Clone)]

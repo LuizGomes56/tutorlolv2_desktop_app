@@ -48,6 +48,9 @@ pub enum Route {
     #[at("/calculator")]
     Calculator,
 
+    #[at("/settings")]
+    Settings,
+
     #[at("/child_process/:id")]
     ChildProcess { id: u8 },
 }
@@ -62,8 +65,7 @@ fn app() -> Html {
                 )}>
                     <Sidebar />
                     <div class={classes!(
-                        "flex", "flex-1",
-                        color!(bg-900)
+                        "flex", "flex-1", "bg-[#141417]",
                     )}>
                         <Switch<Route> render={switch} />
                     </div>
@@ -88,6 +90,7 @@ fn switch(routes: Route) -> Html {
             1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },
         },
+        Route::Settings => html! { <Settings /> },
     }
 }
 

@@ -73,7 +73,7 @@ impl Default for InputGame {
     fn default() -> Self {
         Self {
             active_player: InputActivePlayer {
-                champion_id: "Neeko",
+                champion_id: "Vex",
                 champion_stats: Default::default(),
                 abilities: AbilityLevels {
                     q: 5,

@@ -125,7 +125,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
     html! {
         <div class={classes!(
             "grid", "grid-cols-[auto_auto_1fr]", "text-white", "items-center",
-            "gap-x-3", "gap-y-0.5", "px-4"
+            "gap-x-3", "gap-y-1", "px-4"
         )}>
             <StatsCell<u8>
                 path={"level.svg"}

@@ -145,18 +145,17 @@ pub fn calculator() -> Html {
     html! {
         <>
             <div class={classes!(
-                "h-screen", "overflow-y-auto",
+                "h-screen", "overflow-y-auto", "oxanium",
                 "gap-4", "grid", "grid-cols-[auto_1fr]",
             )}>
                 <div class={classes!(
-                    "flex", "flex-col", "gap-4", "w-56"
+                    "flex", "flex-col", "gap-4", "w-56", "bg-[#121214]"
                 )}>
                     <ChampionBanner
                         champion_id={&current_player_champion_id}
                     />
                     <div class={classes!(
-                        "grid", "grid-cols-2", "gap-x-2",
-                        "px-4"
+                        "grid", "grid-cols-2", "gap-x-2", "px-4"
                     )}>
                         <AbilitySelector
                             ability_levels={input_game.active_player.abilities}

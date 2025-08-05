@@ -45,7 +45,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                                     "pointer-events-none",
                                     "transition-[visibility,opacity]",
                                     "duration-200", "group-hover:delay-1000",
-                                    "-translate-x-[1px]", "flex", "flex-col",
+                                    "flex", "flex-col",
                                     "fixed", "z-50", "py-3", color!(border-800),
                                     "gap-y-3", "overflow-auto", "max-h-96",
                                     "px-3.5", color!(bg-900), "border",
