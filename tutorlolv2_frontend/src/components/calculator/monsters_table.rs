@@ -11,52 +11,51 @@ pub struct MonstersTableProps {
 
 #[function_component(MonstersTable)]
 pub fn monsters_table(props: &MonstersTableProps) -> Html {
+    macro_rules! table_head {
+        ($name:ident, $extension:literal) => {
+            paste::paste! {
+                html! {
+                    <th
+                        title={stringify!([<$name:snake:camel>])}
+                        class={classes!("min-w-10", "h-10", "justify-items-center")}
+                    >
+                        <Image
+                            class={classes!("w-8", "h-8")}
+                            source={ImageType::Other(
+                                AttrValue::Static(
+                                    concat!(
+                                        url!(@inner),
+                                        "/img/other/",
+                                        stringify!($name),
+                                        ".",
+                                        $extension
+                                    )
+                                )
+                            ) }
+                        />
+                    </th>
+                }
+            }
+        };
+    }
+
     let header_memo = use_memo((), move |_| {
         html! {
             <thead>
                 <tr>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/tower.webp"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/dragon.avif"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/baron.avif"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/melee_minion.avif"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/ranged_minion.avif"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/super_minion.avif"))) }
-                        />
-                    </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                        <Image
-                            class={classes!("w-8", "h-8")}
-                            source={ImageType::Other(AttrValue::Static(url!("/img/other/red_buff.avif"))) }
-                        />
-                    </th>
+                    {table_head!(tower, "webp")}
+                    {table_head!(dragon, "avif")}
+                    {table_head!(baron, "avif")}
+                    {table_head!(atakhan, "avif")}
+                    {table_head!(voidgrubs, "avif")}
+                    {table_head!(melee_minion, "avif")}
+                    {table_head!(ranged_minion, "avif")}
+                    {table_head!(super_minion, "avif")}
+                    {table_head!(red_buff, "avif")}
+                    {table_head!(gromp, "avif")}
+                    {table_head!(krug, "avif")}
+                    {table_head!(wolves, "avif")}
+                    {table_head!(raptor, "avif")}
                 </tr>
             </thead>
         }

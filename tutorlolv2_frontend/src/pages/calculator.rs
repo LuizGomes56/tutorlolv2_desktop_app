@@ -331,6 +331,12 @@ pub fn calculator() -> Html {
                                                 {make_td(1529.0)}
                                                 {make_td(1529.0)}
                                                 {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
                                             </tr>
                                         }}
                                     />
