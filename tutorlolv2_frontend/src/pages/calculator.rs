@@ -9,7 +9,9 @@ use crate::{
     external::api::{decode_bytes, send_bytes},
     models::calculator::{InputGame, OutputGame},
     url,
+    utils::BytesExt,
 };
+use generated_code::CHAMPION_ABILITIES;
 use rustc_hash::FxHashSet;
 use web_sys::AbortController;
 use yew::{
@@ -22,6 +24,7 @@ pub fn calculator() -> Html {
     let input_game = use_reducer(InputGame::default);
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
+    let damage_stack = use_reducer(Stack::default);
 
     let current_player_champion_id = AttrValue::Static((*input_game).active_player.champion_id);
 
@@ -103,6 +106,22 @@ pub fn calculator() -> Html {
             input_game.dispatch(InputGameAction::SetCurrentPlayerInferStats(v));
         })
     };
+    let push_stack_callback = {
+        let damage_stack = damage_stack.clone();
+        use_callback((), move |v, _| {
+            damage_stack.dispatch(StackAction::Push(v));
+        })
+    };
+    let remove_stack_callback = {
+        let damage_stack = damage_stack.clone();
+        use_callback((), move |v, _| {
+            damage_stack.dispatch(StackAction::Remove(v));
+        })
+    };
+
+    use_effect_with(damage_stack.clone(), move |damage_stack| {
+        web_sys::console::log_1(&format!("{:#?}", damage_stack.get_owned()).into());
+    });
 
     {
         let output_game = output_game.clone();
@@ -223,6 +242,83 @@ pub fn calculator() -> Html {
                                         items={output_game.current_player.damaging_items.clone()}
                                         runes={output_game.current_player.damaging_runes.clone()}
                                         champion_id={&current_player_champion_id}
+                                        stack={(*damage_stack).get_owned()}
+                                        push_callback={push_stack_callback}
+                                        remove_callback={remove_stack_callback}
+                                        damages={
+                                            enemies
+                                                .iter()
+                                                .map(|(enemy_champion_id, enemy)| {
+                                                    let mut total_damage = 0.0;
+                                                    for value in (*damage_stack).get_ref() {
+                                                        match value {
+                                                            StackValue::Ability(bytes) => {
+                                                                let ability_name = bytes.as_str_unchecked();
+                                                                if let Some(abilities_phf) = CHAMPION_ABILITIES.get(&current_player_champion_id) {
+                                                                    if let Some(index) = abilities_phf.get_index(ability_name) {
+                                                                        if let Some((_, instance_damage)) = enemy.damages.abilities.get(index) {
+                                                                            total_damage += instance_damage.minimum_damage
+                                                                             + instance_damage.maximum_damage;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            StackValue::BasicAttack => {
+                                                                let len = enemy.damages.abilities.len();
+                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
+                                                                    total_damage += instance_damage.minimum_damage
+                                                                     + instance_damage.maximum_damage;
+                                                                }
+                                                            }
+                                                            StackValue::CriticalStrike => {
+                                                                let len = enemy.damages.abilities.len();
+                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 1) {
+                                                                    total_damage += instance_damage.minimum_damage
+                                                                     + instance_damage.maximum_damage;
+                                                                }
+                                                            },
+                                                            StackValue::Item(item_id) => {
+                                                                if let Ok(index) = enemy.damages.items.binary_search_by_key(item_id, |(key, _)| *key) {
+                                                                    let instance_damage = &enemy.damages.items[index].1;
+                                                                    total_damage += instance_damage.minimum_damage + instance_damage.maximum_damage;
+                                                                }
+                                                            },
+                                                            StackValue::Rune(rune_id) => {
+                                                                if let Ok(index) = enemy.damages.runes.binary_search_by_key(rune_id, |(key, _)| *key) {
+                                                                    let instance_damage = &enemy.damages.runes[index].1;
+                                                                    total_damage += instance_damage.minimum_damage + instance_damage.maximum_damage;
+                                                                }
+                                                            },
+                                                            _ => {},
+                                                        }
+                                                    }
+                                                    let make_td = |text| -> Html {
+                                                        html! {
+                                                            <td class={classes!{
+                                                                "text-center", "text-sm", "px-2",
+                                                                "max-w-24", "truncate", "text-violet-500",
+                                                            }}>
+                                                                {text}
+                                                            </td>
+                                                        }
+                                                    };
+                                                    html! {
+                                                        <tr>
+                                                            <td class={classes!("w-10", "h-10")}>
+                                                                <ImageCell
+                                                                    instance={Instances::Champions(
+                                                                        AttrValue::from((*enemy_champion_id).clone()),
+                                                                    )}
+                                                                />
+                                                            </td>
+                                                            {make_td(total_damage.round())}
+                                                            {make_td((enemy.current_stats.health - total_damage).round())}
+                                                            {make_td((total_damage / enemy.current_stats.health * 100.0).round())}
+                                                        </tr>
+                                                    }
+                                                })
+                                                .collect::<Html>()
+                                        }
                                     />
                                 </div>
                             }

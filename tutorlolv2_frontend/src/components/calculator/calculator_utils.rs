@@ -1,8 +1,9 @@
-#![allow(dead_code)]
-
-use crate::models::{
-    base::{AbilityLevels, BasicStats, Stats},
-    calculator::InputGame,
+use crate::{
+    models::{
+        base::{AbilityLevels, BasicStats, Stats},
+        calculator::InputGame,
+    },
+    utils::BytesExt,
 };
 use paste::paste;
 use std::{rc::Rc, u32};
@@ -211,5 +212,73 @@ impl Reducible for InputGame {
         }
 
         Rc::new(new_state)
+    }
+}
+
+pub const ABILITY_STR_SIZE: usize = 15;
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum StackValue {
+    Ability([u8; ABILITY_STR_SIZE]),
+    Item(u32),
+    Rune(u32),
+    BasicAttack,
+    CriticalStrike,
+    Ignite,
+}
+
+pub enum StackAction {
+    Push(StackValue),
+    Remove(usize),
+}
+
+#[derive(Clone, PartialEq, Default)]
+pub struct Stack(Vec<StackValue>);
+
+impl Stack {
+    pub fn get_owned(&self) -> Vec<StackValue> {
+        self.0.clone()
+    }
+    pub fn get_ref(&self) -> &[StackValue] {
+        &self.0
+    }
+    pub fn push(&mut self, value: StackValue) {
+        self.0.push(value);
+    }
+
+    pub fn remove(&mut self, index: usize) {
+        self.0.remove(index);
+    }
+}
+
+impl Reducible for Stack {
+    type Action = StackAction;
+
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+        match action {
+            StackAction::Push(value) => {
+                new_state.push(value);
+            }
+            StackAction::Remove(index) => {
+                new_state.remove(index);
+            }
+        }
+        Rc::new(new_state)
+    }
+}
+
+impl std::fmt::Debug for StackValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StackValue::Ability(bytes) => {
+                write!(f, "Ability(\"{}\")", bytes.as_str_unchecked())
+            }
+            StackValue::Item(val) => write!(f, "Item({})", val),
+            StackValue::Rune(val) => write!(f, "Rune({})", val),
+            StackValue::BasicAttack => write!(f, "BasicAttack"),
+            StackValue::CriticalStrike => write!(f, "CriticalStrike"),
+            StackValue::Ignite => write!(f, "Ignite"),
+        }
     }
 }

@@ -40,11 +40,11 @@ impl StringExt for str {
 }
 
 pub trait BytesExt {
-    fn to_str(&self) -> &str;
+    fn as_str_unchecked(&self) -> &str;
 }
 
 impl<const N: usize> BytesExt for [u8; N] {
-    fn to_str(&self) -> &str {
+    fn as_str_unchecked(&self) -> &str {
         let len = self.iter().position(|&b| b == 0).unwrap_or(N);
         unsafe { std::str::from_utf8_unchecked(&self[..len]) }
     }

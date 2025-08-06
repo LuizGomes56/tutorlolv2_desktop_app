@@ -46,7 +46,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
     };
 
     html! {
-        <table class={classes!()}>
+        <table>
             {(*thead).clone()}
             <tbody>{props.damages.clone()}</tbody>
         </table>
