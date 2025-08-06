@@ -13,7 +13,7 @@ static CACHE_PTR: AtomicPtr<u8> = AtomicPtr::new(null_mut());
 static CACHE_LEN: AtomicPtr<usize> = AtomicPtr::new(null_mut());
 
 impl ComptimeCache for (usize, usize) {
-    fn as_str(&self) -> &str {
+    fn as_str(&self) -> &'static str {
         let cache_ptr = CACHE_PTR.load(Ordering::Relaxed);
         let len_ptr = CACHE_LEN.load(Ordering::Relaxed);
 

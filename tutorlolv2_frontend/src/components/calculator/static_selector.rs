@@ -1,15 +1,9 @@
 use crate::{
     color,
-    components::{Image, ImageType, hover::item_stats::ItemStatsHover},
+    components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
 };
 use generated_code::{ITEM_NAME_TO_ID, RUNE_NAME_TO_ID};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum StaticIterator {
-    Runes,
-    Items,
-}
 
 #[derive(PartialEq, Properties)]
 pub struct StaticEventProps {

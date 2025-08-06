@@ -8,6 +8,12 @@ use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum StaticIterator {
+    Runes,
+    Items,
+}
+
 macro_rules! stats_reducer {
     ($name:ident, $( $stat:ident ),*) => {
         paste! {
