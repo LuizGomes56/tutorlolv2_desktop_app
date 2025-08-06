@@ -161,6 +161,17 @@ pub fn calculator() -> Html {
         });
     }
 
+    let make_td = |text| -> Html {
+        html! {
+            <td class={classes!{
+                "text-center", "text-sm", "px-2", "h-10",
+                "max-w-24", "truncate", "text-violet-500",
+            }}>
+                {text}
+            </td>
+        }
+    };
+
     html! {
         <>
             <div class={classes!(
@@ -292,16 +303,6 @@ pub fn calculator() -> Html {
                                                             _ => {},
                                                         }
                                                     }
-                                                    let make_td = |text| -> Html {
-                                                        html! {
-                                                            <td class={classes!{
-                                                                "text-center", "text-sm", "px-2",
-                                                                "max-w-24", "truncate", "text-violet-500",
-                                                            }}>
-                                                                {text}
-                                                            </td>
-                                                        }
-                                                    };
                                                     html! {
                                                         <tr>
                                                             <td class={classes!("w-10", "h-10")}>
@@ -320,6 +321,19 @@ pub fn calculator() -> Html {
                                                 .collect::<Html>()
                                         }
                                     />
+                                    <MonstersTable
+                                        damages={html! {
+                                            <tr>
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                                {make_td(1529.0)}
+                                            </tr>
+                                        }}
+                                    />
                                 </div>
                             }
                         } else {
@@ -328,16 +342,16 @@ pub fn calculator() -> Html {
                     }
                 </div>
             </div>
-            <MainSelector
-                set_current_player_champion_id_callback={set_current_player_champion_id}
-                insert_item_callback={insert_current_player_items}
-                remove_item_callback={remove_current_player_items}
-                insert_rune_callback={insert_current_player_runes}
-                remove_rune_callback={remove_current_player_runes}
-                items_iterator={input_game.active_player.items.clone()}
-                runes_iterator={input_game.active_player.runes.clone()}
-                current_player_champion_id={current_player_champion_id}
-            />
+            // <MainSelector
+            //     set_current_player_champion_id_callback={set_current_player_champion_id}
+            //     insert_item_callback={insert_current_player_items}
+            //     remove_item_callback={remove_current_player_items}
+            //     insert_rune_callback={insert_current_player_runes}
+            //     remove_rune_callback={remove_current_player_runes}
+            //     items_iterator={input_game.active_player.items.clone()}
+            //     runes_iterator={input_game.active_player.runes.clone()}
+            //     current_player_champion_id={current_player_champion_id}
+            // />
         </>
     }
 }

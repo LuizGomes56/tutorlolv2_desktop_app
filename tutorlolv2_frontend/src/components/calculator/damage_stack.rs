@@ -37,18 +37,18 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
         html! {
             <thead>
                 <tr>
-                    <th></th>
-                    <th class={classes!("p-1", "justify-items-center")}>
-                        {svg!("../../../public/svgs/sigma", "32")}
+                    <th class={classes!("min-w-10")}></th>
+                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                        {svg!("../../../public/svgs/sigma", "24")}
                     </th>
-                    <th class={classes!("p-1", "justify-items-center")}>
+                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
                         <Image
-                            class={classes!("w-8", "h-8")}
+                            class={classes!("w-6", "h-6")}
                             source={ImageType::Other(AttrValue::Static(url!("/img/stats/health.svg"))) }
                         />
                     </th>
-                    <th class={classes!("p-1", "justify-items-center")}>
-                        {svg!("../../../public/svgs/weakness", "32")}
+                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                        {svg!("../../../public/svgs/weakness", "24")}
                     </th>
                 </tr>
             </thead>
