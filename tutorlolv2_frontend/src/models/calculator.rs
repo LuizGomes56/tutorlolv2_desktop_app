@@ -1,27 +1,58 @@
 use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
 use serde::{Deserialize, Serialize};
+use yew::{AttrValue, Html, html};
 
 #[derive(Debug, Deserialize)]
-pub struct MonsterDamages {
-    pub tower: f64,
-    pub dragon: f64,
-    pub baron: f64,
-    pub atakhan: f64,
-    pub voidgrubs: f64,
-    pub melee_minion: f64,
-    pub ranged_minion: f64,
-    pub super_minion: f64,
-    pub red_buff: f64,
-    pub blue_buff: f64,
-    pub gromp: f64,
-    pub krug: f64,
-    pub wolves: f64,
-    pub raptor: f64,
+pub struct DamageValue {
+    pub minimum_damage: f64,
+    pub maximum_damage: f64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MonsterExpr {
+    pub abilities: Vec<DamageValue>,
+    pub items: Vec<DamageValue>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MonsterDamages([MonsterExpr; 7]);
+
+impl MonsterDamages {
+    pub fn join_td_index(&self, index: usize) -> Html {
+        let Some(monster_expr) = self.0.get(index) else {
+            return html! {};
+        };
+
+        monster_expr
+            .abilities
+            .iter()
+            .chain(monster_expr.items.iter())
+            .map(|damage_value| {
+                let text = if damage_value.maximum_damage != 0.0 {
+                    let mut s = damage_value.minimum_damage.round().to_string();
+                    s.push_str(" - ");
+                    s.push_str(&damage_value.maximum_damage.round().to_string());
+                    AttrValue::from(s)
+                } else {
+                    AttrValue::from(damage_value.minimum_damage.round().to_string())
+                };
+                html! {
+                    <td
+                        title={text.clone()}
+                        class="text-center text-sm px-2 text-violet-500 max-w-24 truncate"
+                    >
+                        { text }
+                    </td>
+                }
+            })
+            .collect::<Html>()
+    }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
+    pub tower_damage: f64,
     pub current_player: OutputCurrentPlayer,
     pub enemies: Vec<(String, OutputEnemy)>,
     pub recommended_items: Vec<u32>,
@@ -101,7 +132,7 @@ impl Default for InputGame {
                     r: 3,
                 },
                 level: 15,
-                infer_stats: false,
+                infer_stats: true,
                 items: vec![3115, 3153, 3100],
                 runes: Default::default(),
                 stacks: Default::default(),

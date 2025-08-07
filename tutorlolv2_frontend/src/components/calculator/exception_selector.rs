@@ -116,7 +116,7 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
         >
             {props.image_html.clone()}
             <input
-                type="checkbox"
+                type={"checkbox"}
                 onchange={{
                     let callback = props.callback.clone();
                     Callback::from(move |e: Event| {
@@ -135,8 +135,8 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                     "absolute", "left-0.5", "top-0.5",
                     "w-5", "h-5", "bg-white", "rounded-full",
                     "transform", "transition-transform", "duration-200",
-                    if props.enabled { "translate-x-6" } else { "" }, "flex",
-                    "items-center", "justify-center"
+                    if props.enabled { "translate-x-6" } else { "" },
+                    "flex", "items-center", "justify-center"
                 )}>
                     {
                         if props.enabled {

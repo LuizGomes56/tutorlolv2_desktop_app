@@ -25,6 +25,31 @@ pub fn settings() -> Html {
             )}>
                 { "Application Settings" }
             </h1>
+            /*
+            const ChangeThemeButton = () => {
+                const { theme, toggleTheme } = useTheme();
+                return (
+                    <button
+                        aria-label="toggle theme"
+                        type="button"
+                        className={`relative h-7 w-16 mx-6 rounded-full cursor-pointer transition-colors duration-300 shadow-inner ${theme ? "bg-gradient-to-r from-purple-600 to-indigo-500" : "bg-gradient-to-r from-teal-400 to-emerald-400"}`}
+                        onClick={toggleTheme}
+                        style={{ boxShadow: theme ? 'inset 0 0 4px rgba(79,70,229,0.7)' : 'inset 0 0 4px rgba(16,185,129,0.7)' }}
+                    >
+                        <span
+                            className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full !transition-transform duration-300 flex items-center justify-center shadow-md
+                            ${theme ? "transform translate-x-9 bg-indigo-600" : "bg-emerald-500"}`}
+                            style={{ boxShadow: theme ? '0 2px 4px rgba(67,56,202,0.5)' : '0 2px 4px rgba(5,150,105,0.5)' }}
+                        >
+                            {theme
+                                ? <RiMoonFill className="w-4 h-4 text-white" />
+                                : <MdSunny className="w-4 h-4 text-white" />
+                            }
+                        </span>
+                    </button>
+                )
+            }
+            */
             <div class={classes!(
                 "w-full", "border-b",
                 color!(border-700),

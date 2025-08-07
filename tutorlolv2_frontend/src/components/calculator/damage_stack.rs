@@ -56,7 +56,7 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
     });
 
     html! {
-        <table>
+        <table class={classes!("h-fit")}>
             {(*header_memo).clone()}
             <tbody>
                 {props.damages.clone()}
@@ -80,20 +80,38 @@ pub struct DamageStackSelectorProps {
 pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
     html! {
         <div class={classes!(
-            "flex", "flex-col", "gap-2",
+            "grid", "grid-cols-[auto_1fr]", "gap-x-4",
         )}>
+            <div class={classes!(
+                "flex", "flex-col", "gap-4"
+            )}>
+                <div class={classes!("flex", "flex-col", "gap-2")}>
+                    <h3 class={classes!(
+                        "text-lg"
+                    )}>
+                        { "Insert" }
+                    </h3>
+                    <InsertDamageStackSelector
+                        champion_id={props.champion_id.clone()}
+                        items={props.items.clone()}
+                        runes={props.runes.clone()}
+                        push_callback={props.push_callback.clone()}
+                    />
+                </div>
+                <div class={classes!("flex", "flex-col", "gap-2")}>
+                    <h3 class={classes!(
+                        "text-lg"
+                    )}>
+                        { "Remove" }
+                    </h3>
+                    <RemoveDamageStackSelector
+                        champion_id={props.champion_id.clone()}
+                        stack={props.stack.clone()}
+                        remove_callback={props.remove_callback.clone()}
+                    />
+                </div>
+            </div>
             <DamageStackTable damages={props.damages.clone()} />
-            <InsertDamageStackSelector
-                champion_id={props.champion_id.clone()}
-                items={props.items.clone()}
-                runes={props.runes.clone()}
-                push_callback={props.push_callback.clone()}
-            />
-            <RemoveDamageStackSelector
-                champion_id={props.champion_id.clone()}
-                stack={props.stack.clone()}
-                remove_callback={props.remove_callback.clone()}
-            />
         </div>
     }
 }

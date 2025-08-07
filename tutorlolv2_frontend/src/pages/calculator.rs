@@ -1,5 +1,6 @@
 use crate::{
     components::{
+        Image, ImageType,
         calculator::*,
         tables::{
             BaseTable,
@@ -128,7 +129,7 @@ pub fn calculator() -> Html {
         let abort_controller = abort_controller.clone();
         let input_game = input_game.clone();
         use_effect_with(input_game.clone(), move |_| {
-            web_sys::console::log_1(&format!("{:#?}", *input_game).into());
+            // web_sys::console::log_1(&format!("{:#?}", *input_game).into());
 
             if let Some(controller) = &*abort_controller {
                 controller.abort();
@@ -150,6 +151,7 @@ pub fn calculator() -> Html {
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
+                            web_sys::console::log_1(&format!("{:#?}", data).into());
                             output_game.set(Some(data));
                         }
                         Err(e) => {
@@ -223,128 +225,238 @@ pub fn calculator() -> Html {
                                 .collect::<Vec<_>>();
 
                             html! {
-                                <div>
-                                    <BaseTable
-                                        damaging_items={output_game.current_player.damaging_items.clone()}
-                                        damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                        champion_id={&current_player_champion_id}
-                                        damages={
-                                            enemies
-                                                .iter()
-                                                .map(|(enemy_champion_id, enemy)| {
-                                                    html! {
-                                                        <tr>
-                                                            <td class={classes!("w-10", "h-10")}>
-                                                                <ImageCell
-                                                                    instance={Instances::Champions(
-                                                                        AttrValue::from((*enemy_champion_id).clone()),
-                                                                    )}
-                                                                />
-                                                            </td>
-                                                            {damage_cells(&enemy.damages.abilities)}
-                                                            {damage_cells(&enemy.damages.items)}
-                                                            {damage_cells(&enemy.damages.runes )}
-                                                        </tr>
-                                                    }
-                                                })
-                                                .collect::<Html>()
-                                        }
-                                    />
-                                    <DamageStackSelector
-                                        items={output_game.current_player.damaging_items.clone()}
-                                        runes={output_game.current_player.damaging_runes.clone()}
-                                        champion_id={&current_player_champion_id}
-                                        stack={(*damage_stack).get_owned()}
-                                        push_callback={push_stack_callback}
-                                        remove_callback={remove_stack_callback}
-                                        damages={
-                                            enemies
-                                                .iter()
-                                                .map(|(enemy_champion_id, enemy)| {
-                                                    let mut total_damage = 0.0;
-                                                    for value in (*damage_stack).get_ref() {
-                                                        match value {
-                                                            StackValue::Ability(bytes) => {
-                                                                let ability_name = bytes.as_str_unchecked();
-                                                                if let Some(abilities_phf) = CHAMPION_ABILITIES.get(&current_player_champion_id) {
-                                                                    if let Some(index) = abilities_phf.get_index(ability_name) {
-                                                                        if let Some((_, instance_damage)) = enemy.damages.abilities.get(index) {
-                                                                            total_damage += instance_damage.minimum_damage;
+                                <div class={classes!(
+                                    "flex", "flex-col", "gap-6", "py-2"
+                                )}>
+                                    <div class={classes!("flex", "flex-col", "gap-2")}>
+                                        <h2 class={classes!(
+                                            "text-xl", "font-medium"
+                                        )}>
+                                            { "Basic abilities/items/runes" }
+                                        </h2>
+                                        <BaseTable
+                                            damaging_items={output_game.current_player.damaging_items.clone()}
+                                            damaging_runes={output_game.current_player.damaging_runes.clone()}
+                                            champion_id={&current_player_champion_id}
+                                            damages={
+                                                enemies
+                                                    .iter()
+                                                    .map(|(enemy_champion_id, enemy)| {
+                                                        html! {
+                                                            <tr>
+                                                                <td class={classes!("w-10", "h-10")}>
+                                                                    <ImageCell
+                                                                        instance={Instances::Champions(
+                                                                            AttrValue::from((*enemy_champion_id).clone()),
+                                                                        )}
+                                                                    />
+                                                                </td>
+                                                                {damage_cells(&enemy.damages.abilities)}
+                                                                {damage_cells(&enemy.damages.items)}
+                                                                {damage_cells(&enemy.damages.runes )}
+                                                            </tr>
+                                                        }
+                                                    })
+                                                    .collect::<Html>()
+                                            }
+                                        />
+                                    </div>
+                                    <div class={classes!("flex", "flex-col", "gap-2")}>
+                                        <h2 class={classes!(
+                                            "text-xl", "font-medium"
+                                        )}>
+                                            { "Sum values" }
+                                        </h2>
+                                        <DamageStackSelector
+                                            items={output_game.current_player.damaging_items.clone()}
+                                            runes={output_game.current_player.damaging_runes.clone()}
+                                            champion_id={&current_player_champion_id}
+                                            stack={(*damage_stack).get_owned()}
+                                            push_callback={push_stack_callback}
+                                            remove_callback={remove_stack_callback}
+                                            damages={
+                                                enemies
+                                                    .iter()
+                                                    .map(|(enemy_champion_id, enemy)| {
+                                                        let mut total_damage = 0.0;
+                                                        for value in (*damage_stack).get_ref() {
+                                                            match value {
+                                                                StackValue::Ability(bytes) => {
+                                                                    let ability_name = bytes.as_str_unchecked();
+                                                                    if let Some(abilities_phf) = CHAMPION_ABILITIES.get(&current_player_champion_id) {
+                                                                        if let Some(index) = abilities_phf.get_index(ability_name) {
+                                                                            if let Some((_, instance_damage)) = enemy.damages.abilities.get(index) {
+                                                                                total_damage += instance_damage.minimum_damage;
+                                                                            }
                                                                         }
                                                                     }
+                                                                },
+                                                                StackValue::BasicAttack => {
+                                                                    let len = enemy.damages.abilities.len();
+                                                                    if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 3) {
+                                                                        total_damage += instance_damage.minimum_damage;
+                                                                    }
                                                                 }
-                                                            },
-                                                            StackValue::BasicAttack => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 3) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
+                                                                StackValue::CriticalStrike => {
+                                                                    let len = enemy.damages.abilities.len();
+                                                                    if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
+                                                                        total_damage += instance_damage.minimum_damage;
+                                                                    }
+                                                                },
+                                                                StackValue::Onhit => {
+                                                                    let len = enemy.damages.abilities.len();
+                                                                    if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 1) {
+                                                                        total_damage += instance_damage.minimum_damage;
+                                                                    }
+                                                                },
+                                                                StackValue::Item(item_id) => {
+                                                                    if let Ok(index) = enemy.damages.items.binary_search_by_key(item_id, |(key, _)| *key) {
+                                                                        let instance_damage = &enemy.damages.items[index].1;
+                                                                        total_damage += instance_damage.minimum_damage;
+                                                                    }
+                                                                },
+                                                                StackValue::Rune(rune_id) => {
+                                                                    if let Ok(index) = enemy.damages.runes.binary_search_by_key(rune_id, |(key, _)| *key) {
+                                                                        let instance_damage = &enemy.damages.runes[index].1;
+                                                                        total_damage += instance_damage.minimum_damage;
+                                                                    }
+                                                                },
+                                                                _ => {},
                                                             }
-                                                            StackValue::CriticalStrike => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
-                                                            },
-                                                            StackValue::Onhit => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 1) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
-                                                            },
-                                                            StackValue::Item(item_id) => {
-                                                                if let Ok(index) = enemy.damages.items.binary_search_by_key(item_id, |(key, _)| *key) {
-                                                                    let instance_damage = &enemy.damages.items[index].1;
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
-                                                            },
-                                                            StackValue::Rune(rune_id) => {
-                                                                if let Ok(index) = enemy.damages.runes.binary_search_by_key(rune_id, |(key, _)| *key) {
-                                                                    let instance_damage = &enemy.damages.runes[index].1;
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
-                                                            },
-                                                            _ => {},
                                                         }
+                                                        html! {
+                                                            <tr>
+                                                                <td class={classes!("w-10", "h-10")}>
+                                                                    <ImageCell
+                                                                        instance={Instances::Champions(
+                                                                            AttrValue::from((*enemy_champion_id).clone()),
+                                                                        )}
+                                                                    />
+                                                                </td>
+                                                                {make_td(total_damage.round())}
+                                                                {make_td((enemy.current_stats.health - total_damage).round())}
+                                                                {make_td((total_damage / enemy.current_stats.health * 100.0).round())}
+                                                            </tr>
+                                                        }
+                                                    })
+                                                    .collect::<Html>()
+                                            }
+                                        />
+                                    </div>
+                                    <div class={classes!("flex", "flex-col", "gap-2")}>
+                                        <h2 class={classes!(
+                                            "text-xl", "font-medium"
+                                        )}>
+                                            { "Turrets (Basic Attack damage per plate)" }
+                                        </h2>
+                                        <table class={classes!("w-fit")}>
+                                            <thead>
+                                                <tr>
+                                                    {
+                                                        (0..6).into_iter().map(|i| {
+                                                            html! {
+                                                                <th class={classes!(
+                                                                    "min-w-10"
+                                                                )}>
+                                                                    <div class={classes!(
+                                                                        "flex", "items-center",
+                                                                        "justify-center", "relative"
+                                                                    )}>
+                                                                        <Image
+                                                                            class={classes!(
+                                                                                "w-8", "h-8"
+                                                                            )}
+                                                                            source={ImageType::Other(
+                                                                                AttrValue::Static(url!("/img/other/tower.webp"))
+                                                                            )}
+                                                                        />
+                                                                        <span class={classes!(
+                                                                            "text-sm", "img-letter"
+                                                                        )}>
+                                                                            {i}
+                                                                        </span>
+                                                                    </div>
+                                                                </th>
+                                                            }
+                                                        })
+                                                        .collect::<Html>()
                                                     }
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    {
+                                                        (0..6).into_iter().map(|i| {
+                                                            html! {
+                                                                <td class={classes!(
+                                                                    "text-center", "text-sm",
+                                                                    "px-2",  "text-violet-500",
+                                                                    "max-w-24", "truncate", "h-10"
+                                                                )}>
+                                                                    <span class={classes!("text-violet-500")}>
+                                                                        {
+                                                                            (
+                                                                                output_game.tower_damage
+                                                                                    * (100.0 /
+                                                                                        (100.0 + (-25.0 + 50.0 * i as f64))
+                                                                                    )
+                                                                            )
+                                                                            .round()
+                                                                        }
+                                                                    </span>
+                                                                </td>
+                                                            }
+                                                        })
+                                                        .collect::<Html>()
+                                                    }
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class={classes!("flex", "flex-col", "gap-2")}>
+                                        <h2 class={classes!(
+                                            "text-xl", "font-medium"
+                                        )}>
+                                            { "Monsters" }
+                                        </h2>
+                                        <BaseTable
+                                            damaging_items={output_game.current_player.damaging_items.clone()}
+                                            damaging_runes={output_game.current_player.damaging_runes.clone()}
+                                            champion_id={&current_player_champion_id}
+                                            damages={
+                                                [
+                                                    (0, url!("/img/other/voidgrubs.avif")),
+                                                    (0, url!("/img/other/melee_minion.avif")),
+                                                    (0, url!("/img/other/ranged_minion.avif")),
+                                                    (1, url!("/img/other/dragon.avif")),
+                                                    (2, url!("/img/other/baron.avif")),
+                                                    (3, url!("/img/other/atakhan.avif")),
+                                                    (4, url!("/img/other/super_minion.avif")),
+                                                    (5, url!("/img/other/red_buff.avif")),
+                                                    (5, url!("/img/other/blue_buff.avif")),
+                                                    (5, url!("/img/other/gromp.avif")),
+                                                    (5, url!("/img/other/wolves.avif")),
+                                                    (6, url!("/img/other/krug.avif")),
+                                                    (6, url!("/img/other/raptor.avif")),
+                                                ]
+                                                .into_iter()
+                                                .map(|(index, img_url)| {
                                                     html! {
                                                         <tr>
-                                                            <td class={classes!("w-10", "h-10")}>
-                                                                <ImageCell
-                                                                    instance={Instances::Champions(
-                                                                        AttrValue::from((*enemy_champion_id).clone()),
-                                                                    )}
+                                                            <td class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                                                                <Image
+                                                                    class={classes!("w-8", "h-8")}
+                                                                    source={ImageType::Other(AttrValue::Static(img_url))}
                                                                 />
                                                             </td>
-                                                            {make_td(total_damage.round())}
-                                                            {make_td((enemy.current_stats.health - total_damage).round())}
-                                                            {make_td((total_damage / enemy.current_stats.health * 100.0).round())}
+                                                            {output_game.monster_damages.join_td_index(index)}
                                                         </tr>
                                                     }
                                                 })
                                                 .collect::<Html>()
-                                        }
-                                    />
-                                    <MonstersTable
-                                        damages={html! {
-                                            <tr>
-                                                {make_td(output_game.monster_damages.tower)}
-                                                {make_td(output_game.monster_damages.dragon)}
-                                                {make_td(output_game.monster_damages.baron)}
-                                                {make_td(output_game.monster_damages.atakhan)}
-                                                {make_td(output_game.monster_damages.voidgrubs)}
-                                                {make_td(output_game.monster_damages.melee_minion)}
-                                                {make_td(output_game.monster_damages.ranged_minion)}
-                                                {make_td(output_game.monster_damages.super_minion)}
-                                                {make_td(output_game.monster_damages.red_buff)}
-                                                {make_td(output_game.monster_damages.blue_buff)}
-                                                {make_td(output_game.monster_damages.gromp)}
-                                                {make_td(output_game.monster_damages.krug)}
-                                                {make_td(output_game.monster_damages.wolves)}
-                                                {make_td(output_game.monster_damages.raptor)}
-                                            </tr>
-                                        }}
-                                    />
+                                            }
+                                        />
+                                    </div>
                                 </div>
                             }
                         } else {

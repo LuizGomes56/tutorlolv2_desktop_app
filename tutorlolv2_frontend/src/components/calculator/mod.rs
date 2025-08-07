@@ -5,7 +5,6 @@ pub mod champion_selector;
 pub mod damage_stack;
 pub mod exception_selector;
 pub mod main_selector;
-pub mod monsters_table;
 pub mod static_selector;
 pub mod stats_selector;
 
@@ -16,6 +15,5 @@ pub use champion_selector::*;
 pub use damage_stack::*;
 pub use exception_selector::*;
 pub use main_selector::*;
-pub use monsters_table::*;
 pub use static_selector::*;
 pub use stats_selector::*;
