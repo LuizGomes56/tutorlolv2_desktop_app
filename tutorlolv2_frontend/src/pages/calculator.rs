@@ -192,12 +192,14 @@ pub fn calculator() -> Html {
                             current_player_champion_id={&current_player_champion_id}
                         />
                         <ExceptionSelector
+                            current_player_champion_id={&current_player_champion_id}
+                            attack_form={false}
+                            infer_stats={input_game.active_player.infer_stats}
                             set_ally_fire_dragons={set_ally_fire_dragons}
                             set_ally_earth_dragons={set_ally_earth_dragons}
                             set_current_player_stacks={set_current_player_stacks}
                             set_current_player_infer_stats={set_current_player_infer_stats}
                             set_current_player_attack_form={set_current_player_attack_form}
-                            current_player_champion_id={&current_player_champion_id}
                         />
                     </div>
                     <StatsSelector
@@ -267,36 +269,39 @@ pub fn calculator() -> Html {
                                                                 if let Some(abilities_phf) = CHAMPION_ABILITIES.get(&current_player_champion_id) {
                                                                     if let Some(index) = abilities_phf.get_index(ability_name) {
                                                                         if let Some((_, instance_damage)) = enemy.damages.abilities.get(index) {
-                                                                            total_damage += instance_damage.minimum_damage
-                                                                             + instance_damage.maximum_damage;
+                                                                            total_damage += instance_damage.minimum_damage;
                                                                         }
                                                                     }
                                                                 }
                                                             },
                                                             StackValue::BasicAttack => {
                                                                 let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
-                                                                    total_damage += instance_damage.minimum_damage
-                                                                     + instance_damage.maximum_damage;
+                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 3) {
+                                                                    total_damage += instance_damage.minimum_damage;
                                                                 }
                                                             }
                                                             StackValue::CriticalStrike => {
                                                                 let len = enemy.damages.abilities.len();
+                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
+                                                                    total_damage += instance_damage.minimum_damage;
+                                                                }
+                                                            },
+                                                            StackValue::Onhit => {
+                                                                let len = enemy.damages.abilities.len();
                                                                 if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 1) {
-                                                                    total_damage += instance_damage.minimum_damage
-                                                                     + instance_damage.maximum_damage;
+                                                                    total_damage += instance_damage.minimum_damage;
                                                                 }
                                                             },
                                                             StackValue::Item(item_id) => {
                                                                 if let Ok(index) = enemy.damages.items.binary_search_by_key(item_id, |(key, _)| *key) {
                                                                     let instance_damage = &enemy.damages.items[index].1;
-                                                                    total_damage += instance_damage.minimum_damage + instance_damage.maximum_damage;
+                                                                    total_damage += instance_damage.minimum_damage;
                                                                 }
                                                             },
                                                             StackValue::Rune(rune_id) => {
                                                                 if let Ok(index) = enemy.damages.runes.binary_search_by_key(rune_id, |(key, _)| *key) {
                                                                     let instance_damage = &enemy.damages.runes[index].1;
-                                                                    total_damage += instance_damage.minimum_damage + instance_damage.maximum_damage;
+                                                                    total_damage += instance_damage.minimum_damage;
                                                                 }
                                                             },
                                                             _ => {},

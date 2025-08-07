@@ -4,8 +4,8 @@ use crate::{
 };
 use std::str::FromStr;
 use yew::{
-    AttrValue, Callback, Event, Html, InputEvent, Properties, TargetCast, classes,
-    function_component, html,
+    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
+    html, html::onchange::Event,
 };
 
 #[derive(PartialEq)]
@@ -98,66 +98,54 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct BooleanFieldProps {
     pub callback: Callback<bool>,
+    pub enabled: bool,
     pub image_html: Html,
     pub title: AttrValue,
 }
 
 #[function_component(BooleanField)]
 pub fn boolean_field(props: &BooleanFieldProps) -> Html {
-    // <button
-    //     aria-label="checkbox"
-    //     type="button"
-    //     class="relative h-6 flex items-center w-12 bg-pink-800 rounded-full cursor-pointer
-    //     transition-colors duration-200">
-    //     <span class="absolute left-0.5 w-5 bg-white h-5 false rounded-full
-    //         !transition-transform duration-200 flex items-center justify-center">
-    //         <svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-    //     <path d="M2.3 2.3a.75.75 0 011.06 0L6 4.94l2.64-2.64a.75.75 0 111.06 1.06L7.06 6l2.64
-    //     2.64a.75.75 0 11-1.06 1.06L6 7.06 3.36 9.7a.75.75 0 11-1.06-1.06L4.94 6 2.3 3.36a.75.75
-    //     0 010-1.06z"
-    // fill="#9d174d">
-    // </path>
-    // </svg>
-    // </span>
-    // </button>
     html! {
         <label
             class={classes!(
                 "grid", "gap-x-2", "text-white",
                 "grid-cols-[auto_1fr]", "justify-center",
-                "cursor-pointer"
+                "cursor-pointer", "items-center"
             )}
             title={&props.title}
         >
             {props.image_html.clone()}
+            <input
+                type="checkbox"
+                onchange={{
+                    let callback = props.callback.clone();
+                    Callback::from(move |e: Event| {
+                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                        callback.emit(target.checked());
+                    })
+                }}
+                class={classes!("sr-only", "peer")}
+            />
             <div class={classes!(
-                "flex", "items-center", "justify-center"
+                "relative", "h-6", "w-12", "rounded-full",
+                "bg-pink-800", "transition-colors", "duration-200",
+                "peer-checked:bg-emerald-700"
             )}>
-                <div class={classes!("relative")}>
-                    <input
-                        type={"checkbox"}
-                        class={"sr-only peer"}
-                        onchange={{
-                            let callback = props.callback.clone();
-                            Callback::from(move |e: Event| {
-                                let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                callback.emit(target.checked());
-                            })
-                        }}
-                    />
-                    <div class={classes!(
-                        "w-10", "h-5", "bg-gray-600", "rounded-full",
-                        "peer-checked:bg-green-500", "transition-colors"
-                        )}
-                    />
-                    <div class={classes!(
-                        "absolute", "top-0.5", "left-0.5", "w-4",
-                        "h-4", "bg-white", "rounded-full",
-                        "peer-checked:translate-x-5",
-                        "transition-transform"
-                        )}
-                    />
-                </div>
+                <span class={classes!(
+                    "absolute", "left-0.5", "top-0.5",
+                    "w-5", "h-5", "bg-white", "rounded-full",
+                    "transform", "transition-transform", "duration-200",
+                    if props.enabled { "translate-x-6" } else { "" }, "flex",
+                    "items-center", "justify-center"
+                )}>
+                    {
+                        if props.enabled {
+                            svg!("../../../public/svgs/enabled", "12")
+                        } else {
+                            svg!("../../../public/svgs/disabled", "12")
+                        }
+                    }
+                </span>
             </div>
         </label>
     }
@@ -166,6 +154,8 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
     pub current_player_champion_id: AttrValue,
+    pub attack_form: bool,
+    pub infer_stats: bool,
     pub set_ally_fire_dragons: Callback<u8>,
     pub set_ally_earth_dragons: Callback<u8>,
     pub set_current_player_stacks: Callback<u32>,
@@ -213,6 +203,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                     "Gnar" | "Nidalee" => {
                         html! {
                             <BooleanField
+                                enabled={props.attack_form}
                                 callback={props.set_current_player_attack_form.clone()}
                                 image_html={svg!("../../../public/svgs/shift", SIZE_SVG)}
                                 title={"Toggle if this champion is melee or ranged"}
@@ -225,6 +216,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                 }
             }
             <BooleanField
+                enabled={props.infer_stats}
                 callback={props.set_current_player_infer_stats.clone()}
                 image_html={svg!("../../../public/svgs/infer", SIZE_SVG)}
                 title={"Determine if this champion's stats will be based on its items, or manually inserted"}

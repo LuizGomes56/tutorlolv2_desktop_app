@@ -129,6 +129,9 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
                             StackValue::CriticalStrike => {
                                 ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg")))
                             }
+                            StackValue::Onhit => {
+                                ImageType::Other(AttrValue::Static(url!("/img/stats/onhit.svg")))
+                            }
                             StackValue::Ignite => {
                                 ImageType::Other(AttrValue::Static(url!("/img/other/ignite.avif")))
                             }
@@ -181,6 +184,16 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                         let push_callback = push_callback.clone();
                         Callback::from(move |_| {
                             push_callback.emit(StackValue::CriticalStrike)
+                        })
+                    },
+                    None,
+                )}
+                {base_content(
+                    ImageType::Other(AttrValue::Static(url!("/img/stats/onhit.svg"))),
+                    {
+                        let push_callback = push_callback.clone();
+                        Callback::from(move |_| {
+                            push_callback.emit(StackValue::Onhit)
                         })
                     },
                     None,

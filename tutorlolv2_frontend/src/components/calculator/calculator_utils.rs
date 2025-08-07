@@ -224,6 +224,7 @@ pub enum StackValue {
     Rune(u32),
     BasicAttack,
     CriticalStrike,
+    Onhit,
     Ignite,
 }
 
@@ -278,6 +279,7 @@ impl std::fmt::Debug for StackValue {
             StackValue::Rune(val) => write!(f, "Rune({})", val),
             StackValue::BasicAttack => write!(f, "BasicAttack"),
             StackValue::CriticalStrike => write!(f, "CriticalStrike"),
+            StackValue::Onhit => write!(f, "Onhit"),
             StackValue::Ignite => write!(f, "Ignite"),
         }
     }
