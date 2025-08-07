@@ -52,6 +52,7 @@ pub fn monsters_table(props: &MonstersTableProps) -> Html {
                     {table_head!(ranged_minion, "avif")}
                     {table_head!(super_minion, "avif")}
                     {table_head!(red_buff, "avif")}
+                    {table_head!(blue_buff, "avif")}
                     {table_head!(gromp, "avif")}
                     {table_head!(krug, "avif")}
                     {table_head!(wolves, "avif")}

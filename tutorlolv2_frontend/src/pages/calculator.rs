@@ -161,13 +161,13 @@ pub fn calculator() -> Html {
         });
     }
 
-    let make_td = |text| -> Html {
+    let make_td = |text: f64| -> Html {
         html! {
             <td class={classes!{
                 "text-center", "text-sm", "px-2", "h-10",
                 "max-w-24", "truncate", "text-violet-500",
             }}>
-                {text}
+                {text.round()}
             </td>
         }
     };
@@ -175,11 +175,10 @@ pub fn calculator() -> Html {
     html! {
         <>
             <div class={classes!(
-                "h-screen", "overflow-y-auto", "oxanium",
-                "gap-4", "grid", "grid-cols-[auto_1fr]",
+                "oxanium", "gap-4", "grid", "grid-cols-[auto_1fr]",
             )}>
                 <div class={classes!(
-                    "flex", "flex-col", "gap-4", "w-56", "bg-[#121214]"
+                    "flex", "flex-col", "gap-4", "w-56", "bg-[#141417]"
                 )}>
                     <ChampionBanner
                         champion_id={&current_player_champion_id}
@@ -324,19 +323,20 @@ pub fn calculator() -> Html {
                                     <MonstersTable
                                         damages={html! {
                                             <tr>
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
-                                                {make_td(1529.0)}
+                                                {make_td(output_game.monster_damages.tower)}
+                                                {make_td(output_game.monster_damages.dragon)}
+                                                {make_td(output_game.monster_damages.baron)}
+                                                {make_td(output_game.monster_damages.atakhan)}
+                                                {make_td(output_game.monster_damages.voidgrubs)}
+                                                {make_td(output_game.monster_damages.melee_minion)}
+                                                {make_td(output_game.monster_damages.ranged_minion)}
+                                                {make_td(output_game.monster_damages.super_minion)}
+                                                {make_td(output_game.monster_damages.red_buff)}
+                                                {make_td(output_game.monster_damages.blue_buff)}
+                                                {make_td(output_game.monster_damages.gromp)}
+                                                {make_td(output_game.monster_damages.krug)}
+                                                {make_td(output_game.monster_damages.wolves)}
+                                                {make_td(output_game.monster_damages.raptor)}
                                             </tr>
                                         }}
                                     />

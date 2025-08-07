@@ -1,4 +1,4 @@
-use crate::models::base::InstanceDamage;
+use crate::models::base::{DamageType, InstanceDamage};
 use yew::{AttrValue, Html, classes, html};
 
 pub fn damage_cells<'a, T>(instances: &[(T, InstanceDamage)]) -> Html {
@@ -15,13 +15,13 @@ pub fn damage_cells<'a, T>(instances: &[(T, InstanceDamage)]) -> Html {
                 };
                 html! {
                     <td title={&text} class={classes!{
-                        "text-center", "text-sm", "px-2", match value.damage_type.as_str() {
-                            "PHYSICAL_DAMAGE" => "text-orange-500",
-                            "MAGIC_DAMAGE" => "text-sky-500",
-                            "TRUE_DAMAGE" => "text-white",
-                            "ADAPTATIVE_DAMAGE" => "text-pink-500",
-                            "MIXED" => "text-violet-500",
-                            _ => "text-emerald-500"
+                        "text-center", "text-sm", "px-2", match value.damage_type {
+                            DamageType::Physical => "text-orange-500",
+                            DamageType::Magic => "text-sky-500",
+                            DamageType::True => "text-white",
+                            DamageType::Adaptative => "text-pink-500",
+                            DamageType::Mixed => "text-violet-500",
+                            DamageType::Unknown => "text-emerald-500"
                         },
                         "max-w-24", "truncate",
                     }}>

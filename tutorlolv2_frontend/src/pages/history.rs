@@ -84,8 +84,7 @@ pub fn history() -> Html {
 
     html! {
         <div class={classes!(
-            "p-6", "flex-1", "h-screen", "overflow-y-auto",
-            "flex", "flex-col", "gap-4",
+            "p-6", "flex-1", "flex", "flex-col", "gap-4",
         )}>
             <h1 class={classes!(
                 "font-semibold", "text-2xl", "text-white"

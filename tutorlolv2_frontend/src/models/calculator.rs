@@ -2,7 +2,26 @@ use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
+pub struct MonsterDamages {
+    pub tower: f64,
+    pub dragon: f64,
+    pub baron: f64,
+    pub atakhan: f64,
+    pub voidgrubs: f64,
+    pub melee_minion: f64,
+    pub ranged_minion: f64,
+    pub super_minion: f64,
+    pub red_buff: f64,
+    pub blue_buff: f64,
+    pub gromp: f64,
+    pub krug: f64,
+    pub wolves: f64,
+    pub raptor: f64,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct OutputGame {
+    pub monster_damages: MonsterDamages,
     pub current_player: OutputCurrentPlayer,
     pub enemies: Vec<(String, OutputEnemy)>,
     pub recommended_items: Vec<u32>,

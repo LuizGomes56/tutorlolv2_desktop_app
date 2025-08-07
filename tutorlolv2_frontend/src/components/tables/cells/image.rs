@@ -8,29 +8,11 @@ use crate::{
     url,
     utils::{ComptimeCache, StringExt},
 };
-use generated_code::{CHAMPION_ABILITIES, ITEM_FORMULAS, RUNE_FORMULAS};
+use generated_code::{
+    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ITEM_FORMULAS,
+    ONHIT_EFFECT_OFFSET, RUNE_FORMULAS,
+};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};
-
-const BASIC_ATTACK_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">BASIC_ATTACK</span><span class="punctuation"> = {
-    <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Basic Attack"</span>,
-    <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
-    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span>|</span> {
-        <span class="variable">ctx.ad</span> * <span class="variable">ctx.physical_multiplier</span>
-    },
-    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0</span>,
-};</pre>"#;
-
-const CRITICAL_STRIKE_FORMULA: &'static str = r#"<pre><span class="control">intrinsic</span> <span class="constant">CRITICAL_STRIKE</span><span class="punctuation"> = {
-    <span class="variable">name</span><span class="punctuation">: </span><span class="string">"Critical Strike"</span>,
-    <span class="variable">damage_type</span><span class="punctuation">: </span><span class="string">"PHYSICAL_DAMAGE"</span>,
-    <span class="variable">minimum_damage</span><span class="punctuation">: </span><span class="punctuation">|</span>_<span class="punctuation">, </span><span class="variable">ctx</span>|</span> {
-        <span class="variable">ctx.ad</span>
-        <span class="punctuation"> * </span><span class="variable">ctx.physical_multiplier</span>
-        <span class="punctuation"> * </span><span class="variable">ctx.crit_damage</span>
-        <span class="punctuation"> / </span><span class="float">100.0</span>
-    },
-    <span class="variable">maximum_damage</span><span class="punctuation">: </span>|_, _| <span class="float">0.0</span>,
-};</pre>"#;
 
 #[derive(PartialEq)]
 pub enum Instances {
@@ -110,7 +92,12 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 chain_th(base_content(
                                     ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
                                     match hover_settings {
-                                        HoverDocs::Full => html! { hover_docs(BASIC_ATTACK_FORMULA.into(), true) },
+                                        HoverDocs::Full => html! {
+                                            hover_docs(
+                                                AttrValue::Static(BASIC_ATTACK_OFFSET.as_str()),
+                                                true
+                                            )
+                                        },
                                         _ => html!(),
                                     },
                                 ))
@@ -119,7 +106,26 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 chain_th(base_content(
                                     ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
                                     match hover_settings {
-                                        HoverDocs::Full => html! { hover_docs(CRITICAL_STRIKE_FORMULA.into(), true) },
+                                        HoverDocs::Full => html! {
+                                            hover_docs(
+                                                AttrValue::Static(CRITICAL_STRIKE_OFFSET.as_str()),
+                                                true
+                                            )
+                                        },
+                                        _ => html!(),
+                                    },
+                                ))
+                            ))
+                            .chain(std::iter::once(
+                                chain_th(base_content(
+                                    ImageType::Other(AttrValue::Static(url!("/img/stats/onhit.svg"))),
+                                    match hover_settings {
+                                        HoverDocs::Full => html! {
+                                            hover_docs(
+                                                AttrValue::Static(ONHIT_EFFECT_OFFSET.as_str()),
+                                                true
+                                            )
+                                        },
                                         _ => html!(),
                                     },
                                 ))

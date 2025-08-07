@@ -1,10 +1,21 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Copy, Clone, Deserialize, Default)]
+pub enum DamageType {
+    Physical,
+    Magic,
+    Mixed,
+    True,
+    Adaptative,
+    #[default]
+    Unknown,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct InstanceDamage {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
-    pub damage_type: String,
+    pub damage_type: DamageType,
 }
 
 #[derive(Debug, Serialize, Clone, Copy, Deserialize, PartialEq, Default)]

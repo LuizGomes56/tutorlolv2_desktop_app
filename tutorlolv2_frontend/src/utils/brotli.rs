@@ -1,4 +1,5 @@
 use brotli::BrotliDecompress;
+use generated_code::{MEGA_BLOCK, UNCOMPRESSED_MEGA_BLOCK_SIZE};
 use std::{
     io::Cursor,
     ptr::null_mut,
@@ -36,8 +37,8 @@ impl ComptimeCache for (usize, usize) {
 
 pub fn init_cache() {
     if CACHE_PTR.load(Ordering::Relaxed).is_null() {
-        let mut output = Vec::with_capacity(generated_code::UNCOMPRESSED_MEGA_BLOCK_SIZE);
-        let _ = BrotliDecompress(&mut Cursor::new(&generated_code::MEGA_BLOCK), &mut output);
+        let mut output = Vec::with_capacity(UNCOMPRESSED_MEGA_BLOCK_SIZE);
+        let _ = BrotliDecompress(&mut Cursor::new(&MEGA_BLOCK), &mut output);
         let unchecked_string = unsafe { String::from_utf8_unchecked(output) };
         let leaked_str: &'static str = Box::leak(unchecked_string.into_boxed_str());
         let str_ptr = leaked_str.as_ptr() as *mut u8;

@@ -51,6 +51,9 @@ pub enum Route {
     #[at("/calculator")]
     Calculator,
 
+    #[at("/help")]
+    Help,
+
     #[at("/settings")]
     Settings,
 
@@ -68,7 +71,8 @@ fn app() -> Html {
                 )}>
                     <Sidebar />
                     <div class={classes!(
-                        "flex", "flex-1", "bg-[#141417]",
+                        "flex", "flex-1", "bg-[#121214]",
+                        "h-screen", "overflow-y-auto",
                     )}>
                         <Switch<Route> render={switch} />
                     </div>
@@ -81,6 +85,7 @@ fn app() -> Html {
 fn switch(routes: Route) -> Html {
     global_bool!(set HISTORY_LOOP_FLAG, true);
     match routes {
+        Route::Help => html! { <Help /> },
         Route::Home => html! { <Home /> },
         Route::History => {
             global_bool!(set HISTORY_LOOP_FLAG, false);

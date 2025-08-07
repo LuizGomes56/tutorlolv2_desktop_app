@@ -5,7 +5,7 @@ use yew::{Html, classes, function_component, html};
 pub fn home() -> Html {
     html! {
         <div class={classes!(
-            "p-6", "flex-1", "h-screen", "overflow-y-auto"
+            "p-6", "flex-1",
         )}>
             <div class={classes!("max-w-3xl", "flex", "flex-col", "gap-4")}>
                 <h1 class={classes!(

@@ -39,7 +39,7 @@ pub fn sidebar() -> Html {
     }
     html! {
         <div class={classes!(
-            "bg-[#17171b]", "h-screen", "p-4",
+            "bg-[#1a1a1e]", "h-screen", "p-4",
             "flex", "flex-col", "w-fit", "oxanium",
             "overflow-y-auto", "flex-shrink-0", "gap-2",
             "justify-between"
@@ -47,6 +47,11 @@ pub fn sidebar() -> Html {
             <div class={classes!(
                 "flex", "flex-col", "gap-2",
             )}>
+                <div class={classes!(
+                    "font-bold", "text-2xl", "cursor-pointer", "p-4", "text-zinc-400"
+                )}>
+                    { "TutorLoL" }
+                </div>
                 {make_tabs!(
                     svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home,
                     svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::Realtime,
@@ -57,7 +62,8 @@ pub fn sidebar() -> Html {
             </div>
             <div class={classes!("flex", "flex-col", "gap-2")}>
                 {make_tabs!(
-                    svg!("../../public/sidebar/settings", ICON_SIZE), "Settings", Route::Settings
+                    svg!("../../public/sidebar/settings", ICON_SIZE), "Settings", Route::Settings,
+                    svg!("../../public/sidebar/help", ICON_SIZE), "Help/FAQ", Route::Help
                 )}
             </div>
         </div>
