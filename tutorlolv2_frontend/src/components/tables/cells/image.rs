@@ -153,7 +153,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 "transition-[visibility,opacity]",
                                 "duration-200",
                                 "group-hover:delay-1000",
-                                "flex-col", "flex", "fixed",
+                                "flex-col", "flex", "absolute",
                                 "translate-x-[calc(50%-16px)]",
                                 "translate-y-[calc(50%+20px)]",
                                 "z-50", "py-3", "hover-docs", "gap-y-2",
@@ -166,7 +166,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                         }),
                         _ => Some(html! {
                             <div class={classes!(
-                                "group-hover:flex", "flex-col", "fixed", "hover-docs", "hidden",
+                                "group-hover:flex", "flex-col", "absolute", "hover-docs", "hidden",
                                 "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
                                 "z-50", "py-3", "border", color!(border-800), "gap-y-2",
                                 "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),

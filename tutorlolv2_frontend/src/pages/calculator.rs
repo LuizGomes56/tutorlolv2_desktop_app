@@ -151,7 +151,7 @@ pub fn calculator() -> Html {
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
-                            web_sys::console::log_1(&format!("{:#?}", data).into());
+                            // web_sys::console::log_1(&format!("{:#?}", data).into());
                             output_game.set(Some(data));
                         }
                         Err(e) => {
@@ -394,15 +394,7 @@ pub fn calculator() -> Html {
                                                                     "max-w-24", "truncate", "h-10"
                                                                 )}>
                                                                     <span class={classes!("text-violet-500")}>
-                                                                        {
-                                                                            (
-                                                                                output_game.tower_damage
-                                                                                    * (100.0 /
-                                                                                        (100.0 + (-25.0 + 50.0 * i as f64))
-                                                                                    )
-                                                                            )
-                                                                            .round()
-                                                                        }
+                                                                        {output_game.tower_damage[i].round()}
                                                                     </span>
                                                                 </td>
                                                             }
@@ -428,10 +420,11 @@ pub fn calculator() -> Html {
                                                     (0, url!("/img/other/voidgrubs.avif")),
                                                     (0, url!("/img/other/melee_minion.avif")),
                                                     (0, url!("/img/other/ranged_minion.avif")),
-                                                    (1, url!("/img/other/dragon.avif")),
-                                                    (2, url!("/img/other/baron.avif")),
-                                                    (3, url!("/img/other/atakhan.avif")),
-                                                    (4, url!("/img/other/super_minion.avif")),
+                                                    (0, url!("/img/other/cannon.avif")),
+                                                    (1, url!("/img/other/super_minion.avif")),
+                                                    (2, url!("/img/other/dragon.avif")),
+                                                    (3, url!("/img/other/baron.avif")),
+                                                    (4, url!("/img/other/atakhan.avif")),
                                                     (5, url!("/img/other/red_buff.avif")),
                                                     (5, url!("/img/other/blue_buff.avif")),
                                                     (5, url!("/img/other/gromp.avif")),

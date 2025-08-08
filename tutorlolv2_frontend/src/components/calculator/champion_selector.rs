@@ -45,7 +45,7 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                                     />
                                     <div class={classes!(
                                         "hidden", "flex-col", "peer-hover:flex",
-                                        "fixed", "z-50", "py-2", "border",
+                                        "absolute", "z-50", "py-2", "border",
                                         color!(border-800), "gap-y-1.5", "overflow-auto",
                                         "max-h-96", "px-3.5", color!(bg-900),
                                         if index % 12 > 6 {

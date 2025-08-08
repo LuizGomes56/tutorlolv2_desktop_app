@@ -11,7 +11,7 @@ pub fn hover_docs(formula: AttrValue, single: bool) -> Html {
                     "group-hover:pointer-events-auto",
                     "transition-[visibility,opacity]",
                     "duration-200", "group-hover:delay-1000",
-                    "flex", "flex-col", "fixed", "max-w-md",
+                    "flex", "flex-col", "absolute", "max-w-md",
                     "max-h-96", "overflow-auto", "p-2", "leading-6",
                     "text-base", "z-50", "hover-docs",
                     "translate-x-[calc(50%-16px)]",

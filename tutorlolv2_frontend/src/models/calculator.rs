@@ -52,7 +52,7 @@ impl MonsterDamages {
 #[derive(Debug, Deserialize)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
-    pub tower_damage: f64,
+    pub tower_damage: [f64; 6],
     pub current_player: OutputCurrentPlayer,
     pub enemies: Vec<(String, OutputEnemy)>,
     pub recommended_items: Vec<u32>,
