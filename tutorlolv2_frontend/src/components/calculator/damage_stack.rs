@@ -85,31 +85,17 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
             <div class={classes!(
                 "flex", "flex-col", "gap-4"
             )}>
-                <div class={classes!("flex", "flex-col", "gap-2")}>
-                    <h3 class={classes!(
-                        "text-lg"
-                    )}>
-                        { "Insert" }
-                    </h3>
-                    <InsertDamageStackSelector
-                        champion_id={props.champion_id.clone()}
-                        items={props.items.clone()}
-                        runes={props.runes.clone()}
-                        push_callback={props.push_callback.clone()}
-                    />
-                </div>
-                <div class={classes!("flex", "flex-col", "gap-2")}>
-                    <h3 class={classes!(
-                        "text-lg"
-                    )}>
-                        { "Remove" }
-                    </h3>
-                    <RemoveDamageStackSelector
-                        champion_id={props.champion_id.clone()}
-                        stack={props.stack.clone()}
-                        remove_callback={props.remove_callback.clone()}
-                    />
-                </div>
+                <InsertDamageStackSelector
+                    champion_id={props.champion_id.clone()}
+                    items={props.items.clone()}
+                    runes={props.runes.clone()}
+                    push_callback={props.push_callback.clone()}
+                />
+                <RemoveDamageStackSelector
+                    champion_id={props.champion_id.clone()}
+                    stack={props.stack.clone()}
+                    remove_callback={props.remove_callback.clone()}
+                />
             </div>
             <DamageStackTable damages={props.damages.clone()} />
         </div>

@@ -81,13 +81,11 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
     }
 
     html! {
-        <div class={classes!(
-            "flex", "flex-col", "gap-2",
-        )}>
+        <>
             {ability_cell!(q, 'Q')}
             {ability_cell!(w, 'W')}
             {ability_cell!(e, 'E')}
             {ability_cell!(r, 'R')}
-        </div>
+        </>
     }
 }

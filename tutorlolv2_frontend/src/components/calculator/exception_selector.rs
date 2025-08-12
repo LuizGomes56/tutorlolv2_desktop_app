@@ -169,9 +169,7 @@ const SIZE_SVG: &'static str = "32";
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
     html! {
-        <div class={classes!(
-            "flex", "flex-col", "gap-2",
-        )}>
+        <>
             <NumericField<u8>
                 title={"Number of ally fire dragons"}
                 source={Exception::Image}
@@ -221,6 +219,6 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                 image_html={svg!("../../../public/svgs/infer", SIZE_SVG)}
                 title={"Determine if this champion's stats will be based on its items, or manually inserted"}
             />
-        </div>
+        </>
     }
 }
