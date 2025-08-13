@@ -1,8 +1,8 @@
 use crate::{
     components::{Image, ImageType, calculator::ChangeAbilityLevelsAction},
-    models::{base::AbilityLevels, shared::ChampionId},
+    models::base::AbilityLevels,
 };
-use generated_code::{AbilityLike, AbilityName};
+use generated_code::{AbilityLike, AbilityName, ChampionId};
 use paste::paste;
 use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 

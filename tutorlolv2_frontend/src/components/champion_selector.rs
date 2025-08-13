@@ -2,10 +2,10 @@ use crate::{
     color,
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
-    models::shared::ChampionId,
+    utils::UnsafeCast,
     svg,
 };
-use generated_code::CHAMPION_ID_TO_NAME;
+use generated_code::{CHAMPION_ID_TO_NAME, ChampionId};
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
     use_callback, use_memo, use_node_ref, use_state,
@@ -67,7 +67,7 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                     <ChampionOptions
                         key={index}
                         callback={callback}
-                        champion_id={ChampionId::unsafe_cast(index as u8)}
+                        champion_id={ChampionId::from_usize_unchecked(index)}
                     />
                 };
 

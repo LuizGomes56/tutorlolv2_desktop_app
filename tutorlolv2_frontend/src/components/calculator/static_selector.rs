@@ -1,9 +1,9 @@
 use crate::{
     color,
     components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
-    models::shared::{ItemId, RuneId, UnsafeCast},
+    utils::UnsafeCast,
 };
-use generated_code::{ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
+use generated_code::{ITEM_ID_TO_NAME, ItemId, RUNE_ID_TO_NAME, RuneId};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(PartialEq, Properties)]
@@ -62,9 +62,11 @@ pub struct StaticSelectorProps<T: PartialEq> {
 }
 
 #[function_component(StaticSelector)]
-pub fn static_selector<T: PartialEq + UnsafeCast + 'static>(
-    props: &StaticSelectorProps<T>,
-) -> Html {
+pub fn static_selector<T>(props: &StaticSelectorProps<T>) -> Html
+where
+    T: PartialEq + UnsafeCast + 'static,
+    T::Repr: TryInto<usize> + TryFrom<usize>,
+{
     let static_iterator: &[&'static str] = match props.static_iter {
         StaticIterator::Items => &ITEM_ID_TO_NAME,
         StaticIterator::Runes => &RUNE_ID_TO_NAME,
@@ -91,16 +93,16 @@ pub fn static_selector<T: PartialEq + UnsafeCast + 'static>(
                                     onclick={{
                                         let insert_callback = props.insert_callback.clone();
                                         Callback::from(move |_| {
-                                            insert_callback.emit(T::unsafe_cast_usize(index));
+                                            insert_callback.emit(T::from_usize_unchecked(index));
                                         })
                                     }}
                                 >
                                     <Image
                                         source={
                                             if props.static_iter == StaticIterator::Items {
-                                                ImageType::Items(ItemId::unsafe_cast_usize(index))
+                                                ImageType::Items(ItemId::from_usize_unchecked(index))
                                             } else {
-                                                ImageType::Runes(RuneId::unsafe_cast_usize(index))
+                                                ImageType::Runes(RuneId::from_usize_unchecked(index))
                                             }
                                         }
                                         class={classes!("h-10", "w-10", "peer")}
@@ -127,7 +129,7 @@ pub fn static_selector<T: PartialEq + UnsafeCast + 'static>(
                                         {
                                             if props.static_iter == StaticIterator::Items {
                                                 html! {
-                                                    <ItemStatsHover item_id={ItemId::unsafe_cast_usize(index)} />
+                                                    <ItemStatsHover item_id={ItemId::from_usize_unchecked(index)} />
                                                 }
                                             } else {
                                                 html!()

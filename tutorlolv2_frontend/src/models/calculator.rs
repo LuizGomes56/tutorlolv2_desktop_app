@@ -1,10 +1,5 @@
-use crate::models::shared::{ItemId, RuneId};
-
-use super::{
-    base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats},
-    shared::ChampionId,
-};
-use generated_code::AbilityLike;
+use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use serde::{Deserialize, Serialize};
 use yew::{AttrValue, Html, html};
 

@@ -11,7 +11,7 @@ pub fn settings() -> Html {
     let hover_docs_callback = {
         let context = context.clone();
         use_callback((), move |v, _| {
-            context.dispatch(GlobalContextActions::SetHoverDocs(HoverDocs::from(v)));
+            context.dispatch(GlobalContextActions::SetHoverDocs(v));
         })
     };
 
@@ -77,15 +77,11 @@ pub fn settings() -> Html {
                         </ol>
                     </div>
                 </div>
-                <Dropdown<3>
-                    current_index={context.docs as usize}
+                <Dropdown<3, HoverDocs>
+                    current_index={context.docs}
                     callback={hover_docs_callback.clone()}
                     name={"hover_attr"}
-                    iterator={[
-                        "None",
-                        "Partial",
-                        "Full",
-                    ]}
+                    iterator={HoverDocs::to_array()}
                 />
             </div>
         </div>

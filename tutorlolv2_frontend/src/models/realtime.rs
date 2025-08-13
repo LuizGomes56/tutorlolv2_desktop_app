@@ -1,7 +1,5 @@
-use super::{
-    base::{BasicStats, Damages, DragonMultipliers, Stats},
-    shared::{ChampionId, ItemId, RuneId},
-};
+use super::base::{BasicStats, Damages, DragonMultipliers, Stats};
+use generated_code::{ChampionId, ItemId, RuneId};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 

@@ -2,8 +2,8 @@ use crate::{
     color,
     components::{Image, ImageType, calculator::StaticIterator},
     hooks::mouseout::use_mouseout,
-    models::shared::UnsafeCast,
     svg,
+    utils::UnsafeCast,
 };
 use generated_code::{ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
 use yew::{
@@ -28,7 +28,8 @@ struct U32Item {
 #[function_component(U32Selector)]
 pub fn u32_selector<T>(props: &U32SelectorProps<T>) -> Html
 where
-    T: PartialEq + UnsafeCast + Copy + 'static + Into<usize>,
+    T: PartialEq + UnsafeCast + Copy + 'static,
+    T::Repr: TryInto<usize> + TryFrom<usize>,
     ImageType: From<T>,
 {
     let is_open = use_state(|| false);
@@ -78,7 +79,7 @@ where
                         static_iter={props.static_iter}
                         key={index}
                         callback={callback}
-                        value_id={T::unsafe_cast_usize(index)}
+                        value_id={T::from_usize_unchecked(index)}
                     />
                 };
                 U32Item { index, name, html }
@@ -116,7 +117,7 @@ where
                         "text-white", "focus:outline-none", "w-full", "ml-1"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*id_to_name.get(props.current_value.into()).unwrap_or(&"Unknown")}
+                    placeholder={*id_to_name.get(T::into_usize_unchecked(props.current_value)).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -146,7 +147,8 @@ pub struct U32OptionsProps<T: PartialEq + UnsafeCast + 'static> {
 #[function_component(U32Options)]
 fn u32_options<T>(props: &U32OptionsProps<T>) -> Html
 where
-    T: Copy + Into<usize> + PartialEq + UnsafeCast + 'static,
+    T: Copy + PartialEq + UnsafeCast + 'static,
+    T::Repr: TryInto<usize>,
     ImageType: From<T>,
 {
     let id_to_name: &[&'static str] = match props.static_iter {
@@ -166,7 +168,7 @@ where
             }}
         >
             <Image class={classes!("w-5", "h-5")} source={ImageType::from(props.value_id)} />
-            <span>{id_to_name.get(props.value_id.into()).unwrap_or(&"Unknown")}</span>
+            <span>{id_to_name.get(T::into_usize_unchecked(props.value_id)).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }

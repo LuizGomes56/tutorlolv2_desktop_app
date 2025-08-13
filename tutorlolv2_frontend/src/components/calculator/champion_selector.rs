@@ -1,9 +1,9 @@
 use crate::{
     color,
     components::{Image, ImageType},
-    models::shared::ChampionId,
+    utils::UnsafeCast,
 };
-use generated_code::CHAMPION_ID_TO_NAME;
+use generated_code::{CHAMPION_ID_TO_NAME, ChampionId};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
@@ -36,12 +36,12 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                                     onclick={{
                                         let callback = props.set_champion_callback.clone();
                                         Callback::from(move |_| {
-                                            callback.emit(ChampionId::unsafe_cast(index as u8));
+                                            callback.emit(ChampionId::from_usize_unchecked(index));
                                         })
                                     }}
                                 >
                                     <Image
-                                        source={ImageType::Champions(ChampionId::unsafe_cast(index as u8))}
+                                        source={ImageType::Champions(ChampionId::from_usize_unchecked(index))}
                                         class={classes!("h-10", "w-10", "peer")}
                                     />
                                     <div class={classes!(

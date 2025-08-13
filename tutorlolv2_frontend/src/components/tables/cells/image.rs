@@ -5,13 +5,12 @@ use crate::{
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
     },
     context::{HoverDocs, SettingsContext},
-    models::shared::{ChampionId, ItemId, RuneId},
     url,
     utils::ComptimeCache,
 };
 use generated_code::{
-    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ITEM_FORMULAS,
-    ONHIT_EFFECT_OFFSET, RUNE_FORMULAS,
+    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ChampionId, ITEM_FORMULAS,
+    ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
 };
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};
 

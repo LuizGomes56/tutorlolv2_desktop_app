@@ -1,9 +1,8 @@
 use crate::models::{
     base::{AbilityLevels, BasicStats, Stats},
     calculator::InputGame,
-    shared::{ChampionId, ItemId, RuneId},
 };
-use generated_code::AbilityLike;
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;

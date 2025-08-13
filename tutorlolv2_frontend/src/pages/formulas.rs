@@ -4,28 +4,27 @@ use crate::{
         ChampionSelector, U32Selector, calculator::StaticIterator,
         formulas::source_code::SourceCode,
     },
-    models::shared::{ChampionId, ItemId, RuneId},
 };
-use generated_code::{CHAMPION_FORMULAS, CHAMPION_GENERATOR, ITEM_FORMULAS, RUNE_FORMULAS};
+use generated_code::{
+    CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
+};
 use yew::{Callback, Html, classes, function_component, html, use_callback, use_state};
 
 #[derive(Clone, Copy)]
 enum FormulaDropdown {
-    Champions = 0,
-    Items = 1,
-    Runes = 2,
-    Generator = 3,
+    Champions,
+    Items,
+    Runes,
+    Generator,
 }
 
-impl From<usize> for FormulaDropdown {
-    fn from(value: usize) -> Self {
-        match value {
-            0 => FormulaDropdown::Champions,
-            1 => FormulaDropdown::Items,
-            2 => FormulaDropdown::Runes,
-            3 => FormulaDropdown::Generator,
-            _ => FormulaDropdown::Champions,
-        }
+impl FormulaDropdown {
+    fn unsafe_cast(value: u8) -> Self {
+        unsafe { std::mem::transmute(value) }
+    }
+
+    fn to_array() -> [&'static str; 4] {
+        ["Champions", "Items", "Runes", "Generator"]
     }
 }
 
@@ -63,12 +62,7 @@ pub fn formulas() -> Html {
             <div class={classes!("flex", "flex-wrap", "gap-2", "items-center")}>
                 <div class={classes!("grid", "grid-cols-4", "gap-x-2")}>
                     {
-                        [
-                            "Champions",
-                            "Items",
-                            "Runes",
-                            "Generator",
-                        ]
+                        FormulaDropdown::to_array()
                         .into_iter()
                         .enumerate()
                         .map(|(index, value)| html! {
@@ -85,7 +79,7 @@ pub fn formulas() -> Html {
                                     onchange={{
                                         let current_dropdown_id = current_dropdown_id.clone();
                                         Callback::from(move |_| {
-                                            current_dropdown_id.set(FormulaDropdown::from(index));
+                                            current_dropdown_id.set(FormulaDropdown::unsafe_cast(index as u8));
                                         })
                                     }}
                                     type={"radio"}

@@ -1,9 +1,8 @@
 use crate::{
     components::{Image, ImageType, calculator::StackValue},
-    models::shared::{ChampionId, ItemId, RuneId},
     svg, url,
 };
-use generated_code::CHAMPION_ABILITIES;
+use generated_code::{CHAMPION_ABILITIES, ChampionId, ItemId, RuneId};
 use yew::{
     AttrValue, Callback, Html, MouseEvent, Properties, classes, function_component, html, use_memo,
 };

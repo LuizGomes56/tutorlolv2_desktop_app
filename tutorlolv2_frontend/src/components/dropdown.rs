@@ -1,16 +1,23 @@
-use crate::{color, hooks::mouseout::use_mouseout, svg};
+use crate::{
+    color, hooks::mouseout::use_mouseout, utils::UnsafeCast, svg, utils::StringifyEnum,
+};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_node_ref, use_state};
 
 #[derive(Properties, PartialEq)]
-pub struct DropdownProps<const N: usize> {
-    pub current_index: usize,
-    pub callback: Callback<usize>,
+pub struct DropdownProps<const N: usize, T: Copy + 'static + StringifyEnum + UnsafeCast + PartialEq>
+{
+    pub current_index: T,
+    pub callback: Callback<T>,
     pub iterator: [&'static str; N],
     pub name: &'static str,
 }
 
 #[function_component(Dropdown)]
-pub fn dropdown<const N: usize>(props: &DropdownProps<N>) -> Html {
+pub fn dropdown<const N: usize, T>(props: &DropdownProps<N, T>) -> Html
+where
+    T: PartialEq + UnsafeCast + StringifyEnum + Copy + 'static,
+    T::Repr: TryInto<usize> + TryFrom<usize>,
+{
     let is_open = use_state(|| false);
 
     let dropdown_ref = use_node_ref();
@@ -47,7 +54,7 @@ pub fn dropdown<const N: usize>(props: &DropdownProps<N>) -> Html {
                     "flex", "items-center", "gap-4",
                     color!(text-200)
                 )}>
-                    <span>{props.iterator[props.current_index]}</span>
+                    <span>{props.current_index.as_str()}</span>
                 </div>
                 <span class={classes!(color!(text-400))}>
                     {svg!("../../public/svgs/chevron_down", "20")}
@@ -77,11 +84,11 @@ pub fn dropdown<const N: usize>(props: &DropdownProps<N>) -> Html {
                                     "has-[:checked]:font-medium",
                                 )}>
                                     <input
-                                        checked={index == props.current_index}
+                                        checked={index == T::into_usize_unchecked(props.current_index)}
                                         onchange={{
                                             let callback = props.callback.clone();
                                             Callback::from(move |_| {
-                                                callback.emit(index);
+                                                callback.emit(T::from_usize_unchecked(index));
                                             })
                                         }}
                                         type={"radio"}

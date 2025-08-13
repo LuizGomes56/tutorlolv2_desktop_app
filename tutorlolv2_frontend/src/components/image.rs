@@ -1,9 +1,5 @@
-use crate::{
-    models::shared::{ChampionId, ItemId, RuneId},
-    url,
-    utils::StringExt,
-};
-use generated_code::AbilityLike;
+use crate::{url, utils::StringExt};
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{AttrValue, Classes, Html, Properties, function_component, html};
 
 #[derive(PartialEq)]

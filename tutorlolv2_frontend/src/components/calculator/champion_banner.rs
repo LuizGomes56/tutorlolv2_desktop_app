@@ -2,11 +2,10 @@ use crate::{
     color,
     components::{Image, ImageType, hover::docs::hover_docs},
     context::{HoverDocs, SettingsContext},
-    models::shared::ChampionId,
     url,
     utils::ComptimeCache,
 };
-use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME};
+use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ChampionId};
 use yew::{AttrValue, Html, Properties, classes, function_component, html, use_context};
 
 #[derive(Properties, PartialEq)]

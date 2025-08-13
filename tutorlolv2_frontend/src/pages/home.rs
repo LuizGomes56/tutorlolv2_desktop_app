@@ -1,7 +1,5 @@
-use crate::{
-    components::image::{Image, ImageType},
-    models::shared::ItemId,
-};
+use crate::components::image::{Image, ImageType};
+use generated_code::ItemId;
 use yew::{Html, classes, function_component, html};
 
 #[function_component(Home)]

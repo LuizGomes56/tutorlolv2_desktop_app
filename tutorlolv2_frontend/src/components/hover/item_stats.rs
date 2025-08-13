@@ -1,10 +1,9 @@
 use crate::{
     color,
     components::{Image, ImageType},
-    models::shared::ItemId,
     url,
 };
-use generated_code::ITEM_DESCRIPTIONS;
+use generated_code::{ITEM_DESCRIPTIONS, ItemId};
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]

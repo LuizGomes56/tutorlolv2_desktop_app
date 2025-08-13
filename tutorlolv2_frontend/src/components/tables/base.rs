@@ -1,7 +1,5 @@
-use crate::{
-    components::tables::cells::{ImageCell, Instances},
-    models::shared::{ChampionId, ItemId, RuneId},
-};
+use crate::components::tables::cells::{ImageCell, Instances};
+use generated_code::{ChampionId, ItemId, RuneId};
 use yew::{Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]

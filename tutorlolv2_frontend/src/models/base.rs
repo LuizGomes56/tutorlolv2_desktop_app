@@ -1,5 +1,4 @@
-use super::shared::{ItemId, RuneId};
-use generated_code::AbilityLike;
+use generated_code::{AbilityLike, ItemId, RuneId};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Deserialize, Default)]

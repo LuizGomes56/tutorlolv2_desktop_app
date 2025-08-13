@@ -1,8 +1,8 @@
 use crate::{
     components::{Image, ImageType},
-    models::shared::ChampionId,
     svg, url,
 };
+use generated_code::ChampionId;
 use std::str::FromStr;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
