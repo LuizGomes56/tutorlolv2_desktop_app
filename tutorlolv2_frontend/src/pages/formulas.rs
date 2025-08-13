@@ -1,9 +1,6 @@
 use crate::{
     color,
-    components::{
-        ChampionSelector, U32Selector, calculator::StaticIterator,
-        formulas::source_code::SourceCode,
-    },
+    components::{Selector, calculator::StaticIterator, formulas::source_code::SourceCode},
 };
 use generated_code::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
@@ -99,20 +96,21 @@ pub fn formulas() -> Html {
                 {
                     match *current_dropdown_id {
                         FormulaDropdown::Champions | FormulaDropdown::Generator => html! {
-                            <ChampionSelector
+                            <Selector<ChampionId>
+                                static_iter={StaticIterator::Champions}
                                 callback={champion_callback.clone()}
-                                current_champion={*current_champion}
+                                current_value={*current_champion}
                             />
                         },
                         FormulaDropdown::Items => html! {
-                            <U32Selector<ItemId>
+                            <Selector<ItemId>
                                 static_iter={StaticIterator::Items}
                                 callback={item_callback.clone()}
                                 current_value={*current_item}
                             />
                         },
                         FormulaDropdown::Runes => html! {
-                            <U32Selector<RuneId>
+                            <Selector<RuneId>
                                 static_iter={StaticIterator::Runes}
                                 callback={rune_callback.clone()}
                                 current_value={*current_rune}

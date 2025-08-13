@@ -3,7 +3,7 @@ use crate::{
     components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
     utils::UnsafeCast,
 };
-use generated_code::{ITEM_ID_TO_NAME, ItemId, RUNE_ID_TO_NAME, RuneId};
+use generated_code::{CHAMPION_ID_TO_NAME, ITEM_ID_TO_NAME, ItemId, RUNE_ID_TO_NAME, RuneId};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(PartialEq, Properties)]
@@ -57,7 +57,7 @@ where
 
 #[derive(PartialEq, Properties)]
 pub struct StaticSelectorProps<T: PartialEq> {
-    pub insert_callback: Callback<T>,
+    pub callback: Callback<T>,
     pub static_iter: StaticIterator,
 }
 
@@ -70,6 +70,7 @@ where
     let static_iterator: &[&'static str] = match props.static_iter {
         StaticIterator::Items => &ITEM_ID_TO_NAME,
         StaticIterator::Runes => &RUNE_ID_TO_NAME,
+        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
     };
 
     let selector_memo = use_memo((), |_| {
@@ -91,9 +92,9 @@ where
                                         color!(border-700),
                                     )}
                                     onclick={{
-                                        let insert_callback = props.insert_callback.clone();
+                                        let callback = props.callback.clone();
                                         Callback::from(move |_| {
-                                            insert_callback.emit(T::from_usize_unchecked(index));
+                                            callback.emit(T::from_usize_unchecked(index));
                                         })
                                     }}
                                 >

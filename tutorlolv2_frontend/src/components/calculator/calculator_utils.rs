@@ -11,6 +11,7 @@ use yew::Reducible;
 pub enum StaticIterator {
     Runes,
     Items,
+    Champions,
 }
 
 macro_rules! stats_reducer {

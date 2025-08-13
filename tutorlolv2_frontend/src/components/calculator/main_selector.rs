@@ -78,8 +78,9 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
                 if *selected_tab == SelectedTab::Champions { "block" }
                 else { "hidden" }
             )}>
-                <ChampionSelector
-                    set_champion_callback={props.set_current_player_champion_id_callback.clone()}
+                <StaticSelector<ChampionId>
+                    static_iter={StaticIterator::Champions}
+                    callback={props.set_current_player_champion_id_callback.clone()}
                 />
             </div>
             <div class={classes!(
@@ -89,7 +90,7 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
             )}>
                 <StaticSelector<ItemId>
                     static_iter={StaticIterator::Items}
-                    insert_callback={props.insert_item_callback.clone()}
+                    callback={props.insert_item_callback.clone()}
                 />
                 <StaticEvent<ItemId>
                     iterator={props.items_iterator.clone()}
@@ -104,7 +105,7 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
             )}>
                 <StaticSelector<RuneId>
                     static_iter={StaticIterator::Runes}
-                    insert_callback={props.insert_rune_callback.clone()}
+                    callback={props.insert_rune_callback.clone()}
                 />
                 <StaticEvent<RuneId>
                     iterator={props.runes_iterator.clone()}

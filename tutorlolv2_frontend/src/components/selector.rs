@@ -1,32 +1,44 @@
 use crate::{
     color,
-    components::{Image, ImageType},
+    components::{Image, ImageType, calculator::StaticIterator},
     hooks::mouseout::use_mouseout,
-    utils::UnsafeCast,
     svg,
+    utils::UnsafeCast,
 };
-use generated_code::{CHAMPION_ID_TO_NAME, ChampionId};
+use generated_code::{CHAMPION_ID_TO_NAME, ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
     use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
-pub struct ChampionSelectorProps {
-    pub callback: Callback<ChampionId>,
-    pub current_champion: ChampionId,
+pub struct SelectorProps<T: PartialEq + UnsafeCast + 'static> {
+    pub static_iter: StaticIterator,
+    pub callback: Callback<T>,
+    pub current_value: T,
 }
 
 #[derive(Clone, PartialEq)]
-struct ChampionItem {
+struct U32Item {
+    index: usize,
     name: &'static str,
     html: Html,
 }
 
-#[function_component(ChampionSelector)]
-pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
+#[function_component(Selector)]
+pub fn selector<T>(props: &SelectorProps<T>) -> Html
+where
+    T: PartialEq + UnsafeCast + Copy + 'static,
+    T::Repr: TryInto<usize> + TryFrom<usize>,
+    ImageType: From<T>,
+{
     let is_open = use_state(|| false);
     let search_query = use_state(|| String::new());
+    let id_to_name: &[&'static str] = match props.static_iter {
+        StaticIterator::Items => &ITEM_ID_TO_NAME,
+        StaticIterator::Runes => &RUNE_ID_TO_NAME,
+        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
+    };
     let callback = {
         let original_callback = props.callback.clone();
         use_callback(original_callback, |v, original_callback| {
@@ -58,28 +70,29 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
         })
     };
 
-    let all_champions = use_memo(callback, |callback| {
-        CHAMPION_ID_TO_NAME
+    let all_values = use_memo(callback, |callback| {
+        id_to_name
             .into_iter()
             .enumerate()
-            .map(|(index, name)| {
+            .map(|(index, &name)| {
                 let html = html! {
-                    <ChampionOptions
+                    <U32Options<T>
+                        static_iter={props.static_iter}
                         key={index}
                         callback={callback}
-                        champion_id={ChampionId::from_usize_unchecked(index)}
+                        value_id={T::from_usize_unchecked(index)}
                     />
                 };
-
-                ChampionItem { name, html }
+                U32Item { index, name, html }
             })
             .collect::<Vec<_>>()
     });
 
-    let visible_champions = all_champions
+    let visible_values = all_values
         .iter()
-        .filter(|item| {
-            item.name
+        .filter(|value| {
+            value
+                .name
                 .to_lowercase()
                 .contains(&search_query.to_lowercase())
         })
@@ -105,7 +118,7 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                         "text-white", "focus:outline-none", "w-full", "ml-1"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*CHAMPION_ID_TO_NAME.get(props.current_champion as usize).unwrap_or(&"Unknown")}
+                    placeholder={*id_to_name.get(T::into_usize_unchecked(props.current_value)).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -119,20 +132,31 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                     if *is_open { "flex" } else { "hidden" }
                 )
             }>
-                {for visible_champions.iter().map(|item| item.html.clone())}
+                {for visible_values.iter().map(|item| item.html.clone())}
             </div>
         </div>
     }
 }
 
 #[derive(Properties, PartialEq)]
-pub struct ChampionOptionsProps {
-    pub callback: Callback<ChampionId>,
-    pub champion_id: ChampionId,
+pub struct U32OptionsProps<T: PartialEq + UnsafeCast + 'static> {
+    pub static_iter: StaticIterator,
+    pub callback: Callback<T>,
+    pub value_id: T,
 }
 
-#[function_component(ChampionOptions)]
-fn champion_options(props: &ChampionOptionsProps) -> Html {
+#[function_component(U32Options)]
+fn u32_options<T>(props: &U32OptionsProps<T>) -> Html
+where
+    T: Copy + PartialEq + UnsafeCast + 'static,
+    T::Repr: TryInto<usize>,
+    ImageType: From<T>,
+{
+    let id_to_name: &[&'static str] = match props.static_iter {
+        StaticIterator::Items => &ITEM_ID_TO_NAME,
+        StaticIterator::Runes => &RUNE_ID_TO_NAME,
+        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
+    };
     html! {
         <button
             class={classes!(
@@ -141,12 +165,12 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 "text-sm", "select-none"
             )}
             onclick={{
-                let champion_id = props.champion_id;
-                props.callback.reform(move |_| champion_id)
+                let value_id = props.value_id;
+                props.callback.reform(move |_| value_id)
             }}
         >
-            <Image class={classes!("w-5", "h-5")} source={ImageType::Champions(props.champion_id)} />
-            <span>{CHAMPION_ID_TO_NAME.get(props.champion_id as usize).unwrap_or(&"Unknown")}</span>
+            <Image class={classes!("w-5", "h-5")} source={ImageType::from(props.value_id)} />
+            <span>{id_to_name.get(T::into_usize_unchecked(props.value_id)).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }

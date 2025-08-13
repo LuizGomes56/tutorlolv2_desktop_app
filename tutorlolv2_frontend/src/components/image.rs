@@ -11,6 +11,12 @@ pub enum ImageType {
     Other(AttrValue),
 }
 
+impl From<ChampionId> for ImageType {
+    fn from(value: ChampionId) -> Self {
+        ImageType::Champions(value)
+    }
+}
+
 impl From<RuneId> for ImageType {
     fn from(value: RuneId) -> Self {
         ImageType::Runes(value)

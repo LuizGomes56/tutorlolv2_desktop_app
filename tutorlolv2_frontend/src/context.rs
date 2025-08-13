@@ -16,8 +16,8 @@ pub enum HoverDocs {
 
 impl StringifyEnum for HoverDocs {
     #[inline]
-    fn as_str(&self) -> &'static str {
-        match *self {
+    fn as_str(self) -> &'static str {
+        match self {
             HoverDocs::None => "None",
             HoverDocs::Partial => "Partial",
             HoverDocs::Full => "Full",
@@ -26,6 +26,7 @@ impl StringifyEnum for HoverDocs {
 }
 
 impl HoverDocs {
+    #[inline]
     pub fn to_array() -> [&'static str; 3] {
         [
             HoverDocs::None.as_str(),
@@ -71,13 +72,6 @@ pub struct SettingsProviderProps {
 #[function_component(SettingsProvider)]
 pub fn settings_provider(props: &SettingsProviderProps) -> Html {
     let settings = use_reducer(GlobalContext::default);
-
-    // {
-    //     let settings = settings.clone();
-    //     use_effect_with(settings, move |settings| {
-    //         web_sys::console::log_1(&format!("{:?}", (*settings).docs).into());
-    //     })
-    // }
 
     html! {
         <ContextProvider<SettingsContext> context={settings.clone()}>
