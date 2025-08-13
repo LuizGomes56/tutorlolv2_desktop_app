@@ -1,5 +1,8 @@
 use super::*;
-use crate::color;
+use crate::{
+    color,
+    models::shared::{ChampionId, ItemId, RuneId},
+};
 use yew::{
     AttrValue, Callback, Html, Properties, classes, function_component, html, use_callback,
     use_memo, use_state,
@@ -7,13 +10,13 @@ use yew::{
 
 #[derive(PartialEq, Properties)]
 pub struct MainSelectorProps {
-    pub set_current_player_champion_id_callback: Callback<&'static str>,
-    pub insert_item_callback: Callback<u32>,
+    pub set_current_player_champion_id_callback: Callback<ChampionId>,
+    pub insert_item_callback: Callback<ItemId>,
     pub remove_item_callback: Callback<usize>,
-    pub insert_rune_callback: Callback<u32>,
+    pub insert_rune_callback: Callback<RuneId>,
     pub remove_rune_callback: Callback<usize>,
-    pub items_iterator: Vec<u32>,
-    pub runes_iterator: Vec<u32>,
+    pub items_iterator: Vec<ItemId>,
+    pub runes_iterator: Vec<RuneId>,
     pub current_player_champion_id: AttrValue,
 }
 
@@ -86,11 +89,11 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
                 else { "hidden" },
                 "grid", "grid-cols-[auto_1fr]", "gap-4",
             )}>
-                <StaticSelector
+                <StaticSelector<ItemId>
                     static_iter={StaticIterator::Items}
                     insert_callback={props.insert_item_callback.clone()}
                 />
-                <StaticEvent
+                <StaticEvent<ItemId>
                     iterator={props.items_iterator.clone()}
                     remove_callback={props.remove_item_callback.clone()}
                     static_iter={StaticIterator::Items}
@@ -101,11 +104,11 @@ pub fn main_selector(props: &MainSelectorProps) -> Html {
                 else { "hidden" },
                 "grid", "grid-cols-[auto_1fr]", "gap-4",
             )}>
-                <StaticSelector
+                <StaticSelector<RuneId>
                     static_iter={StaticIterator::Runes}
                     insert_callback={props.insert_rune_callback.clone()}
                 />
-                <StaticEvent
+                <StaticEvent<RuneId>
                     iterator={props.runes_iterator.clone()}
                     remove_callback={props.remove_rune_callback.clone()}
                     static_iter={StaticIterator::Runes}

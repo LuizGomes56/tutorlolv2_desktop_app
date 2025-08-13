@@ -1,3 +1,5 @@
+use super::shared::{ItemId, RuneId};
+use generated_code::AbilityLike;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Deserialize, Default)]
@@ -51,17 +53,17 @@ pub struct BasicStats {
 
 #[derive(Debug, Deserialize)]
 pub struct SimulatedDamages {
-    pub abilities: Vec<(String, InstanceDamage)>,
-    pub items: DamageLike<u32>,
-    pub runes: DamageLike<u32>,
+    pub abilities: DamageLike<AbilityLike>,
+    pub items: DamageLike<ItemId>,
+    pub runes: DamageLike<RuneId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Damages {
-    pub abilities: Vec<(String, InstanceDamage)>,
-    pub items: DamageLike<u32>,
-    pub runes: DamageLike<u32>,
-    pub compared_items: Vec<(u32, SimulatedDamages)>,
+    pub abilities: DamageLike<AbilityLike>,
+    pub items: DamageLike<ItemId>,
+    pub runes: DamageLike<RuneId>,
+    pub compared_items: Vec<(ItemId, SimulatedDamages)>,
 }
 
 #[derive(Debug, Deserialize)]

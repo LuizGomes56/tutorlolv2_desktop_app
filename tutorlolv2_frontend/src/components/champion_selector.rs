@@ -2,24 +2,24 @@ use crate::{
     color,
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
+    models::shared::ChampionId,
     svg,
 };
-use generated_code::{CHAMPION_ID_TO_NAME, CHAMPION_NAME_TO_ID};
-use std::borrow::Cow;
+use generated_code::CHAMPION_ID_TO_NAME;
 use yew::{
-    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
-    html, use_callback, use_memo, use_node_ref, use_state,
+    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
+    use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
-    pub callback: Callback<&'static str>,
-    pub current_champion: &'static str,
+    pub callback: Callback<ChampionId>,
+    pub current_champion: ChampionId,
 }
 
 #[derive(Clone, PartialEq)]
-struct ChampionItem<'a> {
-    name: Cow<'a, str>,
+struct ChampionItem {
+    name: &'static str,
     html: Html,
 }
 
@@ -59,22 +59,19 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
     };
 
     let all_champions = use_memo(callback, |callback| {
-        CHAMPION_NAME_TO_ID
-            .entries()
+        CHAMPION_ID_TO_NAME
+            .into_iter()
             .enumerate()
-            .map(|(index, (champion_name, champion_id))| {
+            .map(|(index, name)| {
                 let html = html! {
                     <ChampionOptions
                         key={index}
                         callback={callback}
-                        champion_id={*champion_id}
+                        champion_id={ChampionId::unsafe_cast(index as u8)}
                     />
                 };
 
-                ChampionItem {
-                    name: Cow::Borrowed(champion_name),
-                    html,
-                }
+                ChampionItem { name, html }
             })
             .collect::<Vec<_>>()
     });
@@ -108,7 +105,7 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                         "text-white", "focus:outline-none", "w-full", "ml-1"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*CHAMPION_ID_TO_NAME.get(props.current_champion).unwrap_or(&"Unknown")}
+                    placeholder={*CHAMPION_ID_TO_NAME.get(props.current_champion as usize).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -130,8 +127,8 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionOptionsProps {
-    pub callback: Callback<&'static str>,
-    pub champion_id: &'static str,
+    pub callback: Callback<ChampionId>,
+    pub champion_id: ChampionId,
 }
 
 #[function_component(ChampionOptions)]
@@ -148,8 +145,8 @@ fn champion_options(props: &ChampionOptionsProps) -> Html {
                 props.callback.reform(move |_| champion_id)
             }}
         >
-            <Image class={classes!("w-5", "h-5")} source={ImageType::Champions(AttrValue::Static(props.champion_id))} />
-            <span>{CHAMPION_ID_TO_NAME.get(props.champion_id).unwrap_or(&"Unknown")}</span>
+            <Image class={classes!("w-5", "h-5")} source={ImageType::Champions(props.champion_id)} />
+            <span>{CHAMPION_ID_TO_NAME.get(props.champion_id as usize).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }

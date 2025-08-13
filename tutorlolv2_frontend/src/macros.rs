@@ -49,6 +49,9 @@ macro_rules! color {
 #[macro_export]
 macro_rules! url {
     (@inner) => { "http://localhost:8082" };
+    (static $path:expr) => {
+        url!(@inner).to_owned() + $path
+    };
     ($path:literal) => {
         concat!(url!(@inner), $path)
     };
@@ -59,27 +62,3 @@ macro_rules! url {
         )
     };
 }
-
-pub static STATS_URL: phf::Map<&'static str, &'static str> = phf::phf_map!(
-    "Health" => url!("/img/stats/health.svg"),
-    "Ability Haste" => url!("/img/stats/ability_haste.svg"),
-    "Move Speed" => url!("/img/stats/move_speed.svg"),
-    "Life Steal" => url!("/img/stats/life_steal.svg"),
-    "Omnivamp" => url!("/img/stats/omnivamp.svg"),
-    "Armor Penetration" => url!("/img/stats/armor_penetration.svg"),
-    "Lethality" => url!("/img/stats/armor_penetration.svg"),
-    "Magic Penetration" => url!("/img/stats/magic_penetration.svg"),
-    "Gold Per 10 Seconds" => url!("/img/stats/gold.svg"),
-    "Tenacity" => url!("/img/stats/tenacity.svg"),
-    "Attack Damage" => url!("/img/stats/attack_damage.svg"),
-    "Attack Speed" => url!("/img/stats/attack_speed.svg"),
-    "Critical Strike Chance" => url!("/img/stats/crit_chance.svg"),
-    "Critical Strike Damage" => url!("/img/stats/crit_damage.svg"),
-    "Heal And Shield Power" => url!("/img/stats/heal_and_shield_power.svg"),
-    "Mana" => url!("/img/stats/mana.svg"),
-    "Armor" => url!("/img/stats/armor.svg"),
-    "Base Mana Regen" => url!("/img/stats/mana_regeneration.svg"),
-    "Base Health Regen" => url!("/img/stats/health_regeneration.svg"),
-    "Magic Resist" => url!("/img/stats/magic_resist.svg"),
-    "Ability Power" => url!("/img/stats/ability_power.svg"),
-);

@@ -1,13 +1,14 @@
 use crate::{
     color,
     components::{Image, ImageType},
+    models::shared::ChampionId,
 };
-use generated_code::CHAMPION_NAME_TO_ID;
-use yew::{AttrValue, Callback, Html, Properties, classes, function_component, html, use_memo};
+use generated_code::CHAMPION_ID_TO_NAME;
+use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionSelectorProps {
-    pub set_champion_callback: Callback<&'static str>,
+    pub set_champion_callback: Callback<ChampionId>,
 }
 
 #[function_component(ChampionSelector)]
@@ -19,11 +20,11 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                 "w-fit"
             )}>
                 {
-                    for CHAMPION_NAME_TO_ID
-                        .entries()
+                    for CHAMPION_ID_TO_NAME
+                        .into_iter()
                         .enumerate()
-                        .map(|(index, (name, id))| {
-                            let len = CHAMPION_NAME_TO_ID.len();
+                        .map(|(index, name)| {
+                            let len = CHAMPION_ID_TO_NAME.len();
                             html! {
                                 <button
                                     class={classes!(
@@ -35,12 +36,12 @@ pub fn champion_selector(props: &ChampionSelectorProps) -> Html {
                                     onclick={{
                                         let callback = props.set_champion_callback.clone();
                                         Callback::from(move |_| {
-                                            callback.emit(*id);
+                                            callback.emit(ChampionId::unsafe_cast(index as u8));
                                         })
                                     }}
                                 >
                                     <Image
-                                        source={ImageType::Champions(AttrValue::Static(*id))}
+                                        source={ImageType::Champions(ChampionId::unsafe_cast(index as u8))}
                                         class={classes!("h-10", "w-10", "peer")}
                                     />
                                     <div class={classes!(

@@ -1,19 +1,20 @@
 use crate::{
     color,
     components::{Image, ImageType},
-    macros::STATS_URL,
+    models::shared::ItemId,
+    url,
 };
 use generated_code::ITEM_DESCRIPTIONS;
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
 #[derive(Properties, PartialEq)]
 pub struct ItemStatsHoverProps {
-    pub item_id: u32,
+    pub item_id: ItemId,
 }
 
 #[function_component(ItemStatsHover)]
 pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
-    let item = match ITEM_DESCRIPTIONS.get(&props.item_id) {
+    let item = match ITEM_DESCRIPTIONS.get(props.item_id as usize) {
         Some(item) => item,
         None => return html!(),
     };
@@ -29,29 +30,28 @@ pub fn item_stats_hover(props: &ItemStatsHoverProps) -> Html {
             "text-sm", "text-left", "items-center",
         )}>
             {
-                for item.prettified_stats.iter().filter_map(|(key, val)| {
-                    STATS_URL.get(key).map(|&stat_url| {
-                        html! {
-                            <>
-                                <Image
-                                    class={classes!("min-w-3", "max-w-3", "aspect-square")}
-                                    source={ImageType::Other(AttrValue::Static(stat_url))}
-                                />
-                                <span class={classes!(
-                                    color!(text-300), "font-medium",
-                                    "text-nowrap"
-                                )}>
-                                    { val }
-                                </span>
-                                <span class={classes!(
-                                    color!(text-400), "font-normal",
-                                    "text-nowrap",
-                                )}>
-                                    { key }
-                                </span>
-                            </>
-                        }
-                    })
+                for item.prettified_stats.iter().map(|stat_name| {
+                    let (icon, name, value) = stat_name.info();
+                    html! {
+                        <>
+                            <Image
+                                class={classes!("min-w-3", "max-w-3", "aspect-square")}
+                                source={ImageType::Other(AttrValue::from(url!(static icon)))}
+                            />
+                            <span class={classes!(
+                                color!(text-300), "font-medium",
+                                "text-nowrap"
+                            )}>
+                                { value }
+                            </span>
+                            <span class={classes!(
+                                color!(text-400), "font-normal",
+                                "text-nowrap",
+                            )}>
+                                { name }
+                            </span>
+                        </>
+                    }
                 })
             }
         </div>

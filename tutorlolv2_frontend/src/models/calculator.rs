@@ -1,4 +1,10 @@
-use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
+use crate::models::shared::{ItemId, RuneId};
+
+use super::{
+    base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats},
+    shared::ChampionId,
+};
+use generated_code::AbilityLike;
 use serde::{Deserialize, Serialize};
 use yew::{AttrValue, Html, html};
 
@@ -54,15 +60,15 @@ pub struct OutputGame {
     pub monster_damages: MonsterDamages,
     pub tower_damage: [f64; 6],
     pub current_player: OutputCurrentPlayer,
-    pub enemies: Vec<(String, OutputEnemy)>,
-    pub recommended_items: Vec<u32>,
+    pub enemies: Vec<(ChampionId, OutputEnemy)>,
+    pub recommended_items: Vec<ItemId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputCurrentPlayer {
-    pub champion_id: String,
-    pub damaging_items: Vec<u32>,
-    pub damaging_runes: Vec<u32>,
+    pub champion_id: ChampionId,
+    pub damaging_items: Vec<ItemId>,
+    pub damaging_runes: Vec<RuneId>,
     pub level: u8,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
@@ -71,14 +77,13 @@ pub struct OutputCurrentPlayer {
 
 #[derive(Debug, Deserialize)]
 pub struct CalculatorDamages {
-    pub abilities: Vec<(String, InstanceDamage)>,
-    pub items: DamageLike<u32>,
-    pub runes: DamageLike<u32>,
+    pub abilities: Vec<(AbilityLike, InstanceDamage)>,
+    pub items: DamageLike<ItemId>,
+    pub runes: DamageLike<RuneId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OutputEnemy {
-    pub champion_name: String,
     pub level: u8,
     pub damages: CalculatorDamages,
     pub base_stats: BasicStats,
@@ -90,11 +95,11 @@ pub struct OutputEnemy {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputActivePlayer {
-    pub champion_id: &'static str,
+    pub champion_id: ChampionId,
     pub champion_stats: Stats,
     pub abilities: AbilityLevels,
-    pub items: Vec<u32>,
-    pub runes: Vec<u32>,
+    pub items: Vec<ItemId>,
+    pub runes: Vec<RuneId>,
     pub level: u8,
     pub stacks: u32,
     pub infer_stats: bool,
@@ -102,8 +107,8 @@ pub struct InputActivePlayer {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct InputEnemyPlayers {
-    pub champion_name: &'static str,
-    pub items: Vec<u32>,
+    pub champion_id: ChampionId,
+    pub items: Vec<ItemId>,
     pub level: u8,
     pub stats: BasicStats,
     pub infer_stats: bool,
@@ -123,7 +128,7 @@ impl Default for InputGame {
     fn default() -> Self {
         Self {
             active_player: InputActivePlayer {
-                champion_id: "Vex",
+                champion_id: ChampionId::Vex,
                 champion_stats: Default::default(),
                 abilities: AbilityLevels {
                     q: 5,
@@ -133,12 +138,16 @@ impl Default for InputGame {
                 },
                 level: 15,
                 infer_stats: true,
-                items: vec![3115, 3153, 3100],
+                items: vec![
+                    ItemId::NashorsTooth,
+                    ItemId::BladeoftheRuinedKing,
+                    ItemId::LichBane,
+                ],
                 runes: Default::default(),
                 stacks: Default::default(),
             },
             enemy_players: Vec::from_iter([InputEnemyPlayers {
-                champion_name: "Gwen",
+                champion_id: ChampionId::Gwen,
                 level: 15,
                 infer_stats: true,
                 items: Default::default(),

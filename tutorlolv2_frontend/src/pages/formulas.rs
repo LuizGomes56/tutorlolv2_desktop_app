@@ -4,6 +4,7 @@ use crate::{
         ChampionSelector, U32Selector, calculator::StaticIterator,
         formulas::source_code::SourceCode,
     },
+    models::shared::{ChampionId, ItemId, RuneId},
 };
 use generated_code::{CHAMPION_FORMULAS, CHAMPION_GENERATOR, ITEM_FORMULAS, RUNE_FORMULAS};
 use yew::{Callback, Html, classes, function_component, html, use_callback, use_state};
@@ -31,9 +32,9 @@ impl From<usize> for FormulaDropdown {
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
     let current_dropdown_id = use_state(|| FormulaDropdown::Champions);
-    let current_champion = use_state(|| "Aatrox");
-    let current_item = use_state(|| 3115u32);
-    let current_rune = use_state(|| 8112u32);
+    let current_champion = use_state(|| ChampionId::Aatrox);
+    let current_item = use_state(|| ItemId::NashorsTooth);
+    let current_rune = use_state(|| RuneId::Electrocute);
     let champion_callback = {
         let current_champion = current_champion.clone();
         use_callback((), move |v, _| {
@@ -110,14 +111,14 @@ pub fn formulas() -> Html {
                             />
                         },
                         FormulaDropdown::Items => html! {
-                            <U32Selector
+                            <U32Selector<ItemId>
                                 static_iter={StaticIterator::Items}
                                 callback={item_callback.clone()}
                                 current_value={*current_item}
                             />
                         },
                         FormulaDropdown::Runes => html! {
-                            <U32Selector
+                            <U32Selector<RuneId>
                                 static_iter={StaticIterator::Runes}
                                 callback={rune_callback.clone()}
                                 current_value={*current_rune}
@@ -129,16 +130,16 @@ pub fn formulas() -> Html {
             {
                 match *current_dropdown_id {
                     FormulaDropdown::Champions => html! {
-                        <SourceCode offset={CHAMPION_FORMULAS.get(*current_champion)} />
+                        <SourceCode offset={CHAMPION_FORMULAS.get(*current_champion as usize)} />
                     },
                     FormulaDropdown::Items => html! {
-                        <SourceCode offset={ITEM_FORMULAS.get(&*current_item)} />
+                        <SourceCode offset={ITEM_FORMULAS.get(*current_item as usize)} />
                     },
                     FormulaDropdown::Runes => html! {
-                        <SourceCode offset={RUNE_FORMULAS.get(&*current_rune)} />
+                        <SourceCode offset={RUNE_FORMULAS.get(*current_rune as usize)} />
                     },
                     FormulaDropdown::Generator => html! {
-                        <SourceCode offset={CHAMPION_GENERATOR.get(*current_champion)} />
+                        <SourceCode offset={CHAMPION_GENERATOR.get(*current_champion as usize)} />
                     },
                 }
             }

@@ -2,6 +2,7 @@ use crate::{
     color,
     components::{Image, ImageType, hover::docs::hover_docs},
     context::{HoverDocs, SettingsContext},
+    models::shared::ChampionId,
     url,
     utils::ComptimeCache,
 };
@@ -10,7 +11,7 @@ use yew::{AttrValue, Html, Properties, classes, function_component, html, use_co
 
 #[derive(Properties, PartialEq)]
 pub struct ChampionBannerProps {
-    pub champion_id: AttrValue,
+    pub champion_id: ChampionId,
 }
 
 #[function_component(ChampionBanner)]
@@ -26,15 +27,15 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
         })}>
             <Image
                 class={classes!("w-full", "img-clipped", "h-16")}
-                source={ImageType::Other(url!("/img/centered/{}_0.avif", props.champion_id).into())}
+                source={ImageType::Other(url!("/img/centered/{}_0.avif", props.champion_id.as_str()).into())}
             />
             <span class={classes!("img-letter", "left-2", "bottom-1", "text-sm")}>
-                {*CHAMPION_ID_TO_NAME.get(&props.champion_id).unwrap_or(&"Unknown")}
+                {*CHAMPION_ID_TO_NAME.get(props.champion_id as usize).unwrap_or(&"Unknown")}
             </span>
             {
                 CHAMPION_FORMULAS
-                    .get(&props.champion_id)
-                    .and_then(|formula| {
+                    .get(props.champion_id as usize)
+                    .and_then(|coords| {
                         if hover_settings == HoverDocs::Full {
                             Some(html! {
                                 <div class={classes!(
@@ -50,7 +51,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                                     "gap-y-3", "overflow-auto", "max-h-96",
                                     "px-3.5", color!(bg-900), "border",
                                 )}>
-                                    {hover_docs(AttrValue::Static(formula.as_str()), false)}
+                                    {hover_docs(AttrValue::Static(coords.as_str()), false)}
                                 </div>
                             })
                         }

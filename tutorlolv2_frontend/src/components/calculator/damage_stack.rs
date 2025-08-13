@@ -1,10 +1,7 @@
 use crate::{
-    components::{
-        Image, ImageType,
-        calculator::{StackValue, calculator_utils::ABILITY_STR_SIZE},
-    },
+    components::{Image, ImageType, calculator::StackValue},
+    models::shared::{ChampionId, ItemId, RuneId},
     svg, url,
-    utils::StringExt,
 };
 use generated_code::CHAMPION_ABILITIES;
 use yew::{
@@ -67,9 +64,9 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
 
 #[derive(Properties, PartialEq)]
 pub struct DamageStackSelectorProps {
-    pub champion_id: AttrValue,
-    pub items: Vec<u32>,
-    pub runes: Vec<u32>,
+    pub champion_id: ChampionId,
+    pub items: Vec<ItemId>,
+    pub runes: Vec<RuneId>,
     pub stack: Vec<StackValue>,
     pub push_callback: Callback<StackValue>,
     pub remove_callback: Callback<usize>,
@@ -86,13 +83,13 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
                 "flex", "flex-col", "gap-4"
             )}>
                 <InsertDamageStackSelector
-                    champion_id={props.champion_id.clone()}
+                    champion_id={props.champion_id}
                     items={props.items.clone()}
                     runes={props.runes.clone()}
                     push_callback={props.push_callback.clone()}
                 />
                 <RemoveDamageStackSelector
-                    champion_id={props.champion_id.clone()}
+                    champion_id={props.champion_id}
                     stack={props.stack.clone()}
                     remove_callback={props.remove_callback.clone()}
                 />
@@ -104,7 +101,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
 
 #[derive(Properties, PartialEq)]
 struct RemoveDamageStackSelectorProps {
-    champion_id: AttrValue,
+    champion_id: ChampionId,
     stack: Vec<StackValue>,
     remove_callback: Callback<usize>,
 }
@@ -122,8 +119,9 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
                     .enumerate()
                     .map(|(index, value)| {
                         let image_url = match value {
-                            StackValue::Ability(bytes) => ImageType::Abilities(
-                                props.champion_id.as_str().concat_char(bytes[0] as char),
+                            StackValue::Ability(name) => ImageType::Abilities(
+                                props.champion_id,
+                                *name,
                             ),
                             StackValue::Item(val) => ImageType::Items(*val),
                             StackValue::Rune(val) => ImageType::Runes(*val),
@@ -159,9 +157,9 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
 
 #[derive(Properties, PartialEq)]
 struct InsertDamageStackSelectorProps {
-    champion_id: AttrValue,
-    items: Vec<u32>,
-    runes: Vec<u32>,
+    champion_id: ChampionId,
+    items: Vec<ItemId>,
+    runes: Vec<RuneId>,
     push_callback: Callback<StackValue>,
 }
 
@@ -250,29 +248,25 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
         (props.champion_id.clone(), push_callback.clone()),
         move |(champion_id, push_callback)| {
             CHAMPION_ABILITIES
-                .get(champion_id)
+                .get(*champion_id as usize)
                 .and_then(|value| {
                     Some(
                         value
-                            .keys()
-                            .map(|ability_name| {
-                                let first_char = ability_name.first_char();
+                            .into_iter()
+                            .map(|(ability_name, _)| {
+                                let first_char = ability_name.as_char();
                                 base_content(
-                                    ImageType::Abilities(
-                                        props.champion_id.as_str().concat_char(first_char),
-                                    ),
+                                    ImageType::Abilities(props.champion_id, *ability_name),
                                     {
                                         let push_callback = push_callback.clone();
                                         Callback::from(move |_| {
-                                            push_callback.emit(StackValue::Ability(
-                                                ability_name.to_sized_slice::<ABILITY_STR_SIZE>(),
-                                            ));
+                                            push_callback.emit(StackValue::Ability(*ability_name));
                                         })
                                     },
                                     Some(html! {
                                         <span class={classes!("text-sm", "img-letter")}>
                                             {first_char}
-                                            <sub>{ ability_name.padding_chars() }</sub>
+                                            // <sub>{ ability_name.padding_chars() }</sub>
                                         </span>
                                     }),
                                 )

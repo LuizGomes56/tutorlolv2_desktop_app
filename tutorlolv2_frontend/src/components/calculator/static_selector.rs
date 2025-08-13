@@ -1,19 +1,24 @@
 use crate::{
     color,
     components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
+    models::shared::{ItemId, RuneId, UnsafeCast},
 };
-use generated_code::{ITEM_NAME_TO_ID, RUNE_NAME_TO_ID};
+use generated_code::{ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(PartialEq, Properties)]
-pub struct StaticEventProps {
+pub struct StaticEventProps<T: PartialEq + 'static> {
     pub remove_callback: Callback<usize>,
-    pub iterator: Vec<u32>,
+    pub iterator: Vec<T>,
     pub static_iter: StaticIterator,
 }
 
 #[function_component(StaticEvent)]
-pub fn static_event(props: &StaticEventProps) -> Html {
+pub fn static_event<T>(props: &StaticEventProps<T>) -> Html
+where
+    T: PartialEq + 'static + Copy,
+    ImageType: From<T>,
+{
     html! {
         <div class={classes!(
             "grid", "gap-4", "grid-cols-8",
@@ -40,12 +45,7 @@ pub fn static_event(props: &StaticEventProps) -> Html {
                             >
                                 <Image
                                     class={classes!("h-10", "w-10")}
-                                    source={
-                                        match props.static_iter {
-                                            StaticIterator::Runes => ImageType::Runes(*id),
-                                            StaticIterator::Items => ImageType::Items(*id),
-                                        }
-                                    }
+                                    source={ImageType::from(*id)}
                                 />
                             </button>
                         }
@@ -56,16 +56,18 @@ pub fn static_event(props: &StaticEventProps) -> Html {
 }
 
 #[derive(PartialEq, Properties)]
-pub struct StaticSelectorProps {
-    pub insert_callback: Callback<u32>,
+pub struct StaticSelectorProps<T: PartialEq> {
+    pub insert_callback: Callback<T>,
     pub static_iter: StaticIterator,
 }
 
 #[function_component(StaticSelector)]
-pub fn static_selector(props: &StaticSelectorProps) -> Html {
-    let static_iterator = match props.static_iter {
-        StaticIterator::Items => &ITEM_NAME_TO_ID,
-        StaticIterator::Runes => &RUNE_NAME_TO_ID,
+pub fn static_selector<T: PartialEq + UnsafeCast + 'static>(
+    props: &StaticSelectorProps<T>,
+) -> Html {
+    let static_iterator: &[&'static str] = match props.static_iter {
+        StaticIterator::Items => &ITEM_ID_TO_NAME,
+        StaticIterator::Runes => &RUNE_ID_TO_NAME,
     };
 
     let selector_memo = use_memo((), |_| {
@@ -75,9 +77,9 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
             )}>
                 {
                     for static_iterator
-                        .entries()
+                        .into_iter()
                         .enumerate()
-                        .map(|(index, (name, id))| {
+                        .map(|(index, name)| {
                             let len = static_iterator.len();
                             html! {
                                 <button
@@ -89,16 +91,16 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                     onclick={{
                                         let insert_callback = props.insert_callback.clone();
                                         Callback::from(move |_| {
-                                            insert_callback.emit(*id);
+                                            insert_callback.emit(T::unsafe_cast_usize(index));
                                         })
                                     }}
                                 >
                                     <Image
                                         source={
                                             if props.static_iter == StaticIterator::Items {
-                                                ImageType::Items(*id)
+                                                ImageType::Items(ItemId::unsafe_cast_usize(index))
                                             } else {
-                                                ImageType::Runes(*id)
+                                                ImageType::Runes(RuneId::unsafe_cast_usize(index))
                                             }
                                         }
                                         class={classes!("h-10", "w-10", "peer")}
@@ -125,7 +127,7 @@ pub fn static_selector(props: &StaticSelectorProps) -> Html {
                                         {
                                             if props.static_iter == StaticIterator::Items {
                                                 html! {
-                                                    <ItemStatsHover item_id={*id} />
+                                                    <ItemStatsHover item_id={ItemId::unsafe_cast_usize(index)} />
                                                 }
                                             } else {
                                                 html!()

@@ -10,10 +10,7 @@ use crate::{
     external::api::{decode_bytes, send_bytes},
     models::calculator::{InputGame, OutputGame},
     url,
-    utils::BytesExt,
 };
-use generated_code::CHAMPION_ABILITIES;
-use rustc_hash::FxHashSet;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -27,7 +24,7 @@ pub fn calculator() -> Html {
     let abort_controller = use_state(|| None::<AbortController>);
     let damage_stack = use_reducer(Stack::default);
 
-    let current_player_champion_id = AttrValue::Static((*input_game).active_player.champion_id);
+    let current_player_champion_id = (*input_game).active_player.champion_id;
 
     let set_current_player_champion_id = {
         let input_game = input_game.clone();
@@ -183,7 +180,7 @@ pub fn calculator() -> Html {
                     "flex", "flex-col", "gap-4", "w-56", "bg-[#141417]"
                 )}>
                     <ChampionBanner
-                        champion_id={&current_player_champion_id}
+                        champion_id={current_player_champion_id}
                     />
                     <div class={classes!(
                         "grid", "grid-cols-2", "gap-2", "px-4"
@@ -191,10 +188,10 @@ pub fn calculator() -> Html {
                         <AbilitySelector
                             ability_levels={input_game.active_player.abilities}
                             callback={change_ability_level}
-                            current_player_champion_id={&current_player_champion_id}
+                            current_player_champion_id={current_player_champion_id}
                         />
                         <ExceptionSelector
-                            current_player_champion_id={&current_player_champion_id}
+                            current_player_champion_id={current_player_champion_id}
                             attack_form={false}
                             infer_stats={input_game.active_player.infer_stats}
                             set_ally_fire_dragons={set_ally_fire_dragons}
@@ -215,15 +212,6 @@ pub fn calculator() -> Html {
                 <div>
                     {
                         if let Some(output_game) = &*output_game {
-                            let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
-
-                            let enemies = output_game
-                                .enemies
-                                .iter()
-                                .filter(|(keyname, _)| !hidden_set.contains(keyname))
-                                .map(|(key, val)| (key, val))
-                                .collect::<Vec<_>>();
-
                             html! {
                                 <div class={classes!(
                                     "flex", "flex-col", "gap-6", "py-2"
@@ -231,19 +219,15 @@ pub fn calculator() -> Html {
                                     <BaseTable
                                         damaging_items={output_game.current_player.damaging_items.clone()}
                                         damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                        champion_id={&current_player_champion_id}
+                                        champion_id={current_player_champion_id}
                                         damages={
-                                            enemies
+                                            output_game.enemies
                                                 .iter()
                                                 .map(|(enemy_champion_id, enemy)| {
                                                     html! {
                                                         <tr>
                                                             <td class={classes!("w-10", "h-10")}>
-                                                                <ImageCell
-                                                                    instance={Instances::Champions(
-                                                                        AttrValue::from((*enemy_champion_id).clone()),
-                                                                    )}
-                                                                />
+                                                                <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                             </td>
                                                             {damage_cells(&enemy.damages.abilities)}
                                                             {damage_cells(&enemy.damages.items)}
@@ -257,25 +241,20 @@ pub fn calculator() -> Html {
                                     <DamageStackSelector
                                         items={output_game.current_player.damaging_items.clone()}
                                         runes={output_game.current_player.damaging_runes.clone()}
-                                        champion_id={&current_player_champion_id}
+                                        champion_id={current_player_champion_id}
                                         stack={(*damage_stack).get_owned()}
                                         push_callback={push_stack_callback}
                                         remove_callback={remove_stack_callback}
                                         damages={
-                                            enemies
+                                            output_game.enemies
                                                 .iter()
                                                 .map(|(enemy_champion_id, enemy)| {
                                                     let mut total_damage = 0.0;
                                                     for value in (*damage_stack).get_ref() {
                                                         match value {
-                                                            StackValue::Ability(bytes) => {
-                                                                let ability_name = bytes.as_str_unchecked();
-                                                                if let Some(abilities_phf) = CHAMPION_ABILITIES.get(&current_player_champion_id) {
-                                                                    if let Some(index) = abilities_phf.get_index(ability_name) {
-                                                                        if let Some((_, instance_damage)) = enemy.damages.abilities.get(index) {
-                                                                            total_damage += instance_damage.minimum_damage;
-                                                                        }
-                                                                    }
+                                                            StackValue::Ability(ability) => {
+                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.iter().find(|(a, _)| a == ability) {
+                                                                    total_damage += instance_damage.minimum_damage;
                                                                 }
                                                             },
                                                             StackValue::BasicAttack => {
@@ -314,11 +293,7 @@ pub fn calculator() -> Html {
                                                     html! {
                                                         <tr>
                                                             <td class={classes!("w-10", "h-10")}>
-                                                                <ImageCell
-                                                                    instance={Instances::Champions(
-                                                                        AttrValue::from((*enemy_champion_id).clone()),
-                                                                    )}
-                                                                />
+                                                                <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                             </td>
                                                             {make_td(total_damage.round())}
                                                             {make_td((enemy.current_stats.health - total_damage).round())}
@@ -350,7 +325,7 @@ pub fn calculator() -> Html {
                                     <BaseTable
                                         damaging_items={output_game.current_player.damaging_items.clone()}
                                         damaging_runes={output_game.current_player.damaging_runes.clone()}
-                                        champion_id={&current_player_champion_id}
+                                        champion_id={current_player_champion_id}
                                         damages={
                                             [
                                                 (0, url!("/img/other/voidgrubs.avif")),

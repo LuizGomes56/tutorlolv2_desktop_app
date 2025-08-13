@@ -5,8 +5,9 @@ use crate::{
         hover::{docs::hover_docs, item_stats::ItemStatsHover},
     },
     context::{HoverDocs, SettingsContext},
+    models::shared::{ChampionId, ItemId, RuneId},
     url,
-    utils::{ComptimeCache, StringExt},
+    utils::ComptimeCache,
 };
 use generated_code::{
     BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ITEM_FORMULAS,
@@ -16,10 +17,10 @@ use yew::{AttrValue, Html, Properties, classes, function_component, html, use_co
 
 #[derive(PartialEq)]
 pub enum Instances {
-    Abilities(AttrValue),
-    Items(u32),
-    Runes(u32),
-    Champions(AttrValue),
+    Abilities(ChampionId),
+    Items(ItemId),
+    Runes(RuneId),
+    Champions(ChampionId),
 }
 
 #[derive(Properties, PartialEq)]
@@ -57,27 +58,27 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
         Instances::Abilities(champion_id) => {
             html! {
                 CHAMPION_ABILITIES
-                    .get(champion_id)
-                    .and_then(|phf_formula_map| {
-                        Some(phf_formula_map
-                            .entries()
-                            .map(|(ability_name, formula)| {
-                                let first_char = ability_name.first_char();
+                    .get(*champion_id as usize)
+                    .and_then(|coords| {
+                        Some(coords
+                            .into_iter()
+                            .map(|(ability_like, coord)| {
+                                let first_char = ability_like.as_char();
                                 chain_th(
                                     base_content(
                                         ImageType::Abilities(
-                                            champion_id.concat_char(first_char),
+                                            *champion_id, *ability_like
                                         ),
                                         html! {
                                             <>
                                                 <span class={classes!("text-sm", "img-letter")}>
                                                     {first_char}
-                                                    <sub>{ ability_name.padding_chars() }</sub>
+                                                    // <sub>{ ability_like..padding_chars() }</sub>
                                                 </span>
                                                 {
                                                     match hover_settings {
                                                         HoverDocs::Full => hover_docs(
-                                                            AttrValue::Static(formula.as_str()),
+                                                            AttrValue::Static(coord.as_str()),
                                                             true
                                                         ),
                                                         _ => html!(),
@@ -136,13 +137,13 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                     .unwrap_or_default()
             }
         }
-        Instances::Items(keyname) => base_content(
-            ImageType::Items(*keyname),
+        Instances::Items(item_id) => base_content(
+            ImageType::Items(*item_id),
             match hover_settings {
                 HoverDocs::None => html!(),
                 _ => ITEM_FORMULAS
-                    .get(keyname)
-                    .and_then(|formula| match hover_settings {
+                    .get(*item_id as usize)
+                    .and_then(|coord| match hover_settings {
                         HoverDocs::Full => Some(html! {
                             <div class={classes!(
                                 "group-hover:visible",
@@ -160,8 +161,8 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 "border", color!(border-800), color!(bg-900),
                                 "overflow-auto", "max-h-96", "px-3.5",
                             )}>
-                                <ItemStatsHover item_id={keyname} />
-                                {hover_docs(AttrValue::Static(formula.as_str()), false)}
+                                <ItemStatsHover item_id={*item_id} />
+                                {hover_docs(AttrValue::Static(coord.as_str()), false)}
                             </div>
                         }),
                         _ => Some(html! {
@@ -171,19 +172,19 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 "z-50", "py-3", "border", color!(border-800), "gap-y-2",
                                 "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
                             )}>
-                                <ItemStatsHover item_id={keyname} />
+                                <ItemStatsHover item_id={*item_id} />
                             </div>
                         }),
                     })
                     .unwrap_or_default(),
             },
         ),
-        Instances::Runes(keyname) => base_content(
-            ImageType::Runes(*keyname),
+        Instances::Runes(rune_id) => base_content(
+            ImageType::Runes(*rune_id),
             match hover_settings {
                 HoverDocs::Full => RUNE_FORMULAS
-                    .get(keyname)
-                    .and_then(|formula| Some(hover_docs(AttrValue::Static(formula.as_str()), true)))
+                    .get(*rune_id as usize)
+                    .and_then(|coord| Some(hover_docs(AttrValue::Static(coord.as_str()), true)))
                     .unwrap_or_default(),
                 _ => html!(),
             },

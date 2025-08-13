@@ -3,3 +3,4 @@
 pub mod base;
 pub mod calculator;
 pub mod realtime;
+pub mod shared;

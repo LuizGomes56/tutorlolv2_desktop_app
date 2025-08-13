@@ -1,4 +1,7 @@
-use crate::components::image::{Image, ImageType};
+use crate::{
+    components::image::{Image, ImageType},
+    models::shared::ItemId,
+};
 use yew::{Html, classes, function_component, html};
 
 #[function_component(Home)]
@@ -14,7 +17,7 @@ pub fn home() -> Html {
                     {"Automated damage evaluation"}
                 </h1>
             </div>
-            <Image class={classes!("w-8", "h-8")} source={ImageType::Items(224403)} />
+            <Image class={classes!("w-8", "h-8")} source={ImageType::Items(ItemId::TheGoldenSpatula)} />
         </div>
     }
 }

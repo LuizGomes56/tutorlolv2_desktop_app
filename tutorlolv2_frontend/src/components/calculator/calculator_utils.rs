@@ -1,10 +1,9 @@
-use crate::{
-    models::{
-        base::{AbilityLevels, BasicStats, Stats},
-        calculator::InputGame,
-    },
-    utils::BytesExt,
+use crate::models::{
+    base::{AbilityLevels, BasicStats, Stats},
+    calculator::InputGame,
+    shared::{ChampionId, ItemId, RuneId},
 };
+use generated_code::AbilityLike;
 use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;
@@ -87,24 +86,24 @@ macro_rules! ability_level_reducer {
 ability_level_reducer!(ChangeAbilityLevelsAction, q, w, e, r);
 
 pub enum InputGameAction {
-    SetCurrentPlayerChampionId(&'static str),
+    SetCurrentPlayerChampionId(ChampionId),
     SetCurrentPlayerLevel(u8),
     SetCurrentPlayerInferStats(bool),
     SetCurrentPlayerStacks(u32),
     SetCurrentPlayerStats(ChangeStatsAction),
     SetCurrentPlayerAttackForm(bool),
-    InsertCurrentPlayerItem(u32),
+    InsertCurrentPlayerItem(ItemId),
     RemoveCurrentPlayerItem(usize),
     ClearCurrentPlayerItems,
-    InsertCurrentPlayerRune(u32),
+    InsertCurrentPlayerRune(RuneId),
     RemoveCurrentPlayerRune(usize),
     ClearCurrentPlayerRunes,
     SetAbilityLevels(ChangeAbilityLevelsAction),
-    SetEnemyPlayerChampionName(usize, &'static str),
+    SetEnemyPlayerChampionId(usize, ChampionId),
     SetEnemyPlayerStats(usize, ChangeBasicStatsAction),
     SetEnemyPlayerInferStats(usize, bool),
     SetEnemyPlayerAttackForm(usize, bool),
-    InsertEnemyPlayerItem(usize, u32),
+    InsertEnemyPlayerItem(usize, ItemId),
     RemoveEnemyPlayerItem(usize, usize),
     ClearEnemyPlayerItems(usize),
     SetEnemyPlayerLevel(usize, u8),
@@ -192,9 +191,9 @@ impl Reducible for InputGame {
                     enemy.level = value;
                 }
             }
-            InputGameAction::SetEnemyPlayerChampionName(index, value) => {
+            InputGameAction::SetEnemyPlayerChampionId(index, value) => {
                 if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.champion_name = value;
+                    enemy.champion_id = value;
                 }
             }
             InputGameAction::SetAbilityLevels(action) => {
@@ -215,13 +214,11 @@ impl Reducible for InputGame {
     }
 }
 
-pub const ABILITY_STR_SIZE: usize = 15;
-
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StackValue {
-    Ability([u8; ABILITY_STR_SIZE]),
-    Item(u32),
-    Rune(u32),
+    Ability(AbilityLike),
+    Item(ItemId),
+    Rune(RuneId),
     BasicAttack,
     CriticalStrike,
     Onhit,
@@ -266,21 +263,5 @@ impl Reducible for Stack {
             }
         }
         Rc::new(new_state)
-    }
-}
-
-impl std::fmt::Debug for StackValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StackValue::Ability(bytes) => {
-                write!(f, "Ability(\"{}\")", bytes.as_str_unchecked())
-            }
-            StackValue::Item(val) => write!(f, "Item({})", val),
-            StackValue::Rune(val) => write!(f, "Rune({})", val),
-            StackValue::BasicAttack => write!(f, "BasicAttack"),
-            StackValue::CriticalStrike => write!(f, "CriticalStrike"),
-            StackValue::Onhit => write!(f, "Onhit"),
-            StackValue::Ignite => write!(f, "Ignite"),
-        }
     }
 }

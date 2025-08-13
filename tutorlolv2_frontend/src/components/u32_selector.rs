@@ -2,35 +2,40 @@ use crate::{
     color,
     components::{Image, ImageType, calculator::StaticIterator},
     hooks::mouseout::use_mouseout,
+    models::shared::UnsafeCast,
     svg,
 };
-use generated_code::{ITEM_ID_TO_NAME, ITEM_NAME_TO_ID, RUNE_ID_TO_NAME, RUNE_NAME_TO_ID};
-use std::borrow::Cow;
+use generated_code::{ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
     use_callback, use_memo, use_node_ref, use_state,
 };
 
 #[derive(Properties, PartialEq)]
-pub struct U32SelectorProps {
+pub struct U32SelectorProps<T: PartialEq + UnsafeCast + 'static> {
     pub static_iter: StaticIterator,
-    pub callback: Callback<u32>,
-    pub current_value: u32,
+    pub callback: Callback<T>,
+    pub current_value: T,
 }
 
 #[derive(Clone, PartialEq)]
-struct U32Item<'a> {
-    name: Cow<'a, str>,
+struct U32Item {
+    index: usize,
+    name: &'static str,
     html: Html,
 }
 
 #[function_component(U32Selector)]
-pub fn u32_selector(props: &U32SelectorProps) -> Html {
+pub fn u32_selector<T>(props: &U32SelectorProps<T>) -> Html
+where
+    T: PartialEq + UnsafeCast + Copy + 'static + Into<usize>,
+    ImageType: From<T>,
+{
     let is_open = use_state(|| false);
     let search_query = use_state(|| String::new());
-    let (name_to_id, id_to_name) = match props.static_iter {
-        StaticIterator::Items => (&ITEM_NAME_TO_ID, &ITEM_ID_TO_NAME),
-        StaticIterator::Runes => (&RUNE_NAME_TO_ID, &RUNE_ID_TO_NAME),
+    let id_to_name: &[&'static str] = match props.static_iter {
+        StaticIterator::Items => &ITEM_ID_TO_NAME,
+        StaticIterator::Runes => &RUNE_ID_TO_NAME,
     };
     let callback = {
         let original_callback = props.callback.clone();
@@ -64,22 +69,19 @@ pub fn u32_selector(props: &U32SelectorProps) -> Html {
     };
 
     let all_values = use_memo(callback, |callback| {
-        name_to_id
-            .entries()
+        id_to_name
+            .into_iter()
             .enumerate()
-            .map(|(index, (name, value_id))| {
+            .map(|(index, &name)| {
                 let html = html! {
-                    <U32Options
+                    <U32Options<T>
                         static_iter={props.static_iter}
                         key={index}
                         callback={callback}
-                        value_id={*value_id}
+                        value_id={T::unsafe_cast_usize(index)}
                     />
                 };
-                U32Item {
-                    name: Cow::Borrowed(name),
-                    html,
-                }
+                U32Item { index, name, html }
             })
             .collect::<Vec<_>>()
     });
@@ -114,7 +116,7 @@ pub fn u32_selector(props: &U32SelectorProps) -> Html {
                         "text-white", "focus:outline-none", "w-full", "ml-1"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*id_to_name.get(&props.current_value).unwrap_or(&"Unknown")}
+                    placeholder={*id_to_name.get(props.current_value.into()).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -135,21 +137,21 @@ pub fn u32_selector(props: &U32SelectorProps) -> Html {
 }
 
 #[derive(Properties, PartialEq)]
-pub struct U32OptionsProps {
+pub struct U32OptionsProps<T: PartialEq + UnsafeCast + 'static> {
     pub static_iter: StaticIterator,
-    pub callback: Callback<u32>,
-    pub value_id: u32,
+    pub callback: Callback<T>,
+    pub value_id: T,
 }
 
 #[function_component(U32Options)]
-fn u32_options(props: &U32OptionsProps) -> Html {
-    let id_to_name = match props.static_iter {
+fn u32_options<T>(props: &U32OptionsProps<T>) -> Html
+where
+    T: Copy + Into<usize> + PartialEq + UnsafeCast + 'static,
+    ImageType: From<T>,
+{
+    let id_to_name: &[&'static str] = match props.static_iter {
         StaticIterator::Items => &ITEM_ID_TO_NAME,
         StaticIterator::Runes => &RUNE_ID_TO_NAME,
-    };
-    let source = match props.static_iter {
-        StaticIterator::Items => ImageType::Items(props.value_id),
-        StaticIterator::Runes => ImageType::Runes(props.value_id),
     };
     html! {
         <button
@@ -163,8 +165,8 @@ fn u32_options(props: &U32OptionsProps) -> Html {
                 props.callback.reform(move |_| value_id)
             }}
         >
-            <Image class={classes!("w-5", "h-5")} source={source} />
-            <span>{id_to_name.get(&props.value_id).unwrap_or(&"Unknown")}</span>
+            <Image class={classes!("w-5", "h-5")} source={ImageType::from(props.value_id)} />
+            <span>{id_to_name.get(props.value_id.into()).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }

@@ -9,13 +9,12 @@ use crate::{
     models::realtime::Realtime,
     url,
 };
-use rustc_hash::FxHashSet;
 use serde::Serialize;
-use std::{collections::BTreeMap, rc::Rc};
+use std::rc::Rc;
 use web_sys::{HtmlInputElement, console};
 use yew::{
-    AttrValue, Html, InputEvent, TargetCast, classes, function_component, html,
-    platform::spawn_local, use_effect_with, use_state,
+    Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
+    use_effect_with, use_state,
 };
 
 #[function_component(History)]
@@ -118,15 +117,6 @@ pub fn history() -> Html {
             </div>
             {
                 if let Some(ref data) = **game_data {
-                    let hidden_set = FxHashSet::from_iter(["Neeko".to_string()]);
-
-                    let enemies = data
-                        .enemies
-                        .iter()
-                        .filter(|(keyname, _)| !hidden_set.contains(*keyname))
-                        .map(|(key, val)| (key, val))
-                        .collect::<BTreeMap<_, _>>();
-
                     html! {
                         <div>
                             <BaseTable
@@ -134,7 +124,7 @@ pub fn history() -> Html {
                                 damaging_runes={data.current_player.damaging_runes.clone()}
                                 champion_id={data.current_player.champion_id.clone()}
                                 damages={
-                                    enemies
+                                    data.enemies
                                         .iter()
                                         .map(|(enemy_champion_id, enemy)| {
                                             html! {
@@ -142,13 +132,7 @@ pub fn history() -> Html {
                                                     // color!(odd:bg-900), color!(even:bg-800)
                                                 )}>
                                                     <td class={classes!("w-10", "h-10")}>
-                                                        <ImageCell
-                                                            instance={
-                                                                Instances::Champions(
-                                                                    AttrValue::from((*enemy_champion_id).clone()),
-                                                                )
-                                                            }
-                                                        />
+                                                        <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                     </td>
                                                     {damage_cells(&enemy.damages.abilities)}
                                                     {damage_cells(&enemy.damages.items)}

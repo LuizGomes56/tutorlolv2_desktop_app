@@ -1,11 +1,14 @@
-use crate::components::tables::cells::{ImageCell, Instances};
-use yew::{AttrValue, Html, Properties, classes, function_component, html, use_memo};
+use crate::{
+    components::tables::cells::{ImageCell, Instances},
+    models::shared::{ChampionId, ItemId, RuneId},
+};
+use yew::{Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
-    pub damaging_items: Vec<u32>,
-    pub damaging_runes: Vec<u32>,
-    pub champion_id: AttrValue,
+    pub damaging_items: Vec<ItemId>,
+    pub damaging_runes: Vec<RuneId>,
+    pub champion_id: ChampionId,
     pub damages: Html,
 }
 
@@ -20,7 +23,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                 <thead>
                     <tr>
                         <th class={classes!("h-10")}></th>
-                        <ImageCell instance={Instances::Abilities(props.champion_id.clone())} />
+                        <ImageCell instance={Instances::Abilities(props.champion_id)} />
                         {
                             for props.damaging_items.iter().map(|key| {
                                 html! {

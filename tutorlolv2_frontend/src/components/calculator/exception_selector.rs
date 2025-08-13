@@ -1,5 +1,6 @@
 use crate::{
     components::{Image, ImageType},
+    models::shared::ChampionId,
     svg, url,
 };
 use std::str::FromStr;
@@ -153,7 +154,7 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub current_player_champion_id: AttrValue,
+    pub current_player_champion_id: ChampionId,
     pub attack_form: bool,
     pub infer_stats: bool,
     pub set_ally_fire_dragons: Callback<u8>,
@@ -183,22 +184,23 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                 callback={props.set_ally_earth_dragons.clone()}
             />
             {
-                match props.current_player_champion_id.as_str() {
-                    "Bard" | "Kindred" | "Sion" | "ChoGath" | "Smolder" |
-                    "Nasus" | "AurelionSol" | "Veigar" => {
+                match props.current_player_champion_id {
+                    ChampionId::Bard | ChampionId::Kindred | ChampionId::Sion |
+                    ChampionId::Chogath | ChampionId::Smolder | ChampionId::Nasus
+                    | ChampionId::AurelionSol | ChampionId::Veigar => {
                         html! {
                             <NumericField<u32>
                                 title={"Number of this champion's stacks"}
                                 source={Exception::Stack}
                                 img_url={url!(
                                     "/img/other/{}_stacks.avif",
-                                    &props.current_player_champion_id
+                                    props.current_player_champion_id.as_str()
                                 )}
                                 callback={props.set_current_player_stacks.clone()}
                             />
                         }
                     }
-                    "Gnar" | "Nidalee" => {
+                    ChampionId::Gnar | ChampionId::Nidalee => {
                         html! {
                             <BooleanField
                                 enabled={props.attack_form}

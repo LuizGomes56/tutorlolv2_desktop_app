@@ -1,18 +1,15 @@
 use crate::{
     components::{Image, ImageType, calculator::ChangeAbilityLevelsAction},
-    models::base::AbilityLevels,
-    utils::StringExt,
+    models::{base::AbilityLevels, shared::ChampionId},
 };
+use generated_code::{AbilityLike, AbilityName};
 use paste::paste;
-use yew::{
-    AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
-    html,
-};
+use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorContainerProps {
-    pub text: char,
-    pub current_player_champion_id: AttrValue,
+    pub text: AbilityLike,
+    pub current_player_champion_id: ChampionId,
     pub value: u8,
     pub oninput: Callback<InputEvent>,
 }
@@ -24,13 +21,12 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
             "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
         )}>
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
-                <span class={classes!("text-sm", "img-letter")}>{props.text}</span>
+                <span class={classes!("text-sm", "img-letter")}>{props.text.as_char()}</span>
                 <Image
                     class={classes!("w-8", "h-8")}
                     source={ImageType::Abilities(
-                        props.current_player_champion_id
-                            .as_str()
-                            .concat_char(props.text),
+                        props.current_player_champion_id,
+                        props.text,
                     )}
                 />
             </div>
@@ -48,20 +44,20 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
 #[derive(PartialEq, Properties)]
 pub struct AbilitySelectorProps {
     pub ability_levels: AbilityLevels,
-    pub current_player_champion_id: AttrValue,
+    pub current_player_champion_id: ChampionId,
     pub callback: Callback<ChangeAbilityLevelsAction>,
 }
 
 #[function_component(AbilitySelector)]
 pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
     macro_rules! ability_cell {
-        ($field:ident, $char:literal) => {
+        ($field:ident, $ability:expr) => {
             paste! {
                 html! {
                     <AbilitySelectorContainer
                         value={props.ability_levels.$field}
-                        text={$char}
-                        current_player_champion_id={props.current_player_champion_id.clone()}
+                        text={$ability}
+                        current_player_champion_id={props.current_player_champion_id}
                         oninput={{
                             let callback = props.callback.clone();
                             let max = match props.current_player_champion_id.as_str() {
@@ -82,10 +78,10 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
 
     html! {
         <>
-            {ability_cell!(q, 'Q')}
-            {ability_cell!(w, 'W')}
-            {ability_cell!(e, 'E')}
-            {ability_cell!(r, 'R')}
+            {ability_cell!(q, AbilityLike::Q(AbilityName::Void))}
+            {ability_cell!(w, AbilityLike::W(AbilityName::Void))}
+            {ability_cell!(e, AbilityLike::E(AbilityName::Void))}
+            {ability_cell!(r, AbilityLike::R(AbilityName::Void))}
         </>
     }
 }
