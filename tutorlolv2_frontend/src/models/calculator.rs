@@ -1,21 +1,21 @@
 use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
+use bincode::{Decode, Encode};
 use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
-use serde::{Deserialize, Serialize};
 use yew::{AttrValue, Html, html};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct DamageValue {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct MonsterExpr {
     pub abilities: Vec<DamageValue>,
     pub items: Vec<DamageValue>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct MonsterDamages([MonsterExpr; 7]);
 
 impl MonsterDamages {
@@ -50,7 +50,7 @@ impl MonsterDamages {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
     pub tower_damage: [f64; 6],
@@ -59,7 +59,7 @@ pub struct OutputGame {
     pub recommended_items: Vec<ItemId>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputCurrentPlayer {
     pub champion_id: ChampionId,
     pub damaging_items: Vec<ItemId>,
@@ -70,14 +70,14 @@ pub struct OutputCurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct CalculatorDamages {
     pub abilities: Vec<(AbilityLike, InstanceDamage)>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputEnemy {
     pub level: u8,
     pub damages: CalculatorDamages,
@@ -88,7 +88,7 @@ pub struct OutputEnemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct InputActivePlayer {
     pub champion_id: ChampionId,
     pub champion_stats: Stats,
@@ -100,7 +100,7 @@ pub struct InputActivePlayer {
     pub infer_stats: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct InputEnemyPlayers {
     pub champion_id: ChampionId,
     pub items: Vec<ItemId>,
@@ -109,7 +109,7 @@ pub struct InputEnemyPlayers {
     pub infer_stats: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Encode)]
 pub struct InputGame {
     pub active_player: InputActivePlayer,
     pub enemy_players: Vec<InputEnemyPlayers>,

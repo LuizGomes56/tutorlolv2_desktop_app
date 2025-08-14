@@ -1,13 +1,13 @@
 use crate::models::base::ApiError;
-use serde::{Serialize, de::DeserializeOwned};
+use bincode::{Decode, Encode};
 use web_sys::AbortSignal;
 
-pub async fn send_bytes<T: Serialize>(
+pub async fn send_bytes<T: Encode>(
     url: &str,
     data: &T,
     signal: Option<AbortSignal>,
 ) -> Result<reqwasm::http::Response, String> {
-    match bincode::serde::encode_to_vec(data, bincode::config::standard()) {
+    match bincode::encode_to_vec(data, bincode::config::standard()) {
         Ok(body) => {
             let mut request = reqwasm::http::Request::post(url)
                 .body(body)
@@ -26,18 +26,16 @@ pub async fn send_bytes<T: Serialize>(
     }
 }
 
-pub async fn decode_bytes<T: DeserializeOwned>(
+pub async fn decode_bytes<T: Decode<()>>(
     response: reqwasm::http::Response,
 ) -> Result<T, Box<dyn std::error::Error>> {
     let bytes = response.binary().await?;
 
-    match bincode::serde::decode_from_slice::<T, _>(&bytes, bincode::config::standard()) {
+    match bincode::decode_from_slice::<T, _>(&bytes, bincode::config::standard()) {
         Ok(decoded) => Ok(decoded.0),
         Err(e) => {
-            let api_error = bincode::serde::decode_from_slice::<ApiError, _>(
-                &bytes,
-                bincode::config::standard(),
-            )?;
+            let api_error =
+                bincode::decode_from_slice::<ApiError, _>(&bytes, bincode::config::standard())?;
 
             Err(format!(
                 "API returned error: {}, error: {:#?}",

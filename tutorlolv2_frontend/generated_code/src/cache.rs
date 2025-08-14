@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use bincode::{Decode, Encode};
 
 pub enum StatName {
     AbilityHaste(f64),
@@ -82,7 +82,7 @@ impl StatName {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Encode, Decode)]
 pub enum AbilityLike {
     P(AbilityName),
     Q(AbilityName),
@@ -109,7 +109,7 @@ impl AbilityLike {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Copy, Encode, Decode)]
 pub enum AbilityName {
     _1,
     _2,

@@ -9,7 +9,7 @@ use crate::{
     models::realtime::Realtime,
     url,
 };
-use serde::Serialize;
+use bincode::Encode;
 use std::rc::Rc;
 use web_sys::{HtmlInputElement, console};
 use yew::{
@@ -42,7 +42,7 @@ pub fn history() -> Html {
                         break;
                     }
 
-                    #[derive(Serialize)]
+                    #[derive(Encode)]
                     struct GetByCodeBody<'a> {
                         game_code: &'a str,
                     }

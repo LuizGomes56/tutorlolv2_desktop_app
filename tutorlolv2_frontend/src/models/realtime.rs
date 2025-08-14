@@ -1,15 +1,15 @@
 use super::base::{BasicStats, Damages, DragonMultipliers, Stats};
+use bincode::Decode;
 use generated_code::{ChampionId, ItemId, RuneId};
-use serde::Deserialize;
 use std::collections::BTreeMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct GameInformation {
     pub game_time: f64,
     pub map_number: u8,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct Scoreboard {
     pub assists: u16,
     pub creep_score: u16,
@@ -20,7 +20,7 @@ pub struct Scoreboard {
     pub position: Position,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Decode, Debug)]
 pub struct CurrentPlayer {
     pub damaging_items: Vec<ItemId>,
     pub damaging_runes: Vec<RuneId>,
@@ -34,13 +34,13 @@ pub struct CurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(Debug, Copy, Clone, Deserialize)]
+#[derive(Debug, Copy, Clone, Decode)]
 pub enum Team {
     Blue,
     Red,
 }
 
-#[derive(Debug, Copy, Clone, Deserialize)]
+#[derive(Debug, Copy, Clone, Decode)]
 pub enum Position {
     Top,
     Jungle,
@@ -49,7 +49,7 @@ pub enum Position {
     Support,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Decode, Debug)]
 pub struct Enemy {
     pub riot_id: String,
     pub team: Team,
@@ -63,7 +63,7 @@ pub struct Enemy {
     pub real_magic_resist: f64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Decode, Debug)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: BTreeMap<ChampionId, Enemy>,

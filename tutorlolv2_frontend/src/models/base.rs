@@ -1,7 +1,7 @@
+use bincode::{Decode, Encode};
 use generated_code::{AbilityLike, ItemId, RuneId};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Deserialize, Default)]
+#[derive(Debug, Copy, Clone, Decode, Default)]
 pub enum DamageType {
     Physical,
     Magic,
@@ -12,14 +12,14 @@ pub enum DamageType {
     Unknown,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct InstanceDamage {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
     pub damage_type: DamageType,
 }
 
-#[derive(Debug, Serialize, Clone, Copy, Deserialize, PartialEq, Default)]
+#[derive(Debug, Encode, Clone, Copy, Decode, PartialEq, Default)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
@@ -41,7 +41,7 @@ pub struct Stats {
 
 pub type DamageLike<T> = Vec<(T, InstanceDamage)>;
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Encode, Decode, Copy, Clone, PartialEq, Default)]
 pub struct BasicStats {
     pub armor: f64,
     pub health: f64,
@@ -50,14 +50,14 @@ pub struct BasicStats {
     pub mana: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct SimulatedDamages {
     pub abilities: DamageLike<AbilityLike>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct Damages {
     pub abilities: DamageLike<AbilityLike>,
     pub items: DamageLike<ItemId>,
@@ -65,14 +65,14 @@ pub struct Damages {
     pub compared_items: Vec<(ItemId, SimulatedDamages)>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct DragonMultipliers {
     pub earth: f64,
     pub fire: f64,
     pub chemtech: f64,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Encode, Decode, PartialEq)]
 pub struct AbilityLevels {
     pub q: u8,
     pub w: u8,
@@ -80,7 +80,7 @@ pub struct AbilityLevels {
     pub r: u8,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct ApiError {
     pub message: String,
 }
