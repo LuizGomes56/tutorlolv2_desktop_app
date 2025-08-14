@@ -39,13 +39,7 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
                 )}
                 disabled={props.disabled}
                 placeholder={"0"}
-                value={
-                    if props.disabled {
-                        Some(props.value.to_string())
-                    } else {
-                        None
-                    }
-                }
+                value={props.value.to_string()}
                 oninput={props.oninput.clone()}
             />
         </>

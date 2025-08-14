@@ -118,6 +118,7 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
             {props.image_html.clone()}
             <input
                 type={"checkbox"}
+                checked={props.enabled}
                 onchange={{
                     let callback = props.callback.clone();
                     Callback::from(move |e: Event| {

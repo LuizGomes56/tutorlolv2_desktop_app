@@ -19,7 +19,7 @@ pub struct SelectorProps<T: PartialEq + UnsafeCast + 'static> {
 }
 
 #[derive(Clone, PartialEq)]
-struct U32Item {
+struct SelectorItem {
     index: usize,
     name: &'static str,
     html: Html,
@@ -83,7 +83,7 @@ where
                         value_id={T::from_usize_unchecked(index)}
                     />
                 };
-                U32Item { index, name, html }
+                SelectorItem { index, name, html }
             })
             .collect::<Vec<_>>()
     });

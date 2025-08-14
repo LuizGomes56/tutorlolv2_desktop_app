@@ -60,8 +60,8 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                         current_player_champion_id={props.current_player_champion_id}
                         oninput={{
                             let callback = props.callback.clone();
-                            let max = match props.current_player_champion_id.as_str() {
-                                "Jayce" | "Elise" | "Udyr" => 6,
+                            let max = match props.current_player_champion_id {
+                                ChampionId::Jayce | ChampionId::Elise | ChampionId::Udyr => 6,
                                 _ => 5
                             };
                             Callback::from(move |e: InputEvent| {

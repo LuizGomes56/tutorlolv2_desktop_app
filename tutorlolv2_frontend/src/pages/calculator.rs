@@ -148,7 +148,7 @@ pub fn calculator() -> Html {
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
-                            // web_sys::console::log_1(&format!("{:#?}", data).into());
+                            web_sys::console::log_1(&format!("{:#?}", data).into());
                             output_game.set(Some(data));
                         }
                         Err(e) => {
@@ -177,7 +177,7 @@ pub fn calculator() -> Html {
                 "oxanium", "gap-4", "grid", "grid-cols-[auto_1fr]",
             )}>
                 <div class={classes!(
-                    "flex", "flex-col", "gap-4", "w-56", "bg-[#141417]"
+                    "flex", "flex-col", "gap-4", "w-60", "bg-[#141417]"
                 )}>
                     <ChampionBanner
                         champion_id={current_player_champion_id}
