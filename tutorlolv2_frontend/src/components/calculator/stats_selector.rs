@@ -4,8 +4,8 @@ use crate::{
     models::base::Stats,
     url,
 };
+use hashbrown::HashMap;
 use paste::paste;
-use rustc_hash::FxHashMap;
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html, use_memo,
 };
@@ -71,7 +71,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
     }
 
     let memo_callbacks = use_memo((), move |_| {
-        let mut callback_map = FxHashMap::default();
+        let mut callback_map = HashMap::new();
         callback_map.insert("attack_damage", generate_callback!(attack_damage));
         callback_map.insert("ability_power", generate_callback!(ability_power));
         callback_map.insert("max_health", generate_callback!(max_health));

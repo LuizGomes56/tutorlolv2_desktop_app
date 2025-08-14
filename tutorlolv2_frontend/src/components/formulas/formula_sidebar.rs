@@ -91,7 +91,7 @@ pub fn formula_sidebar() -> Html {
                     "CdnChampion",
                     "Champion",
                     "Target",
-                    "FxHashMap",
+                    "HashMap",
                 ],
                 html! {
                     <span class={classes!("text-white")}>

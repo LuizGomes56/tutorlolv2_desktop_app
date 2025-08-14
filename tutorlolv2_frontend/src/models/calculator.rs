@@ -116,7 +116,7 @@ pub struct InputGame {
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
-    // pub stack_exceptions: FxHashMap<u32, u32>,
+    // pub stack_exceptions: hashbrown::HashMap<u32, u32>,
 }
 
 impl Default for InputGame {
