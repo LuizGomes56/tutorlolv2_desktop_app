@@ -1,18 +1,12 @@
-use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
+use super::base::{AbilityLevels, AdaptativeType, BasicStats, DamageLike, InstanceDamage, Stats};
 use bincode::{Decode, Encode};
 use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
-use yew::{AttrValue, Html, html};
-
-#[derive(Debug, Decode)]
-pub struct DamageValue {
-    pub minimum_damage: f64,
-    pub maximum_damage: f64,
-}
+use yew::{AttrValue, Html, classes, html};
 
 #[derive(Debug, Decode)]
 pub struct MonsterExpr {
-    pub abilities: Vec<DamageValue>,
-    pub items: Vec<DamageValue>,
+    pub abilities: Vec<InstanceDamage>,
+    pub items: Vec<InstanceDamage>,
 }
 
 #[derive(Debug, Decode)]
@@ -40,7 +34,10 @@ impl MonsterDamages {
                 html! {
                     <td
                         title={text.clone()}
-                        class="text-center text-sm px-2 text-violet-500 max-w-24 truncate"
+                        class={classes!(
+                            "text-center", "text-sm", "px-2", "max-w-24", "truncate",
+                            damage_value.damage_type.get_color()
+                        )}
                     >
                         { text }
                     </td>
@@ -65,6 +62,7 @@ pub struct OutputCurrentPlayer {
     pub damaging_items: Vec<ItemId>,
     pub damaging_runes: Vec<RuneId>,
     pub level: u8,
+    pub adaptative_type: AdaptativeType,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: Stats,
@@ -123,7 +121,7 @@ impl Default for InputGame {
     fn default() -> Self {
         Self {
             active_player: InputActivePlayer {
-                champion_id: ChampionId::Vex,
+                champion_id: ChampionId::Gnar,
                 champion_stats: Default::default(),
                 abilities: AbilityLevels {
                     q: 5,

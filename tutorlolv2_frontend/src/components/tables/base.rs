@@ -4,6 +4,8 @@ use yew::{Html, Properties, classes, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
+    #[prop_or(1)]
+    pub empty_headers: u8,
     pub damaging_items: Vec<ItemId>,
     pub damaging_runes: Vec<RuneId>,
     pub champion_id: ChampionId,
@@ -20,7 +22,9 @@ pub fn base_table(props: &BaseTableProps) -> Html {
             html! {
                 <thead>
                     <tr>
-                        <th class={classes!("h-10")}></th>
+                        {for (0..props.empty_headers).into_iter().map(|_| {
+                            html! { <th class={classes!("h-10")}></th> }
+                        })}
                         <ImageCell instance={Instances::Abilities(props.champion_id)} />
                         {
                             for props.damaging_items.iter().map(|key| {

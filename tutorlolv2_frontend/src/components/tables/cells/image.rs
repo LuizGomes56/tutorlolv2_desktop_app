@@ -189,7 +189,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             },
         ),
         Instances::Champions(champion_id) => {
-            base_content(ImageType::Champions(champion_id.clone()), html!())
+            base_content(ImageType::Champions(*champion_id), html!())
         }
     }
 }

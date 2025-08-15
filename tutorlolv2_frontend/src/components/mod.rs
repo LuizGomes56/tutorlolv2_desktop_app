@@ -1,6 +1,5 @@
 pub mod calculator;
 pub mod dropdown;
-pub mod formulas;
 pub mod hover;
 pub mod image;
 pub mod selector;

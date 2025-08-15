@@ -1,4 +1,4 @@
-use super::base::{BasicStats, Damages, DragonMultipliers, Stats};
+use super::base::{AdaptativeType, BasicStats, Damages, DragonMultipliers, Stats};
 use bincode::Decode;
 use generated_code::{ChampionId, ItemId, RuneId};
 use std::collections::BTreeMap;
@@ -27,6 +27,7 @@ pub struct CurrentPlayer {
     pub riot_id: String,
     pub level: u8,
     pub team: Team,
+    pub adaptative_type: AdaptativeType,
     pub position: Position,
     pub champion_id: ChampionId,
     pub base_stats: BasicStats,

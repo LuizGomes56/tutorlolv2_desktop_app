@@ -1,11 +1,36 @@
 use crate::{
     color,
-    components::{Selector, calculator::StaticIterator, formulas::source_code::SourceCode},
+    components::{Selector, calculator::StaticIterator},
+    utils::ComptimeCache,
 };
 use generated_code::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
 };
-use yew::{Callback, Html, classes, function_component, html, use_callback, use_state};
+use yew::{
+    AttrValue, Callback, Html, Properties, classes, function_component, html, use_callback,
+    use_state,
+};
+
+#[derive(Properties, PartialEq)]
+pub struct SourceCodeProps {
+    pub offset: Option<&'static (usize, usize)>,
+}
+
+#[function_component(SourceCode)]
+pub fn source_code(props: &SourceCodeProps) -> Html {
+    if let Some(offset) = props.offset {
+        html! {
+            <code class={classes!(
+                "text-[#D4D4D4]", "text-left",
+                "text-wrap", "break-all"
+            )}>
+                { Html::from_html_unchecked(AttrValue::Static(offset.as_str())) }
+            </code>
+        }
+    } else {
+        html! {}
+    }
+}
 
 #[derive(Clone, Copy)]
 enum FormulaDropdown {
@@ -16,8 +41,13 @@ enum FormulaDropdown {
 }
 
 impl FormulaDropdown {
-    fn unsafe_cast(value: u8) -> Self {
-        unsafe { std::mem::transmute(value) }
+    fn from_index(value: usize) -> Self {
+        match value {
+            0 => Self::Champions,
+            1 => Self::Items,
+            2 => Self::Runes,
+            _ => Self::Generator,
+        }
     }
 
     fn to_array() -> [&'static str; 4] {
@@ -76,7 +106,7 @@ pub fn formulas() -> Html {
                                     onchange={{
                                         let current_dropdown_id = current_dropdown_id.clone();
                                         Callback::from(move |_| {
-                                            current_dropdown_id.set(FormulaDropdown::unsafe_cast(index as u8));
+                                            current_dropdown_id.set(FormulaDropdown::from_index(index));
                                         })
                                     }}
                                     type={"radio"}

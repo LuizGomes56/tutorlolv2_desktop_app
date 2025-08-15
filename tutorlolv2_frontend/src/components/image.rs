@@ -13,19 +13,19 @@ pub enum ImageType {
 
 impl From<ChampionId> for ImageType {
     fn from(value: ChampionId) -> Self {
-        ImageType::Champions(value)
+        Self::Champions(value)
     }
 }
 
 impl From<RuneId> for ImageType {
     fn from(value: RuneId) -> Self {
-        ImageType::Runes(value)
+        Self::Runes(value)
     }
 }
 
 impl From<ItemId> for ImageType {
     fn from(value: ItemId) -> Self {
-        ImageType::Items(value)
+        Self::Items(value)
     }
 }
 

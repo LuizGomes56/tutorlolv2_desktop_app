@@ -175,13 +175,13 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             <NumericField<u8>
                 title={"Number of ally fire dragons"}
                 source={Exception::Image}
-                img_url={url!("/img/other/fire_dragon.avif")}
+                img_url={url!("/img/other/fire_soul.avif")}
                 callback={props.set_ally_fire_dragons.clone()}
             />
             <NumericField<u8>
                 title={"Number of ally earth dragons"}
                 source={Exception::Image}
-                img_url={url!("/img/other/earth_dragon.avif")}
+                img_url={url!("/img/other/earth_soul.avif")}
                 callback={props.set_ally_earth_dragons.clone()}
             />
             {

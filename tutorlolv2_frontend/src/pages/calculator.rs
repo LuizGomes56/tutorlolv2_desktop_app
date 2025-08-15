@@ -8,7 +8,10 @@ use crate::{
         },
     },
     external::api::{decode_bytes, send_bytes},
-    models::calculator::{InputGame, OutputGame},
+    models::{
+        base::DamageType,
+        calculator::{InputGame, OutputGame},
+    },
     url,
 };
 use web_sys::AbortController;
@@ -148,7 +151,7 @@ pub fn calculator() -> Html {
                                     ChangeStatsAction::Replace(data.current_player.current_stats),
                                 ));
                             }
-                            web_sys::console::log_1(&format!("{:#?}", data).into());
+                            // web_sys::console::log_1(&format!("{:#?}", data).into());
                             output_game.set(Some(data));
                         }
                         Err(e) => {
@@ -160,11 +163,11 @@ pub fn calculator() -> Html {
         });
     }
 
-    let make_td = |text: f64| -> Html {
+    let make_td = |text: f64, damage_type: DamageType| -> Html {
         html! {
             <td class={classes!{
                 "text-center", "text-sm", "px-2", "h-10",
-                "max-w-24", "truncate", "text-violet-500",
+                "max-w-24", "truncate", damage_type.get_color(),
             }}>
                 {text.round()}
             </td>
@@ -295,9 +298,9 @@ pub fn calculator() -> Html {
                                                             <td class={classes!("w-10", "h-10")}>
                                                                 <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                             </td>
-                                                            {make_td(total_damage.round())}
-                                                            {make_td((enemy.current_stats.health - total_damage).round())}
-                                                            {make_td((total_damage / enemy.current_stats.health * 100.0).round())}
+                                                            {make_td(total_damage.round(), DamageType::Mixed)}
+                                                            {make_td((enemy.current_stats.health - total_damage).round(), DamageType::Unknown)}
+                                                            {make_td((total_damage / enemy.current_stats.health * 100.0).round(), DamageType::True)}
                                                         </tr>
                                                     }
                                                 })
@@ -310,12 +313,10 @@ pub fn calculator() -> Html {
                                                 html! {
                                                     <td class={classes!(
                                                         "text-center", "text-sm",
-                                                        "px-2",  "text-violet-500",
+                                                        "px-2", output_game.current_player.adaptative_type.get_color(),
                                                         "max-w-24", "truncate", "h-10"
                                                     )}>
-                                                        <span class={classes!("text-violet-500")}>
-                                                            {output_game.tower_damage[i].round()}
-                                                        </span>
+                                                        {output_game.tower_damage[i].round()}
                                                     </td>
                                                 }
                                             })
@@ -323,37 +324,64 @@ pub fn calculator() -> Html {
                                         }
                                     />
                                     <BaseTable
+                                        empty_headers={4}
                                         damaging_items={output_game.current_player.damaging_items.clone()}
                                         damaging_runes={output_game.current_player.damaging_runes.clone()}
                                         champion_id={current_player_champion_id}
                                         damages={
-                                            [
-                                                (0, url!("/img/other/voidgrubs.avif")),
-                                                (0, url!("/img/other/melee_minion.avif")),
-                                                (0, url!("/img/other/ranged_minion.avif")),
-                                                (0, url!("/img/other/cannon.avif")),
-                                                (1, url!("/img/other/super_minion.avif")),
-                                                (2, url!("/img/other/dragon.avif")),
-                                                (3, url!("/img/other/baron.avif")),
-                                                (4, url!("/img/other/atakhan.avif")),
-                                                (5, url!("/img/other/red_buff.avif")),
-                                                (5, url!("/img/other/blue_buff.avif")),
-                                                (5, url!("/img/other/gromp.avif")),
-                                                (5, url!("/img/other/wolves.avif")),
-                                                (6, url!("/img/other/krug.avif")),
-                                                (6, url!("/img/other/raptor.avif")),
-                                            ]
-                                            .into_iter()
-                                            .map(|(index, img_url)| {
+                                            ([
+                                                &[
+                                                    url!("/img/other/voidgrubs.avif"),
+                                                    url!("/img/other/melee_minion.avif"),
+                                                    url!("/img/other/ranged_minion.avif"),
+                                                    url!("/img/other/cannon.avif"),
+                                                ],
+                                                &[url!("/img/other/super_minion.avif")],
+                                                &[
+                                                    url!("/img/other/elder_dragon.avif"),
+                                                    url!("/img/other/fire_dragon.avif"),
+                                                    url!("/img/other/ocean_dragon.avif"),
+                                                    url!("/img/other/earth_dragon.avif"),
+                                                ],
+                                                &[url!("/img/other/baron.avif")],
+                                                &[url!("/img/other/atakhan.avif")],
+                                                &[
+                                                    url!("/img/other/red_buff.avif"),
+                                                    url!("/img/other/blue_buff.avif"),
+                                                    url!("/img/other/gromp.avif"),
+                                                    url!("/img/other/wolves.avif"),
+                                                ],
+                                                &[
+                                                    url!("/img/other/krug.avif"),
+                                                    url!("/img/other/raptor.avif"),
+                                                ],
+                                            ] as [&[&'static str]; 7])
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(index, urls)| {
                                                 html! {
                                                     <tr>
-                                                        <td class={classes!("min-w-10", "h-10", "justify-items-center")}>
-                                                            <Image
-                                                                class={classes!("w-8", "h-8")}
-                                                                source={ImageType::Other(AttrValue::Static(img_url))}
-                                                            />
-                                                        </td>
-                                                        {output_game.monster_damages.join_td_index(index)}
+                                                        {
+                                                            for (0..4).map(|i| {
+                                                                html!{
+                                                                    <td class={classes!("min-w-10","h-10","justify-items-center")}>
+                                                                        {
+                                                                            if let Some(&icon_url) = urls.get(i) {
+                                                                                html! {
+                                                                                    <Image
+                                                                                        class={classes!("w-8","h-8")}
+                                                                                        source={ImageType::Other(AttrValue::Static(icon_url))}
+                                                                                    />
+                                                                                }
+                                                                            } else {
+                                                                                html!{}
+                                                                            }
+                                                                        }
+                                                                    </td>
+                                                                }
+                                                            })
+                                                        }
+                                                        { output_game.monster_damages.join_td_index(index) }
                                                     </tr>
                                                 }
                                             })
