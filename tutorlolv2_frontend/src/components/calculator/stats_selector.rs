@@ -4,10 +4,9 @@ use crate::{
     models::base::Stats,
     url,
 };
-use hashbrown::HashMap;
-use paste::paste;
 use yew::{
-    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html, use_memo,
+    Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
+    use_callback,
 };
 
 #[derive(PartialEq, Properties)]
@@ -57,61 +56,147 @@ pub struct StatsSelectorProps {
 
 #[function_component(StatsSelector)]
 pub fn stats_selector(props: &StatsSelectorProps) -> Html {
-    macro_rules! generate_callback {
-        ($field:ident) => {
-            paste! {{
-                let set_stats_callback = props.set_stats_callback.clone();
-                Callback::from(move |e: InputEvent| {
-                    let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                    let value = target.value().parse::<f64>().unwrap_or(0.0).max(0.0);
-                    set_stats_callback.emit(ChangeStatsAction::[<Set $field:camel>](value));
-                })
-            }}
-        };
-    }
-
-    let memo_callbacks = use_memo((), move |_| {
-        let mut callback_map = HashMap::new();
-        callback_map.insert("attack_damage", generate_callback!(attack_damage));
-        callback_map.insert("ability_power", generate_callback!(ability_power));
-        callback_map.insert("max_health", generate_callback!(max_health));
-        callback_map.insert("current_health", generate_callback!(current_health));
-        callback_map.insert("armor", generate_callback!(armor));
-        callback_map.insert(
-            "armor_penetration_flat",
-            generate_callback!(armor_penetration_flat),
-        );
-        callback_map.insert(
-            "armor_penetration_percent",
-            generate_callback!(armor_penetration_percent),
-        );
-        callback_map.insert("magic_resist", generate_callback!(magic_resist));
-        callback_map.insert(
-            "magic_penetration_flat",
-            generate_callback!(magic_penetration_flat),
-        );
-        callback_map.insert(
-            "magic_penetration_percent",
-            generate_callback!(magic_penetration_percent),
-        );
-        callback_map.insert("crit_chance", generate_callback!(crit_chance));
-        callback_map.insert("crit_damage", generate_callback!(crit_damage));
-        callback_map.insert("attack_speed", generate_callback!(attack_speed));
-        callback_map.insert("max_mana", generate_callback!(max_mana));
-        callback_map.insert("current_mana", generate_callback!(current_mana));
-        callback_map
-    });
+    let set_level_callback = {
+        let set_level_callback = props.set_level_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<u8>().unwrap_or(1).clamp(1, 18);
+            set_level_callback.emit(value);
+        })
+    };
+    let set_attack_damage_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetAttackDamage(value));
+        })
+    };
+    let set_ability_power_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetAbilityPower(value));
+        })
+    };
+    let set_max_health_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetMaxHealth(value));
+        })
+    };
+    let set_current_health_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetCurrentHealth(value));
+        })
+    };
+    let set_armor_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetArmor(value));
+        })
+    };
+    let set_armor_penetration_flat_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetArmorPenetrationFlat(value));
+        })
+    };
+    let set_armor_penetration_percent_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetArmorPenetrationPercent(value));
+        })
+    };
+    let set_magic_resist_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetMagicResist(value));
+        })
+    };
+    let set_magic_penetration_flat_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetMagicPenetrationFlat(value));
+        })
+    };
+    let set_magic_penetration_percent_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetMagicPenetrationPercent(value));
+        })
+    };
+    let set_crit_chance_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetCritChance(value));
+        })
+    };
+    let set_crit_damage_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetCritDamage(value));
+        })
+    };
+    let set_attack_speed_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetAttackSpeed(value));
+        })
+    };
+    let set_max_mana_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetMaxMana(value));
+        })
+    };
+    let set_current_mana_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeStatsAction::SetCurrentMana(value));
+        })
+    };
 
     macro_rules! stat_cell {
         ($path:literal, $stat:ident, $display:literal) => {
-            html! {
-                <StatsCell<f64>
-                    path={$path}
-                    disabled={props.infer_stats}
-                    value={props.champion_stats.$stat.round()}
-                    display={$display}
-                    oninput={memo_callbacks.get(stringify!($stat)).unwrap().clone()}
-                />
+            paste::paste! {
+                html! {
+                    <StatsCell<f32>
+                        path={$path}
+                        disabled={props.infer_stats}
+                        value={props.champion_stats.$stat.round()}
+                        display={$display}
+                        oninput={[<set_ $stat _callback>].clone()}
+                    />
+                }
             }
         };
     }
@@ -125,14 +210,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
                 path={"level.svg"}
                 value={props.level}
                 display={"Level"}
-                oninput={
-                    let set_level_callback = props.set_level_callback.clone();
-                    Callback::from(move |e: InputEvent| {
-                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                        let value = target.value().parse::<u8>().unwrap_or(1).clamp(1, 18);
-                        set_level_callback.emit(value);
-                    })
-                }
+                oninput={set_level_callback}
                 disabled={false}
             />
             {stat_cell!("attack_damage.svg", attack_damage,  "Attack Damage")}

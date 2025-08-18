@@ -3,8 +3,8 @@ use yew::{AttrValue, Html, classes, html};
 
 pub struct DamageCell {
     pub damage_type: DamageType,
-    pub minimum_damage: f64,
-    pub maximum_damage: f64,
+    pub minimum_damage: f32,
+    pub maximum_damage: f32,
 }
 
 impl DamageValue {

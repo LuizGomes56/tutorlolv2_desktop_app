@@ -36,7 +36,7 @@ impl MonsterDamages {
 #[derive(Debug, Decode)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
-    pub tower_damage: [f64; 6],
+    pub tower_damage: [f32; 6],
     pub current_player: OutputCurrentPlayer,
     pub enemies: Vec<(ChampionId, OutputEnemy)>,
     pub recommended_items: Vec<ItemId>,
@@ -69,8 +69,8 @@ pub struct OutputEnemy {
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,
-    pub real_armor: f64,
-    pub real_magic_resist: f64,
+    pub real_armor: f32,
+    pub real_magic_resist: f32,
 }
 
 #[derive(Clone, Debug, PartialEq, Encode)]
@@ -108,7 +108,7 @@ impl Default for InputGame {
     fn default() -> Self {
         Self {
             active_player: InputActivePlayer {
-                champion_id: ChampionId::Gnar,
+                champion_id: ChampionId::Vex,
                 champion_stats: Default::default(),
                 abilities: AbilityLevels {
                     q: 5,

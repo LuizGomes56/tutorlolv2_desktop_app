@@ -20,7 +20,7 @@ macro_rules! stats_reducer {
             pub enum [<Change $name Action>] {
                 Replace($name),
                 $(
-                    [<Set $stat:camel>](f64),
+                    [<Set $stat:camel>](f32),
                 )*
             }
 

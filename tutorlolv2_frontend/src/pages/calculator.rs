@@ -163,7 +163,7 @@ pub fn calculator() -> Html {
         });
     }
 
-    let make_td = |text: f64, damage_type: DamageType| -> Html {
+    let make_td = |text: f32, damage_type: DamageType| -> Html {
         html! {
             <td class={classes!{
                 "text-center", "text-sm", "px-2", "h-10",

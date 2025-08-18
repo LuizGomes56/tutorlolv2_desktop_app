@@ -31,7 +31,7 @@ macro_rules! impl_unsafe_cast {
                     let v = <Self::Repr as TryFrom<$ty>>::try_from(n)
                         .ok()
                         .unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
-                    unsafe { Self::from_repr_unchecked(v) }
+                    Self::from_repr_unchecked(v)
                 }
 
                 #[inline]
@@ -41,7 +41,7 @@ macro_rules! impl_unsafe_cast {
                 {
                     <Self::Repr as TryFrom<$ty>>::try_from(n)
                         .ok()
-                        .map(|v| unsafe { Self::from_repr_unchecked(v) })
+                        .map(|v| Self::from_repr_unchecked(v))
                 }
 
                 #[inline]

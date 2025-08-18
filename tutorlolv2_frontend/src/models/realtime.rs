@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(Debug, Decode)]
 pub struct GameInformation {
-    pub game_time: f64,
+    pub game_time: f32,
     pub map_number: u8,
 }
 
@@ -61,9 +61,9 @@ pub struct Damages {
 
 #[derive(Debug, Decode)]
 pub struct DragonMultipliers {
-    pub earth: f64,
-    pub fire: f64,
-    pub chemtech: f64,
+    pub earth: f32,
+    pub fire: f32,
+    pub chemtech: f32,
 }
 
 #[derive(Debug, Decode)]
@@ -83,8 +83,8 @@ pub struct Enemy {
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,
-    pub real_armor: f64,
-    pub real_magic_resist: f64,
+    pub real_armor: f32,
+    pub real_magic_resist: f32,
 }
 
 #[derive(Decode, Debug)]
