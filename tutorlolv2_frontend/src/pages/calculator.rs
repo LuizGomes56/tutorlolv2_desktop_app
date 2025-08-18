@@ -4,7 +4,7 @@ use crate::{
         calculator::*,
         tables::{
             BaseTable,
-            cells::{ImageCell, Instances, damage_cells},
+            cells::{DisplayDamage, ImageCell, Instances},
         },
     },
     external::api::{decode_bytes, send_bytes},
@@ -232,9 +232,10 @@ pub fn calculator() -> Html {
                                                             <td class={classes!("w-10", "h-10")}>
                                                                 <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                             </td>
-                                                            {damage_cells(&enemy.damages.abilities)}
-                                                            {damage_cells(&enemy.damages.items)}
-                                                            {damage_cells(&enemy.damages.runes )}
+                                                            {enemy.damages.attacks.display_damage()}
+                                                            {enemy.damages.abilities.display_damage()}
+                                                            {enemy.damages.items.display_damage()}
+                                                            {enemy.damages.runes.display_damage()}
                                                         </tr>
                                                     }
                                                 })

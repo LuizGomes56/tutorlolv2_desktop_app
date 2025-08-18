@@ -1,5 +1,4 @@
 use bincode::{Decode, Encode};
-use generated_code::{AbilityLike, ItemId, RuneId};
 
 #[derive(Debug, Copy, Clone, Decode, Default)]
 pub enum DamageType {
@@ -79,25 +78,16 @@ pub struct BasicStats {
 }
 
 #[derive(Debug, Decode)]
-pub struct SimulatedDamages {
-    pub abilities: DamageLike<AbilityLike>,
-    pub items: DamageLike<ItemId>,
-    pub runes: DamageLike<RuneId>,
+pub struct DamageValue {
+    pub minimum_damage: f64,
+    pub maximum_damage: f64,
 }
 
 #[derive(Debug, Decode)]
-pub struct Damages {
-    pub abilities: DamageLike<AbilityLike>,
-    pub items: DamageLike<ItemId>,
-    pub runes: DamageLike<RuneId>,
-    pub compared_items: Vec<(ItemId, SimulatedDamages)>,
-}
-
-#[derive(Debug, Decode)]
-pub struct DragonMultipliers {
-    pub earth: f64,
-    pub fire: f64,
-    pub chemtech: f64,
+pub struct Attacks {
+    pub basic_attack: DamageValue,
+    pub critical_strike: DamageValue,
+    pub onhit_damage: DamageValue,
 }
 
 #[derive(Debug, Copy, Clone, Encode, Decode, PartialEq)]

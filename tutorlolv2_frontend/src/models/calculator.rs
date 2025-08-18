@@ -1,10 +1,15 @@
-use super::base::{AbilityLevels, AdaptativeType, BasicStats, DamageLike, InstanceDamage, Stats};
+use crate::components::tables::cells::DisplayDamage;
+
+use super::base::{
+    AbilityLevels, AdaptativeType, Attacks, BasicStats, DamageLike, InstanceDamage, Stats,
+};
 use bincode::{Decode, Encode};
 use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
-use yew::{AttrValue, Html, classes, html};
+use yew::{Html, html};
 
 #[derive(Debug, Decode)]
 pub struct MonsterExpr {
+    pub attacks: Attacks,
     pub abilities: Vec<InstanceDamage>,
     pub items: Vec<InstanceDamage>,
 }
@@ -18,32 +23,13 @@ impl MonsterDamages {
             return html! {};
         };
 
-        monster_expr
-            .abilities
-            .iter()
-            .chain(monster_expr.items.iter())
-            .map(|damage_value| {
-                let text = if damage_value.maximum_damage != 0.0 {
-                    let mut s = damage_value.minimum_damage.round().to_string();
-                    s.push_str(" - ");
-                    s.push_str(&damage_value.maximum_damage.round().to_string());
-                    AttrValue::from(s)
-                } else {
-                    AttrValue::from(damage_value.minimum_damage.round().to_string())
-                };
-                html! {
-                    <td
-                        title={text.clone()}
-                        class={classes!(
-                            "text-center", "text-sm", "px-2", "max-w-24", "truncate",
-                            damage_value.damage_type.get_color()
-                        )}
-                    >
-                        { text }
-                    </td>
-                }
-            })
-            .collect::<Html>()
+        html! {
+            <>
+                {monster_expr.attacks.display_damage()}
+                {monster_expr.abilities.display_damage()}
+                {monster_expr.items.display_damage()}
+            </>
+        }
     }
 }
 
@@ -70,6 +56,7 @@ pub struct OutputCurrentPlayer {
 
 #[derive(Debug, Decode)]
 pub struct CalculatorDamages {
+    pub attacks: Attacks,
     pub abilities: Vec<(AbilityLike, InstanceDamage)>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,

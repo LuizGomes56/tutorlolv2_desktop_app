@@ -1,6 +1,6 @@
-use super::base::{AdaptativeType, BasicStats, Damages, DragonMultipliers, Stats};
+use super::base::{AdaptativeType, Attacks, BasicStats, DamageLike, Stats};
 use bincode::Decode;
-use generated_code::{ChampionId, ItemId, RuneId};
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Decode)]
@@ -48,6 +48,29 @@ pub enum Position {
     Middle,
     Bottom,
     Support,
+}
+
+#[derive(Debug, Decode)]
+pub struct Damages {
+    pub attacks: Attacks,
+    pub abilities: DamageLike<AbilityLike>,
+    pub items: DamageLike<ItemId>,
+    pub runes: DamageLike<RuneId>,
+    pub compared_items: Vec<(ItemId, SimulatedDamages)>,
+}
+
+#[derive(Debug, Decode)]
+pub struct DragonMultipliers {
+    pub earth: f64,
+    pub fire: f64,
+    pub chemtech: f64,
+}
+
+#[derive(Debug, Decode)]
+pub struct SimulatedDamages {
+    pub abilities: DamageLike<AbilityLike>,
+    pub items: DamageLike<ItemId>,
+    pub runes: DamageLike<RuneId>,
 }
 
 #[derive(Decode, Debug)]

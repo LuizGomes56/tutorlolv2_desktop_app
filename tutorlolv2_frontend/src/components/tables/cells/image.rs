@@ -16,6 +16,7 @@ use yew::{AttrValue, Html, Properties, classes, function_component, html, use_co
 
 #[derive(PartialEq)]
 pub enum Instances {
+    Attacks,
     Abilities(ChampionId),
     Items(ItemId),
     Runes(RuneId),
@@ -27,33 +28,65 @@ pub struct ImageCellProps {
     pub instance: Instances,
 }
 
+#[inline]
+fn base_content(img_path: ImageType, content: Html) -> Html {
+    html! {
+        <div class={classes!(
+            "flex", "items-center", "justify-center",
+            "relative", "cell"
+        )}>
+            <Image class={classes!("w-8", "h-8")} source={img_path} />
+            { content }
+        </div>
+    }
+}
+
+#[inline]
+fn chain_th(content: Html) -> Html {
+    html! {
+        <th class={classes!("group", "min-w-10")}>
+            {content}
+        </th>
+    }
+}
+
 #[function_component(ImageCell)]
 pub fn image_cell(props: &ImageCellProps) -> Html {
     let hover_settings = use_context::<SettingsContext>()
         .and_then(|ctx| Some((*ctx).docs))
         .unwrap_or_default();
 
-    let base_content = |img_path, content| {
-        html! {
-            <div class={classes!(
-                "flex", "items-center", "justify-center",
-                "relative", "cell"
-            )}>
-                <Image class={classes!("w-8", "h-8")} source={img_path} />
-                { content }
-            </div>
-        }
-    };
-
-    let chain_th = |content: Html| {
-        html! {
-            <th class={classes!("group", "min-w-10")}>
-                {content}
-            </th>
-        }
-    };
+    macro_rules! insert_attack {
+        ($offset:ident, $url:literal) => {
+            html! {
+                <>
+                    {chain_th(base_content(
+                        ImageType::Other(AttrValue::Static(url!($url))),
+                        match hover_settings {
+                            HoverDocs::Full => html! {
+                                hover_docs(
+                                    AttrValue::Static($offset.as_str()),
+                                    true
+                                )
+                            },
+                            _ => html!(),
+                        },
+                    ))}
+                </>
+            }
+        };
+    }
 
     match &props.instance {
+        Instances::Attacks => {
+            html! {
+                <>
+                    {insert_attack!(BASIC_ATTACK_OFFSET, "/img/other/basic_attack.png")}
+                    {insert_attack!(CRITICAL_STRIKE_OFFSET, "/img/stats/crit_chance.svg")}
+                    {insert_attack!(ONHIT_EFFECT_OFFSET, "/img/stats/onhit.svg")}
+                </>
+            }
+        }
         Instances::Abilities(champion_id) => {
             html! {
                 CHAMPION_ABILITIES
@@ -88,48 +121,6 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                     )
                                 )
                             })
-                            .chain(std::iter::once(
-                                chain_th(base_content(
-                                    ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
-                                    match hover_settings {
-                                        HoverDocs::Full => html! {
-                                            hover_docs(
-                                                AttrValue::Static(BASIC_ATTACK_OFFSET.as_str()),
-                                                true
-                                            )
-                                        },
-                                        _ => html!(),
-                                    },
-                                ))
-                            ))
-                            .chain(std::iter::once(
-                                chain_th(base_content(
-                                    ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
-                                    match hover_settings {
-                                        HoverDocs::Full => html! {
-                                            hover_docs(
-                                                AttrValue::Static(CRITICAL_STRIKE_OFFSET.as_str()),
-                                                true
-                                            )
-                                        },
-                                        _ => html!(),
-                                    },
-                                ))
-                            ))
-                            .chain(std::iter::once(
-                                chain_th(base_content(
-                                    ImageType::Other(AttrValue::Static(url!("/img/stats/onhit.svg"))),
-                                    match hover_settings {
-                                        HoverDocs::Full => html! {
-                                            hover_docs(
-                                                AttrValue::Static(ONHIT_EFFECT_OFFSET.as_str()),
-                                                true
-                                            )
-                                        },
-                                        _ => html!(),
-                                    },
-                                ))
-                            ))
                             .collect::<Html>()
                         )
                     })

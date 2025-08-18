@@ -25,6 +25,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         {for (0..props.empty_headers).into_iter().map(|_| {
                             html! { <th class={classes!("h-10")}></th> }
                         })}
+                        <ImageCell instance={Instances::Attacks} />
                         <ImageCell instance={Instances::Abilities(props.champion_id)} />
                         {
                             for props.damaging_items.iter().map(|key| {
