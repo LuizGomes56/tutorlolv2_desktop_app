@@ -1,10 +1,12 @@
-use crate::components::tables::cells::DisplayDamage;
-
 use super::base::{
     AbilityLevels, AdaptativeType, Attacks, BasicStats, DamageLike, InstanceDamage, Stats,
 };
+use crate::components::tables::cells::DisplayDamage;
 use bincode::{Decode, Encode};
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
+use generated_code::{
+    AbilityLike, CHAMPION_ID_TO_NAME, ChampionId, ItemId, RECOMMENDED_ITEMS, RuneId,
+};
+use web_sys::js_sys::Math;
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]
@@ -39,7 +41,6 @@ pub struct OutputGame {
     pub tower_damage: [f32; 6],
     pub current_player: OutputCurrentPlayer,
     pub enemies: Vec<(ChampionId, OutputEnemy)>,
-    pub recommended_items: Vec<ItemId>,
 }
 
 #[derive(Debug, Decode)]
@@ -74,9 +75,9 @@ pub struct OutputEnemy {
 }
 
 #[derive(Clone, Debug, PartialEq, Encode)]
-pub struct InputActivePlayer {
+pub struct InputCurrentPlayer {
     pub champion_id: ChampionId,
-    pub champion_stats: Stats,
+    pub stats: Stats,
     pub abilities: AbilityLevels,
     pub items: Vec<ItemId>,
     pub runes: Vec<RuneId>,
@@ -86,7 +87,7 @@ pub struct InputActivePlayer {
 }
 
 #[derive(Clone, Debug, PartialEq, Encode)]
-pub struct InputEnemyPlayers {
+pub struct InputEnemyPlayer {
     pub champion_id: ChampionId,
     pub items: Vec<ItemId>,
     pub level: u8,
@@ -94,49 +95,70 @@ pub struct InputEnemyPlayers {
     pub infer_stats: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Encode)]
-pub struct InputGame {
-    pub active_player: InputActivePlayer,
-    pub enemy_players: Vec<InputEnemyPlayers>,
+#[derive(Clone, Debug, Encode)]
+pub struct InputGame<'a> {
+    pub active_player: &'a InputCurrentPlayer,
+    pub enemy_players: &'a [std::rc::Rc<InputEnemyPlayer>],
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
-    // pub stack_exceptions: hashbrown::HashMap<u32, u32>,
 }
 
-impl Default for InputGame {
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InputDragons {
+    pub ally_earth_dragons: u8,
+    pub ally_fire_dragons: u8,
+    pub enemy_earth_dragons: u8,
+}
+
+impl Default for InputCurrentPlayer {
     fn default() -> Self {
         Self {
-            active_player: InputActivePlayer {
-                champion_id: ChampionId::Vex,
-                champion_stats: Default::default(),
-                abilities: AbilityLevels {
-                    q: 5,
-                    w: 5,
-                    e: 5,
-                    r: 3,
-                },
-                level: 15,
-                infer_stats: true,
-                items: vec![
-                    ItemId::NashorsTooth,
-                    ItemId::BladeoftheRuinedKing,
-                    ItemId::LichBane,
-                ],
-                runes: Default::default(),
-                stacks: Default::default(),
+            champion_id: ChampionId::Vex,
+            stats: Default::default(),
+            abilities: AbilityLevels {
+                q: 5,
+                w: 5,
+                e: 5,
+                r: 3,
             },
-            enemy_players: Vec::from_iter([InputEnemyPlayers {
-                champion_id: ChampionId::Gwen,
-                level: 15,
-                infer_stats: true,
-                items: Default::default(),
-                stats: Default::default(),
-            }]),
-            ally_earth_dragons: 0,
-            ally_fire_dragons: 0,
-            enemy_earth_dragons: 0,
-            // stack_exceptions: Default::default(),
+            level: 15,
+            infer_stats: true,
+            items: vec![
+                ItemId::NashorsTooth,
+                ItemId::BladeoftheRuinedKing,
+                ItemId::LichBane,
+            ],
+            runes: Default::default(),
+            stacks: Default::default(),
+        }
+    }
+}
+
+#[inline]
+pub fn random_urange(limit: f64) -> f64 {
+    Math::floor(Math::random() * limit)
+}
+
+impl InputEnemyPlayer {
+    #[inline]
+    pub fn new() -> Self {
+        let (champion_id, items) = unsafe {
+            let random_number = random_urange(CHAMPION_ID_TO_NAME.len() as f64);
+            (
+                std::mem::transmute::<_, ChampionId>(random_number as u8),
+                RECOMMENDED_ITEMS
+                    .get_unchecked(random_number as usize)
+                    .get_unchecked(random_urange(5.0) as usize)
+                    .to_vec(),
+            )
+        };
+        Self {
+            champion_id,
+            level: 18,
+            infer_stats: true,
+            items,
+            stats: Default::default(),
         }
     }
 }

@@ -68,7 +68,7 @@ pub struct DamageStackSelectorProps {
     pub runes: Vec<RuneId>,
     pub stack: Vec<StackValue>,
     pub push_callback: Callback<StackValue>,
-    pub remove_callback: Callback<usize>,
+    pub remove_callback: Callback<u16>,
     pub damages: Html,
 }
 
@@ -102,7 +102,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
 struct RemoveDamageStackSelectorProps {
     champion_id: ChampionId,
     stack: Vec<StackValue>,
-    remove_callback: Callback<usize>,
+    remove_callback: Callback<u16>,
 }
 
 #[function_component(RemoveDamageStackSelector)]
@@ -142,7 +142,7 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
                             {
                                 let remove_callback = remove_callback.clone();
                                 Callback::from(move |_| {
-                                    remove_callback.emit(index);
+                                    remove_callback.emit(index as u16);
                                 })
                             },
                             None,

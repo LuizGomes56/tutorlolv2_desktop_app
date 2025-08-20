@@ -100,5 +100,5 @@ pub struct AbilityLevels {
 
 #[derive(Debug, Decode)]
 pub struct ApiError {
-    pub message: String,
+    pub message: Box<str>,
 }

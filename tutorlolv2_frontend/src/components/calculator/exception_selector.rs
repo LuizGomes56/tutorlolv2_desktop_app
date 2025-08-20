@@ -16,14 +16,14 @@ pub enum Exception {
 }
 
 pub trait Numeric: Copy + 'static + PartialEq + FromStr {
-    fn parse_unsigned(s: String) -> Self;
+    fn parse(s: &str) -> Self;
 }
 
 macro_rules! impl_numeric {
     ($($typename:ty),*) => {
         $(
             impl Numeric for $typename {
-                fn parse_unsigned(s: String) -> Self {
+                fn parse(s: &str) -> Self {
                     s.parse::<$typename>().unwrap_or_default().max(0)
                 }
             }
@@ -87,7 +87,7 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
                     let callback = props.callback.clone();
                     Callback::from(move |e: InputEvent| {
                         let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                        let value = T::parse_unsigned(target.value());
+                        let value = T::parse(&target.value());
                         callback.emit(value);
                     })
                 }}

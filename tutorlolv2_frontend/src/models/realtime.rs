@@ -15,7 +15,7 @@ pub struct Scoreboard {
     pub creep_score: u16,
     pub deaths: u16,
     pub kills: u16,
-    pub riot_id: String,
+    pub riot_id: Box<str>,
     pub champion_id: ChampionId,
     pub position: Position,
 }
@@ -24,7 +24,7 @@ pub struct Scoreboard {
 pub struct CurrentPlayer {
     pub damaging_items: Vec<ItemId>,
     pub damaging_runes: Vec<RuneId>,
-    pub riot_id: String,
+    pub riot_id: Box<str>,
     pub level: u8,
     pub team: Team,
     pub adaptative_type: AdaptativeType,
@@ -75,7 +75,7 @@ pub struct SimulatedDamages {
 
 #[derive(Decode, Debug)]
 pub struct Enemy {
-    pub riot_id: String,
+    pub riot_id: Box<str>,
     pub team: Team,
     pub level: u8,
     pub position: Position,

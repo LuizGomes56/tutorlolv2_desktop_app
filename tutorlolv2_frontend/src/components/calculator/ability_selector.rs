@@ -67,7 +67,7 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                                 let value = target.value().parse::<u8>().unwrap_or(0).clamp(0, max);
-                                callback.emit(ChangeAbilityLevelsAction::[<Set $field:upper>](value));
+                                callback.emit(ChangeAbilityLevelsAction::[<$field:upper>](value));
                             })
                         }}
                     />

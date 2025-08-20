@@ -10,10 +10,11 @@ use crate::{
     external::api::{decode_bytes, send_bytes},
     models::{
         base::DamageType,
-        calculator::{InputGame, OutputGame},
+        calculator::{InputCurrentPlayer, InputDragons, InputEnemyPlayer, InputGame, OutputGame},
     },
     url,
 };
+use generated_code::ChampionId;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -22,89 +23,92 @@ use yew::{
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
-    let input_game = use_reducer(InputGame::default);
+    let input_current_player = use_reducer(InputCurrentPlayer::default);
+    let input_enemy_players = use_reducer(InputEnemies::new);
+    let input_dragons = use_reducer(InputDragons::default);
+
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
     let damage_stack = use_reducer(Stack::default);
 
-    let current_player_champion_id = (*input_game).active_player.champion_id;
+    let current_player_champion_id = (*input_current_player).champion_id;
 
     let set_current_player_champion_id = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerChampionId(v));
+            input_current_player.dispatch(CurrentPlayerAction::ChampionId(v));
         })
     };
     let insert_current_player_items = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::InsertCurrentPlayerItem(v));
+            input_current_player.dispatch(CurrentPlayerAction::InsertItem(v));
         })
     };
     let remove_current_player_items = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::RemoveCurrentPlayerItem(v));
+            input_current_player.dispatch(CurrentPlayerAction::RemoveItem(v));
         })
     };
     let insert_current_player_runes = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::InsertCurrentPlayerRune(v));
+            input_current_player.dispatch(CurrentPlayerAction::InsertRune(v));
         })
     };
     let remove_current_player_runes = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::RemoveCurrentPlayerRune(v));
+            input_current_player.dispatch(CurrentPlayerAction::RemoveRune(v));
         })
     };
     let change_ability_level = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetAbilityLevels(v));
+            input_current_player.dispatch(CurrentPlayerAction::AbilityLevels(v));
         })
     };
     let set_current_player_stats = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerStats(v));
+            input_current_player.dispatch(CurrentPlayerAction::Stats(v));
         })
     };
     let set_current_player_attack_form = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerAttackForm(v));
+            input_current_player.dispatch(CurrentPlayerAction::AttackForm(v));
         })
     };
     let set_current_player_level = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerLevel(v));
-        })
-    };
-    let set_ally_fire_dragons = {
-        let input_game = input_game.clone();
-        use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetAllyFireDragons(v));
-        })
-    };
-    let set_ally_earth_dragons = {
-        let input_game = input_game.clone();
-        use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetAllyEarthDragons(v));
-        })
-    };
-    let set_current_player_stacks = {
-        let input_game = input_game.clone();
-        use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerStacks(v));
+            input_current_player.dispatch(CurrentPlayerAction::Level(v));
         })
     };
     let set_current_player_infer_stats = {
-        let input_game = input_game.clone();
+        let input_current_player = input_current_player.clone();
         use_callback((), move |v, _| {
-            input_game.dispatch(InputGameAction::SetCurrentPlayerInferStats(v));
+            input_current_player.dispatch(CurrentPlayerAction::InferStats(v));
+        })
+    };
+    let set_current_player_stacks = {
+        let input_current_player = input_current_player.clone();
+        use_callback((), move |v, _| {
+            input_current_player.dispatch(CurrentPlayerAction::Stacks(v));
+        })
+    };
+    let set_ally_fire_dragons = {
+        let input_dragons = input_dragons.clone();
+        use_callback((), move |v, _| {
+            input_dragons.dispatch(DragonAction::AllyFireDragons(v));
+        })
+    };
+    let set_ally_earth_dragons = {
+        let input_dragons = input_dragons.clone();
+        use_callback((), move |v, _| {
+            input_dragons.dispatch(DragonAction::AllyEarthDragons(v));
         })
     };
     let push_stack_callback = {
@@ -127,40 +131,56 @@ pub fn calculator() -> Html {
     {
         let output_game = output_game.clone();
         let abort_controller = abort_controller.clone();
-        let input_game = input_game.clone();
-        use_effect_with(input_game.clone(), move |_| {
-            // web_sys::console::log_1(&format!("{:#?}", *input_game).into());
+        let input_current_player = input_current_player.clone();
+        let input_enemy_players = input_enemy_players.clone();
+        let input_dragons = input_dragons.clone();
+        use_effect_with(
+            (
+                input_current_player.clone(),
+                input_enemy_players.clone(),
+                input_dragons.clone(),
+            ),
+            move |_| {
+                if let Some(controller) = &*abort_controller {
+                    controller.abort();
+                }
 
-            if let Some(controller) = &*abort_controller {
-                controller.abort();
-            }
+                let new_controller = AbortController::new().ok();
+                let signal = new_controller.as_ref().map(|c| c.signal());
+                abort_controller.set(new_controller);
+                spawn_local(async move {
+                    let input_game = InputGame {
+                        active_player: &*input_current_player,
+                        enemy_players: (*input_enemy_players).get_ref(),
+                        ally_earth_dragons: input_dragons.ally_earth_dragons,
+                        ally_fire_dragons: input_dragons.ally_fire_dragons,
+                        enemy_earth_dragons: input_dragons.enemy_earth_dragons,
+                    };
 
-            let new_controller = AbortController::new().ok();
-            let signal = new_controller.as_ref().map(|c| c.signal());
-            abort_controller.set(new_controller);
+                    web_sys::console::log_1(&format!("{:#?}", input_game).into());
 
-            spawn_local(async move {
-                let response =
-                    send_bytes(url!("/api/games/calculator"), &*input_game, signal).await;
+                    let response =
+                        send_bytes(url!("/api/games/calculator"), &input_game, signal).await;
 
-                if let Ok(res) = response {
-                    match decode_bytes::<OutputGame>(res).await {
-                        Ok(data) => {
-                            if input_game.active_player.infer_stats {
-                                input_game.dispatch(InputGameAction::SetCurrentPlayerStats(
-                                    ChangeStatsAction::Replace(data.current_player.current_stats),
-                                ));
+                    if let Ok(res) = response {
+                        match decode_bytes::<OutputGame>(res).await {
+                            Ok(data) => {
+                                // if input_current_player.infer_stats {
+                                //     input_game.dispatch(InputGameAction::SetCurrentPlayerStats(
+                                //         ChangeStatsAction::Replace(data.current_player.current_stats),
+                                //     ));
+                                // }
+                                // web_sys::console::log_1(&format!("{:#?}", data).into());
+                                output_game.set(Some(data));
                             }
-                            // web_sys::console::log_1(&format!("{:#?}", data).into());
-                            output_game.set(Some(data));
-                        }
-                        Err(e) => {
-                            web_sys::console::log_1(&format!("{:#?}", e).into());
+                            Err(e) => {
+                                web_sys::console::log_1(&format!("{:#?}", e).into());
+                            }
                         }
                     }
-                }
-            });
-        });
+                });
+            },
+        );
     }
 
     let make_td = |text: f32, damage_type: DamageType| -> Html {
@@ -189,14 +209,14 @@ pub fn calculator() -> Html {
                         "grid", "grid-cols-2", "gap-2", "px-4"
                     )}>
                         <AbilitySelector
-                            ability_levels={input_game.active_player.abilities}
+                            ability_levels={input_current_player.abilities}
                             callback={change_ability_level}
                             current_player_champion_id={current_player_champion_id}
                         />
                         <ExceptionSelector
                             current_player_champion_id={current_player_champion_id}
                             attack_form={false}
-                            infer_stats={input_game.active_player.infer_stats}
+                            infer_stats={input_current_player.infer_stats}
                             set_ally_fire_dragons={set_ally_fire_dragons}
                             set_ally_earth_dragons={set_ally_earth_dragons}
                             set_current_player_stacks={set_current_player_stacks}
@@ -205,11 +225,11 @@ pub fn calculator() -> Html {
                         />
                     </div>
                     <StatsSelector
-                        champion_stats={input_game.active_player.champion_stats}
-                        infer_stats={input_game.active_player.infer_stats}
+                        champion_stats={input_current_player.stats}
+                        infer_stats={input_current_player.infer_stats}
                         set_stats_callback={set_current_player_stats}
                         set_level_callback={set_current_player_level}
-                        level={input_game.active_player.level}
+                        level={input_current_player.level}
                     />
                 </div>
                 <div>
@@ -403,8 +423,8 @@ pub fn calculator() -> Html {
             //     remove_item_callback={remove_current_player_items}
             //     insert_rune_callback={insert_current_player_runes}
             //     remove_rune_callback={remove_current_player_runes}
-            //     items_iterator={input_game.active_player.items.clone()}
-            //     runes_iterator={input_game.active_player.runes.clone()}
+            //     items_iterator={input_current_player.items.clone()}
+            //     runes_iterator={input_current_player.runes.clone()}
             //     current_player_champion_id={current_player_champion_id}
             // />
         </div>
