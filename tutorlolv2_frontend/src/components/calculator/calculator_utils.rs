@@ -18,16 +18,22 @@ macro_rules! stats_reducer {
     ($name:ident, $($stat:ident),*) => {
         paste! {
             pub enum [<Change $name Action>] {
+                Replace(*const $name),
                 $(
-                    [<Set $stat:camel>](f32),
+                    [<$stat:camel>](f32),
                 )*
             }
 
             #[inline]
             fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
                 match action {
+                    [<Change $name Action>]::Replace(value) => {
+                        unsafe {
+                            *stats = *value;
+                        }
+                    },
                     $(
-                        [<Change $name Action>]::[<Set $stat:camel>](value) => {
+                        [<Change $name Action>]::[<$stat:camel>](value) => {
                             stats.$stat = value;
                         }
                     )*
@@ -90,10 +96,10 @@ pub enum CurrentPlayerAction {
     Stats(ChangeStatsAction),
     AttackForm(bool),
     InsertItem(ItemId),
-    RemoveItem(u32),
+    RemoveItem(usize),
     ClearItems,
     InsertRune(RuneId),
-    RemoveRune(u32),
+    RemoveRune(usize),
     ClearRunes,
     AbilityLevels(ChangeAbilityLevelsAction),
 }
@@ -110,7 +116,7 @@ pub enum InputEnemyAction {
     InferStats(bool),
     AttackForm(bool),
     InsertItem(ItemId),
-    RemoveItem(u32),
+    RemoveItem(usize),
     ClearItems,
     Level(u8),
 }
@@ -140,7 +146,7 @@ impl Reducible for InputCurrentPlayer {
                 new_state.items.push(v);
             }
             Self::Action::RemoveItem(v) => {
-                new_state.items.swap_remove(v as usize);
+                new_state.items.swap_remove(v);
             }
             Self::Action::ClearItems => {
                 new_state.items.clear();
@@ -149,7 +155,7 @@ impl Reducible for InputCurrentPlayer {
                 new_state.runes.push(v);
             }
             Self::Action::RemoveRune(v) => {
-                new_state.runes.remove(v as usize);
+                new_state.runes.remove(v);
             }
             Self::Action::ClearRunes => {
                 new_state.runes.clear();
@@ -171,15 +177,15 @@ impl InputEnemies {
         Self(vec![Rc::new(InputEnemyPlayer::new())])
     }
 
-    pub fn get_ref(&self) -> &[Rc<InputEnemyPlayer>] {
+    pub fn as_slice(&self) -> &[Rc<InputEnemyPlayer>] {
         &self.0
     }
 }
 
 pub enum EnemiesAction {
     Push,
-    Remove(u8),
-    Edit(u8, InputEnemyAction),
+    Remove(usize),
+    Edit(usize, InputEnemyAction),
 }
 
 impl Reducible for InputEnemies {
@@ -191,10 +197,10 @@ impl Reducible for InputEnemies {
                 new_state.0.push(Rc::new(InputEnemyPlayer::new()));
             }
             Self::Action::Remove(v) => {
-                new_state.0.swap_remove(v as usize);
+                new_state.0.swap_remove(v);
             }
             Self::Action::Edit(v, enemy_action) => {
-                new_state.0[v as usize] = new_state.0[v as usize].clone().reduce(enemy_action);
+                new_state.0[v] = new_state.0[v].clone().reduce(enemy_action);
             }
         }
         Rc::new(new_state)

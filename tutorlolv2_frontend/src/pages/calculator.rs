@@ -18,14 +18,15 @@ use generated_code::ChampionId;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
-    use_effect_with, use_reducer, use_state,
+    use_effect_with, use_mut_ref, use_reducer, use_state,
 };
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
-    let input_current_player = use_reducer(InputCurrentPlayer::default);
+    let input_current_player = use_reducer(InputCurrentPlayer::new);
     let input_enemy_players = use_reducer(InputEnemies::new);
     let input_dragons = use_reducer(InputDragons::default);
+    let cp_infer_flag = use_mut_ref(|| false);
 
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
@@ -141,6 +142,10 @@ pub fn calculator() -> Html {
                 input_dragons.clone(),
             ),
             move |_| {
+                if *(*cp_infer_flag).borrow() {
+                    *(*cp_infer_flag).borrow_mut() = false;
+                    return;
+                }
                 if let Some(controller) = &*abort_controller {
                     controller.abort();
                 }
@@ -151,7 +156,7 @@ pub fn calculator() -> Html {
                 spawn_local(async move {
                     let input_game = InputGame {
                         active_player: &*input_current_player,
-                        enemy_players: (*input_enemy_players).get_ref(),
+                        enemy_players: (*input_enemy_players).as_slice(),
                         ally_earth_dragons: input_dragons.ally_earth_dragons,
                         ally_fire_dragons: input_dragons.ally_fire_dragons,
                         enemy_earth_dragons: input_dragons.enemy_earth_dragons,
@@ -165,11 +170,16 @@ pub fn calculator() -> Html {
                     if let Ok(res) = response {
                         match decode_bytes::<OutputGame>(res).await {
                             Ok(data) => {
-                                // if input_current_player.infer_stats {
-                                //     input_game.dispatch(InputGameAction::SetCurrentPlayerStats(
-                                //         ChangeStatsAction::Replace(data.current_player.current_stats),
-                                //     ));
-                                // }
+                                if input_current_player.infer_stats {
+                                    if input_current_player.stats != data.current_player.stats {
+                                        *(*cp_infer_flag).borrow_mut() = true;
+                                    }
+                                    input_current_player.dispatch(CurrentPlayerAction::Stats(
+                                        ChangeStatsAction::Replace(
+                                            &data.current_player.stats as *const _,
+                                        ),
+                                    ));
+                                }
                                 // web_sys::console::log_1(&format!("{:#?}", data).into());
                                 output_game.set(Some(data));
                             }

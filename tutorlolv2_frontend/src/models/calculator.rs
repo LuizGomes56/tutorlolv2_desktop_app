@@ -52,7 +52,7 @@ pub struct OutputCurrentPlayer {
     pub adaptative_type: AdaptativeType,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
-    pub current_stats: Stats,
+    pub stats: Stats,
 }
 
 #[derive(Debug, Decode)]
@@ -111,10 +111,26 @@ pub struct InputDragons {
     pub enemy_earth_dragons: u8,
 }
 
-impl Default for InputCurrentPlayer {
-    fn default() -> Self {
+#[inline]
+pub fn rand_num_limited(limit: f64) -> f64 {
+    Math::floor(Math::random() * limit)
+}
+
+impl InputCurrentPlayer {
+    #[inline]
+    pub fn new() -> Self {
+        let (champion_id, items) = unsafe {
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
+            (
+                std::mem::transmute::<_, ChampionId>(random_number as u8),
+                RECOMMENDED_ITEMS
+                    .get_unchecked(random_number as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
+                    .to_vec(),
+            )
+        };
         Self {
-            champion_id: ChampionId::Vex,
+            champion_id,
             stats: Default::default(),
             abilities: AbilityLevels {
                 q: 5,
@@ -122,34 +138,25 @@ impl Default for InputCurrentPlayer {
                 e: 5,
                 r: 3,
             },
-            level: 15,
+            level: 18,
             infer_stats: true,
-            items: vec![
-                ItemId::NashorsTooth,
-                ItemId::BladeoftheRuinedKing,
-                ItemId::LichBane,
-            ],
+            items,
             runes: Default::default(),
             stacks: Default::default(),
         }
     }
 }
 
-#[inline]
-pub fn random_urange(limit: f64) -> f64 {
-    Math::floor(Math::random() * limit)
-}
-
 impl InputEnemyPlayer {
     #[inline]
     pub fn new() -> Self {
         let (champion_id, items) = unsafe {
-            let random_number = random_urange(CHAMPION_ID_TO_NAME.len() as f64);
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
             (
                 std::mem::transmute::<_, ChampionId>(random_number as u8),
                 RECOMMENDED_ITEMS
                     .get_unchecked(random_number as usize)
-                    .get_unchecked(random_urange(5.0) as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
                     .to_vec(),
             )
         };
