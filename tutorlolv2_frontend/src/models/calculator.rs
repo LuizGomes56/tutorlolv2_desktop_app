@@ -93,6 +93,7 @@ pub struct InputEnemyPlayer {
     pub level: u8,
     pub stats: BasicStats,
     pub infer_stats: bool,
+    pub stacks: u32,
 }
 
 #[derive(Clone, Debug, Encode)]
@@ -142,7 +143,7 @@ impl InputCurrentPlayer {
             infer_stats: true,
             items,
             runes: Default::default(),
-            stacks: Default::default(),
+            stacks: 0,
         }
     }
 }
@@ -166,6 +167,7 @@ impl InputEnemyPlayer {
             infer_stats: true,
             items,
             stats: Default::default(),
+            stacks: 0,
         }
     }
 }

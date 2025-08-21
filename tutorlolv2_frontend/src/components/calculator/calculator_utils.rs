@@ -119,6 +119,7 @@ pub enum InputEnemyAction {
     RemoveItem(usize),
     ClearItems,
     Level(u8),
+    Stacks(u32),
 }
 
 impl Reducible for InputCurrentPlayer {
@@ -173,10 +174,12 @@ impl Reducible for InputCurrentPlayer {
 pub struct InputEnemies(Vec<Rc<InputEnemyPlayer>>);
 
 impl InputEnemies {
+    #[inline]
     pub fn new() -> Self {
         Self(vec![Rc::new(InputEnemyPlayer::new())])
     }
 
+    #[inline]
     pub fn as_slice(&self) -> &[Rc<InputEnemyPlayer>] {
         &self.0
     }
@@ -233,6 +236,9 @@ impl Reducible for InputEnemyPlayer {
             }
             Self::Action::Level(v) => {
                 new_state.level = v;
+            }
+            Self::Action::Stacks(v) => {
+                new_state.stacks = v;
             }
         }
         Rc::new(new_state)

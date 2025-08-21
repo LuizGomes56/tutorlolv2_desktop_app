@@ -1,7 +1,10 @@
 use crate::{
     color,
-    components::{Image, ImageType, calculator::ChangeStatsAction},
-    models::base::Stats,
+    components::{
+        Image, ImageType,
+        calculator::{ChangeBasicStatsAction, ChangeStatsAction},
+    },
+    models::base::{BasicStats, Stats},
     url,
 };
 use yew::{
@@ -228,6 +231,85 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
             {stat_cell!("attack_speed.svg", attack_speed, "Attack Speed")}
             {stat_cell!("mana.svg", max_mana, "Max Mana")}
             {stat_cell!("mana.svg", current_mana, "Current Mana")}
+        </div>
+    }
+}
+
+#[derive(PartialEq, Properties)]
+pub struct BasicStatsSelectorProps {
+    pub infer_stats: bool,
+    pub champion_stats: BasicStats,
+    pub set_stats_callback: Callback<ChangeBasicStatsAction>,
+    pub set_level_callback: Callback<u8>,
+    pub level: u8,
+}
+
+#[function_component(BasicStatsSelector)]
+pub fn basic_stats_selector(props: &BasicStatsSelectorProps) -> Html {
+    let set_level_callback = {
+        let set_level_callback = props.set_level_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<u8>().unwrap_or(1).clamp(1, 18);
+            set_level_callback.emit(value);
+        })
+    };
+    let set_health_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeBasicStatsAction::Health(value));
+        })
+    };
+    let set_armor_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeBasicStatsAction::Armor(value));
+        })
+    };
+    let set_magic_resist_callback = {
+        let set_stats_callback = props.set_stats_callback.clone();
+        use_callback((), move |e: InputEvent, _| {
+            let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            set_stats_callback.emit(ChangeBasicStatsAction::MagicResist(value));
+        })
+    };
+
+    macro_rules! stat_cell {
+        ($path:literal, $stat:ident, $display:literal) => {
+            paste::paste! {
+                html! {
+                    <StatsCell<f32>
+                        path={$path}
+                        disabled={props.infer_stats}
+                        value={props.champion_stats.$stat.round()}
+                        display={$display}
+                        oninput={[<set_ $stat _callback>].clone()}
+                    />
+                }
+            }
+        };
+    }
+
+    html! {
+        <div class={classes!(
+            "grid", "grid-cols-[auto_auto_1fr]", "text-white", "items-center",
+            "gap-x-3", "gap-y-1", "px-4", "mb-2",
+        )}>
+            <StatsCell<u8>
+                path={"level.svg"}
+                value={props.level}
+                display={"Level"}
+                oninput={set_level_callback}
+                disabled={false}
+            />
+            {stat_cell!("health.svg", health, "Health")}
+            {stat_cell!("armor.svg", armor, "Armor")}
+            {stat_cell!("magic_resist.svg", magic_resist, "Magic Resist")}
         </div>
     }
 }

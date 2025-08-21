@@ -1,5 +1,6 @@
 use crate::{
     components::{Image, ImageType},
+    models::calculator::rand_num_limited,
     svg, url,
 };
 use generated_code::ChampionId;
@@ -106,6 +107,7 @@ pub struct BooleanFieldProps {
 
 #[function_component(BooleanField)]
 pub fn boolean_field(props: &BooleanFieldProps) -> Html {
+    let input_id = AttrValue::from(rand_num_limited((1 << 20) as f64).to_string());
     html! {
         <label
             class={classes!(
@@ -113,10 +115,12 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                 "grid-cols-[auto_1fr]", "justify-center",
                 "cursor-pointer", "items-center"
             )}
+            for={&input_id}
             title={&props.title}
         >
             {props.image_html.clone()}
             <input
+                id={&input_id}
                 type={"checkbox"}
                 checked={props.enabled}
                 onchange={{
@@ -155,37 +159,22 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub current_player_champion_id: ChampionId,
+    pub champion_id: ChampionId,
     pub attack_form: bool,
     pub infer_stats: bool,
-    pub set_ally_fire_dragons: Callback<u8>,
-    pub set_ally_earth_dragons: Callback<u8>,
-    pub set_current_player_stacks: Callback<u32>,
-    pub set_current_player_attack_form: Callback<bool>,
-    pub set_current_player_infer_stats: Callback<bool>,
+    pub stack_callback: Callback<u32>,
+    pub attack_form_callback: Callback<bool>,
+    pub infer_stats_callback: Callback<bool>,
 }
 
 const SIZE_SVG: &'static str = "32";
 
-/// Pending
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
     html! {
         <>
-            <NumericField<u8>
-                title={"Number of ally fire dragons"}
-                source={Exception::Image}
-                img_url={url!("/img/other/fire_soul.avif")}
-                callback={props.set_ally_fire_dragons.clone()}
-            />
-            <NumericField<u8>
-                title={"Number of ally earth dragons"}
-                source={Exception::Image}
-                img_url={url!("/img/other/earth_soul.avif")}
-                callback={props.set_ally_earth_dragons.clone()}
-            />
             {
-                match props.current_player_champion_id {
+                match props.champion_id {
                     ChampionId::Bard | ChampionId::Kindred | ChampionId::Sion |
                     ChampionId::Chogath | ChampionId::Smolder | ChampionId::Nasus
                     | ChampionId::AurelionSol | ChampionId::Veigar => {
@@ -195,9 +184,9 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                                 source={Exception::Stack}
                                 img_url={url!(
                                     "/img/other/{}_stacks.avif",
-                                    props.current_player_champion_id.as_str()
+                                    props.champion_id.as_str()
                                 )}
-                                callback={props.set_current_player_stacks.clone()}
+                                callback={props.stack_callback.clone()}
                             />
                         }
                     }
@@ -205,7 +194,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         html! {
                             <BooleanField
                                 enabled={props.attack_form}
-                                callback={props.set_current_player_attack_form.clone()}
+                                callback={props.attack_form_callback.clone()}
                                 image_html={svg!("../../../public/svgs/shift", SIZE_SVG)}
                                 title={"Toggle if this champion is melee or ranged"}
                             />
@@ -218,7 +207,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             }
             <BooleanField
                 enabled={props.infer_stats}
-                callback={props.set_current_player_infer_stats.clone()}
+                callback={props.infer_stats_callback.clone()}
                 image_html={svg!("../../../public/svgs/infer", SIZE_SVG)}
                 title={"Determine if this champion's stats will be based on its items, or manually inserted"}
             />
