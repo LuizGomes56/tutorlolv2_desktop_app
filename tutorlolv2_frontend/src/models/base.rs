@@ -66,7 +66,7 @@ pub struct Stats {
     pub current_mana: f32,
 }
 
-pub type DamageLike<T> = Vec<(T, InstanceDamage)>;
+pub type DamageLike<T> = Box<[(T, InstanceDamage)]>;
 
 #[derive(Debug, Encode, Decode, Copy, Clone, PartialEq, Default)]
 pub struct BasicStats {

@@ -22,8 +22,8 @@ pub struct Scoreboard {
 
 #[derive(Decode, Debug)]
 pub struct CurrentPlayer {
-    pub damaging_items: Vec<ItemId>,
-    pub damaging_runes: Vec<RuneId>,
+    pub damaging_items: Box<[ItemId]>,
+    pub damaging_runes: Box<[RuneId]>,
     pub riot_id: Box<str>,
     pub level: u8,
     pub team: Team,
@@ -56,7 +56,7 @@ pub struct Damages {
     pub abilities: DamageLike<AbilityLike>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
-    pub compared_items: Vec<(ItemId, SimulatedDamages)>,
+    pub compared_items: Box<[(ItemId, SimulatedDamages)]>,
 }
 
 #[derive(Debug, Decode)]
@@ -92,7 +92,7 @@ pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: BTreeMap<ChampionId, Enemy>,
     pub game_information: GameInformation,
-    pub recommended_items: Vec<ItemId>,
+    pub recommended_items: Box<[ItemId]>,
     pub scoreboard: Scoreboard,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,

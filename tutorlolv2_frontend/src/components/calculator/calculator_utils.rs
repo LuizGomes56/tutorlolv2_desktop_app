@@ -279,8 +279,8 @@ pub enum StackAction {
 pub struct Stack(Vec<StackValue>);
 
 impl Stack {
-    pub fn get_owned(&self) -> Vec<StackValue> {
-        self.0.clone()
+    pub fn into_boxed_slice(&self) -> Box<[StackValue]> {
+        self.0.clone().into_boxed_slice()
     }
     pub fn get_ref(&self) -> &[StackValue] {
         &self.0

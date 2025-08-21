@@ -10,11 +10,10 @@ use crate::{
     external::api::{decode_bytes, send_bytes},
     models::{
         base::DamageType,
-        calculator::{InputCurrentPlayer, InputDragons, InputEnemyPlayer, InputGame, OutputGame},
+        calculator::{InputCurrentPlayer, InputDragons, InputGame, OutputGame},
     },
     url,
 };
-use generated_code::ChampionId;
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -126,7 +125,7 @@ pub fn calculator() -> Html {
     };
 
     use_effect_with(damage_stack.clone(), move |damage_stack| {
-        web_sys::console::log_1(&format!("{:#?}", damage_stack.get_owned()).into());
+        web_sys::console::log_1(&format!("{:#?}", damage_stack.into_boxed_slice()).into());
     });
 
     {
@@ -276,7 +275,7 @@ pub fn calculator() -> Html {
                                         items={output_game.current_player.damaging_items.clone()}
                                         runes={output_game.current_player.damaging_runes.clone()}
                                         champion_id={current_player_champion_id}
-                                        stack={(*damage_stack).get_owned()}
+                                        stack={(*damage_stack).into_boxed_slice()}
                                         push_callback={push_stack_callback}
                                         remove_callback={remove_stack_callback}
                                         damages={
@@ -292,22 +291,13 @@ pub fn calculator() -> Html {
                                                                 }
                                                             },
                                                             StackValue::BasicAttack => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 3) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
+                                                                total_damage += enemy.damages.attacks.basic_attack.minimum_damage;
                                                             }
                                                             StackValue::CriticalStrike => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 2) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
+                                                                total_damage += enemy.damages.attacks.critical_strike.minimum_damage;
                                                             },
                                                             StackValue::Onhit => {
-                                                                let len = enemy.damages.abilities.len();
-                                                                if let Some((_, instance_damage)) = enemy.damages.abilities.get(len - 1) {
-                                                                    total_damage += instance_damage.minimum_damage;
-                                                                }
+                                                                total_damage += enemy.damages.attacks.onhit_damage.minimum_damage;
                                                             },
                                                             StackValue::Item(item_id) => {
                                                                 if let Ok(index) = enemy.damages.items.binary_search_by_key(item_id, |(key, _)| *key) {

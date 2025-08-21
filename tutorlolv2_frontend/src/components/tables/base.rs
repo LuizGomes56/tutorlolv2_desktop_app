@@ -6,8 +6,8 @@ use yew::{Html, Properties, classes, function_component, html, use_memo};
 pub struct BaseTableProps {
     #[prop_or(1)]
     pub empty_headers: u8,
-    pub damaging_items: Vec<ItemId>,
-    pub damaging_runes: Vec<RuneId>,
+    pub damaging_items: Box<[ItemId]>,
+    pub damaging_runes: Box<[RuneId]>,
     pub champion_id: ChampionId,
     pub damages: Html,
 }

@@ -12,8 +12,8 @@ use yew::{Html, html};
 #[derive(Debug, Decode)]
 pub struct MonsterExpr {
     pub attacks: Attacks,
-    pub abilities: Vec<InstanceDamage>,
-    pub items: Vec<InstanceDamage>,
+    pub abilities: Box<[InstanceDamage]>,
+    pub items: Box<[InstanceDamage]>,
 }
 
 #[derive(Debug, Decode)]
@@ -40,14 +40,14 @@ pub struct OutputGame {
     pub monster_damages: MonsterDamages,
     pub tower_damage: [f32; 6],
     pub current_player: OutputCurrentPlayer,
-    pub enemies: Vec<(ChampionId, OutputEnemy)>,
+    pub enemies: Box<[(ChampionId, OutputEnemy)]>,
 }
 
 #[derive(Debug, Decode)]
 pub struct OutputCurrentPlayer {
     pub champion_id: ChampionId,
-    pub damaging_items: Vec<ItemId>,
-    pub damaging_runes: Vec<RuneId>,
+    pub damaging_items: Box<[ItemId]>,
+    pub damaging_runes: Box<[RuneId]>,
     pub level: u8,
     pub adaptative_type: AdaptativeType,
     pub base_stats: BasicStats,
@@ -58,7 +58,7 @@ pub struct OutputCurrentPlayer {
 #[derive(Debug, Decode)]
 pub struct CalculatorDamages {
     pub attacks: Attacks,
-    pub abilities: Vec<(AbilityLike, InstanceDamage)>,
+    pub abilities: Box<[(AbilityLike, InstanceDamage)]>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
 }

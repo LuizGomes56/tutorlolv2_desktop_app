@@ -53,7 +53,7 @@ pub trait DisplayDamage {
     fn display_damage(&self) -> Html;
 }
 
-impl<T> DisplayDamage for Vec<(T, InstanceDamage)> {
+impl<T> DisplayDamage for Box<[(T, InstanceDamage)]> {
     fn display_damage(&self) -> Html {
         html! {
             for self.iter().map(|(_, value)| {
@@ -63,7 +63,7 @@ impl<T> DisplayDamage for Vec<(T, InstanceDamage)> {
     }
 }
 
-impl DisplayDamage for Vec<InstanceDamage> {
+impl DisplayDamage for Box<[InstanceDamage]> {
     fn display_damage(&self) -> Html {
         html! {
             for self.iter().map(|value| {

@@ -64,9 +64,9 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct DamageStackSelectorProps {
     pub champion_id: ChampionId,
-    pub items: Vec<ItemId>,
-    pub runes: Vec<RuneId>,
-    pub stack: Vec<StackValue>,
+    pub items: Box<[ItemId]>,
+    pub runes: Box<[RuneId]>,
+    pub stack: Box<[StackValue]>,
     pub push_callback: Callback<StackValue>,
     pub remove_callback: Callback<u16>,
     pub damages: Html,
@@ -101,7 +101,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
 #[derive(Properties, PartialEq)]
 struct RemoveDamageStackSelectorProps {
     champion_id: ChampionId,
-    stack: Vec<StackValue>,
+    stack: Box<[StackValue]>,
     remove_callback: Callback<u16>,
 }
 
@@ -157,8 +157,8 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
 #[derive(Properties, PartialEq)]
 struct InsertDamageStackSelectorProps {
     champion_id: ChampionId,
-    items: Vec<ItemId>,
-    runes: Vec<RuneId>,
+    items: Box<[ItemId]>,
+    runes: Box<[RuneId]>,
     push_callback: Callback<StackValue>,
 }
 
