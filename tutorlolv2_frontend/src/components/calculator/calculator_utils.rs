@@ -73,6 +73,7 @@ macro_rules! ability_level_reducer {
                 )*
             }
 
+            #[inline]
             fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
                 match action {
                     $(
@@ -156,7 +157,7 @@ impl Reducible for InputCurrentPlayer {
                 new_state.runes.push(v);
             }
             Self::Action::RemoveRune(v) => {
-                new_state.runes.remove(v);
+                new_state.runes.swap_remove(v);
             }
             Self::Action::ClearRunes => {
                 new_state.runes.clear();
@@ -296,7 +297,7 @@ impl Stack {
     }
 
     pub fn remove(&mut self, index: usize) {
-        self.0.remove(index);
+        self.0.swap_remove(index);
     }
 }
 

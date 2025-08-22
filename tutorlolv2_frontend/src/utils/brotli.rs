@@ -8,6 +8,7 @@ pub trait ComptimeCache {
 static mut CACHE: *const str = "";
 
 impl ComptimeCache for (usize, usize) {
+    #[inline]
     fn as_str(&self) -> &'static str {
         unsafe {
             CACHE
