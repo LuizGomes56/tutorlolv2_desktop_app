@@ -1,12 +1,11 @@
 use super::base::{
     AbilityLevels, AdaptativeType, Attacks, BasicStats, DamageLike, InstanceDamage, Stats,
 };
-use crate::components::tables::cells::DisplayDamage;
+use crate::{components::tables::cells::DisplayDamage, utils::rand_num_limited};
 use bincode::{Decode, Encode};
 use generated_code::{
     AbilityLike, CHAMPION_ID_TO_NAME, ChampionId, ItemId, RECOMMENDED_ITEMS, RuneId,
 };
-use web_sys::js_sys::Math;
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]
@@ -112,37 +111,59 @@ pub struct InputDragons {
     pub enemy_earth_dragons: u8,
 }
 
-#[inline]
-pub fn rand_num_limited(limit: f64) -> f64 {
-    Math::floor(Math::random() * limit)
-}
-
 impl InputCurrentPlayer {
     #[inline]
-    pub fn new() -> Self {
-        let (champion_id, items) = unsafe {
-            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
-            (
-                std::mem::transmute::<_, ChampionId>(random_number as u8),
-                RECOMMENDED_ITEMS
-                    .get_unchecked(random_number as usize)
-                    .get_unchecked(rand_num_limited(5.0) as usize)
-                    .to_vec(),
-            )
-        };
+    pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
+            items: unsafe {
+                RECOMMENDED_ITEMS
+                    .get_unchecked(champion_id as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
+                    .to_vec()
+            },
+            runes: self.runes.clone(),
+            ..*self
+        }
+    }
+    #[inline]
+    pub fn new() -> Self {
+        let champion_id = unsafe {
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
+            std::mem::transmute::<_, ChampionId>(random_number as u8)
+        };
+        Self::create(&Self::default(), champion_id)
+    }
+}
+
+impl Default for InputCurrentPlayer {
+    fn default() -> Self {
+        Self {
+            champion_id: ChampionId::Aatrox,
+            items: Default::default(),
+            level: 18,
             stats: Default::default(),
+            infer_stats: true,
+            stacks: 0,
             abilities: AbilityLevels {
                 q: 5,
                 w: 5,
                 e: 5,
                 r: 3,
             },
-            level: 18,
-            infer_stats: true,
-            items,
             runes: Default::default(),
+        }
+    }
+}
+
+impl Default for InputEnemyPlayer {
+    fn default() -> Self {
+        Self {
+            champion_id: ChampionId::Aatrox,
+            items: Default::default(),
+            level: 18,
+            stats: Default::default(),
+            infer_stats: true,
             stacks: 0,
         }
     }
@@ -150,24 +171,24 @@ impl InputCurrentPlayer {
 
 impl InputEnemyPlayer {
     #[inline]
-    pub fn new() -> Self {
-        let (champion_id, items) = unsafe {
-            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
-            (
-                std::mem::transmute::<_, ChampionId>(random_number as u8),
-                RECOMMENDED_ITEMS
-                    .get_unchecked(random_number as usize)
-                    .get_unchecked(rand_num_limited(5.0) as usize)
-                    .to_vec(),
-            )
-        };
+    pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            level: 18,
-            infer_stats: true,
-            items,
-            stats: Default::default(),
-            stacks: 0,
+            items: unsafe {
+                RECOMMENDED_ITEMS
+                    .get_unchecked(champion_id as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
+                    .to_vec()
+            },
+            ..*self
         }
+    }
+    #[inline]
+    pub fn new() -> Self {
+        let champion_id = unsafe {
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
+            std::mem::transmute::<_, ChampionId>(random_number as u8)
+        };
+        Self::create(&Self::default(), champion_id)
     }
 }

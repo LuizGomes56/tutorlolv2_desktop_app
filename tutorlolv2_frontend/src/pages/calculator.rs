@@ -20,36 +20,50 @@ use yew::{
     use_effect_with, use_mut_ref, use_reducer, use_state,
 };
 
+#[derive(PartialEq, Clone, Copy)]
+enum ActionTracker {
+    Init,
+    Any,
+    CurrentPlayer,
+    EnemyPlayer(usize),
+    Replace,
+}
+
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
     let input_current_player = use_reducer(InputCurrentPlayer::new);
     let input_enemy_players = use_reducer(InputEnemies::new);
     let input_enemy_index = use_state(|| 0);
     let input_dragons = use_reducer(InputDragons::default);
-    let cp_infer_flag = use_mut_ref(|| false);
-    let en_infer_flag = use_mut_ref(|| vec![false]);
 
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
     let damage_stack = use_reducer(Stack::default);
+    let action_tracker = use_mut_ref(|| ActionTracker::Init);
 
     let current_player_champion_id = (*input_current_player).champion_id;
 
     let set_current_player_champion_id = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::ChampionId(v));
         })
     };
     let insert_current_player_items = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::InsertItem(v));
         })
     };
     let remove_current_player_items = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::RemoveItem(v));
         })
     };
@@ -73,31 +87,41 @@ pub fn calculator() -> Html {
     };
     let set_current_player_stats = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::Stats(v));
         })
     };
     let set_current_player_attack_form = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::AttackForm(v));
         })
     };
     let set_current_player_level = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::Level(v));
         })
     };
     let set_current_player_infer_stats = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::InferStats(v));
         })
     };
     let set_current_player_stacks = {
         let input_current_player = input_current_player.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_current_player.dispatch(CurrentPlayerAction::Stacks(v));
         })
     };
@@ -131,10 +155,24 @@ pub fn calculator() -> Html {
             damage_stack.dispatch(StackAction::Remove(v));
         })
     };
+    let set_enemy_champion_id = {
+        let input_enemy_players = input_enemy_players.clone();
+        let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
+        use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
+            input_enemy_players.dispatch(EnemiesAction::Edit(
+                input_enemy_index,
+                InputEnemyAction::ChampionId(v),
+            ));
+        })
+    };
     let set_enemy_stacks = {
         let input_enemy_players = input_enemy_players.clone();
         let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_enemy_players.dispatch(EnemiesAction::Edit(
                 input_enemy_index,
                 InputEnemyAction::Stacks(v),
@@ -144,7 +182,9 @@ pub fn calculator() -> Html {
     let set_enemy_infer_stats = {
         let input_enemy_players = input_enemy_players.clone();
         let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_enemy_players.dispatch(EnemiesAction::Edit(
                 input_enemy_index,
                 InputEnemyAction::InferStats(v),
@@ -154,7 +194,9 @@ pub fn calculator() -> Html {
     let set_enemy_attack_form = {
         let input_enemy_players = input_enemy_players.clone();
         let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_enemy_players.dispatch(EnemiesAction::Edit(
                 input_enemy_index,
                 InputEnemyAction::AttackForm(v),
@@ -164,7 +206,9 @@ pub fn calculator() -> Html {
     let set_enemy_stats = {
         let input_enemy_players = input_enemy_players.clone();
         let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_enemy_players.dispatch(EnemiesAction::Edit(
                 input_enemy_index,
                 InputEnemyAction::Stats(v),
@@ -174,7 +218,9 @@ pub fn calculator() -> Html {
     let set_enemy_level = {
         let input_enemy_players = input_enemy_players.clone();
         let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_enemy_players.dispatch(EnemiesAction::Edit(
                 input_enemy_index,
                 InputEnemyAction::Level(v),
@@ -192,6 +238,7 @@ pub fn calculator() -> Html {
         let input_current_player = input_current_player.clone();
         let input_enemy_players = input_enemy_players.clone();
         let input_dragons = input_dragons.clone();
+        let action_tracker = action_tracker.clone();
         use_effect_with(
             (
                 input_current_player.clone(),
@@ -199,17 +246,15 @@ pub fn calculator() -> Html {
                 input_dragons.clone(),
             ),
             move |_| {
-                if *(*cp_infer_flag).borrow() {
-                    *(*cp_infer_flag).borrow_mut() = false;
-                    return;
-                }
-                {
-                    let mut flags = (*en_infer_flag).borrow_mut();
-                    if let Some(i) = flags.iter().position(|&b| b) {
-                        flags[i] = false;
+                let current_action = *action_tracker.borrow();
+                match current_action {
+                    ActionTracker::Replace => {
+                        action_tracker.replace(ActionTracker::Any);
                         return;
                     }
-                }
+                    _ => {}
+                };
+
                 if let Some(controller) = &*abort_controller {
                     controller.abort();
                 }
@@ -226,7 +271,7 @@ pub fn calculator() -> Html {
                         enemy_earth_dragons: input_dragons.enemy_earth_dragons,
                     };
 
-                    web_sys::console::log_1(&format!("{:#?}", input_game).into());
+                    // web_sys::console::log_1(&format!("{:#?}", input_game).into());
 
                     let response =
                         send_bytes(url!("/api/games/calculator"), &input_game, signal).await;
@@ -234,48 +279,53 @@ pub fn calculator() -> Html {
                     if let Ok(res) = response {
                         match decode_bytes::<OutputGame>(res).await {
                             Ok(data) => {
-                                if input_current_player.infer_stats {
-                                    if input_current_player.stats != data.current_player.stats {
-                                        *(*cp_infer_flag).borrow_mut() = true;
-                                    }
-                                    input_current_player.dispatch(CurrentPlayerAction::Stats(
-                                        ChangeStatsAction::Replace(
-                                            &data.current_player.stats as *const _,
-                                        ),
-                                    ));
+                                let last_action = *action_tracker.borrow();
+                                let mut action_ref_mut = action_tracker.borrow_mut();
+                                macro_rules! infer_current_player_stats {
+                                    () => {
+                                        if input_current_player.infer_stats {
+                                            *action_ref_mut = ActionTracker::Replace;
+                                            input_current_player.dispatch(
+                                                CurrentPlayerAction::Stats(
+                                                    ChangeStatsAction::Replace(
+                                                        &data.current_player.stats as *const _,
+                                                    ),
+                                                ),
+                                            );
+                                        }
+                                    };
                                 }
-                                {
-                                    let mut flags = (*en_infer_flag).borrow_mut();
-                                    let need = input_enemy_players.as_slice().len();
-                                    if flags.len() != need {
-                                        flags.resize(need, false);
-                                    }
-
-                                    for (index, enemy) in
-                                        input_enemy_players.as_slice().iter().enumerate()
-                                    {
-                                        if enemy.infer_stats
-                                            && enemy.stats != data.enemies[index].1.current_stats
-                                        {
-                                            flags[index] = true;
+                                macro_rules! infer_enemy_player_stats {
+                                    ($index:expr) => {
+                                        if input_enemy_players.as_slice()[$index].infer_stats {
+                                            *action_ref_mut = ActionTracker::Replace;
+                                            input_enemy_players.dispatch(EnemiesAction::Edit(
+                                                $index,
+                                                InputEnemyAction::Stats(
+                                                    ChangeBasicStatsAction::Replace(
+                                                        &data.enemies[$index].1.current_stats
+                                                            as *const _,
+                                                    ),
+                                                ),
+                                            ));
+                                        }
+                                    };
+                                }
+                                match last_action {
+                                    ActionTracker::Init => {
+                                        infer_current_player_stats!();
+                                        for i in 0..data.enemies.len() {
+                                            infer_enemy_player_stats!(i);
                                         }
                                     }
-                                }
-                                for (index, enemy) in
-                                    input_enemy_players.as_slice().iter().enumerate()
-                                {
-                                    if enemy.infer_stats {
-                                        input_enemy_players.dispatch(EnemiesAction::Edit(
-                                            index,
-                                            InputEnemyAction::Stats(
-                                                ChangeBasicStatsAction::Replace(
-                                                    &data.enemies[index].1.current_stats
-                                                        as *const _,
-                                                ),
-                                            ),
-                                        ));
+                                    ActionTracker::CurrentPlayer => {
+                                        infer_current_player_stats!();
                                     }
-                                }
+                                    ActionTracker::EnemyPlayer(index) => {
+                                        infer_enemy_player_stats!(index);
+                                    }
+                                    _ => {}
+                                };
                                 // web_sys::console::log_1(&format!("{:#?}", data).into());
                                 output_game.set(Some(data));
                             }
@@ -305,15 +355,14 @@ pub fn calculator() -> Html {
             "oxanium", "gap-4", "grid", "grid-cols-[auto_1fr_auto]", "w-full"
         )}>
             <div class={classes!(
-                "flex", "flex-col", "gap-4", "w-60", "bg-[#141417]",
-                "h-screen", "overflow-y-scroll",
+                "flex", "flex-col", "gap-2", "w-60", "bg-[#141417]",
+                "h-screen"
             )}>
                 <ChampionBanner
+                    callback={set_current_player_champion_id}
                     champion_id={current_player_champion_id}
                 />
-                <div class={classes!(
-                    "grid", "grid-cols-2", "gap-2", "px-4"
-                )}>
+                <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
                     <AbilitySelector
                         ability_levels={input_current_player.abilities}
                         callback={change_ability_level}
@@ -524,18 +573,17 @@ pub fn calculator() -> Html {
                 }
             </div>
             <div class={classes!(
-                "flex", "flex-col", "gap-4", "w-60", "bg-[#141417]",
-                "h-screen", "overflow-y-scroll",
+                "flex", "flex-col", "gap-2", "w-60", "bg-[#141417]",
+                "h-screen",
             )}>
-                {(input_enemy_players.as_slice().get(*input_enemy_index).and_then(|input_enemy| {
+                {input_enemy_players.as_slice().get(*input_enemy_index).and_then(|input_enemy| {
                     Some(html! {
                         <>
                             <ChampionBanner
+                                callback={set_enemy_champion_id}
                                 champion_id={input_enemy.champion_id}
                             />
-                            <div class={classes!(
-                                "grid", "grid-cols-2", "gap-2", "px-4"
-                            )}>
+                            <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
                                 <NumericField<u8>
                                     title={"Number of enemy earth dragons"}
                                     source={Exception::Image}
@@ -560,7 +608,7 @@ pub fn calculator() -> Html {
                             />
                         </>
                     })
-                })).unwrap_or_default()}
+                })}
             </div>
         </div>
         // <MainSelector

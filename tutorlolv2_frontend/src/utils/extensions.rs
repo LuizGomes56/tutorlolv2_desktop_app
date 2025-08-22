@@ -1,5 +1,17 @@
 use core::convert::TryFrom;
 use generated_code::{ChampionId, ItemId, RuneId};
+use web_sys::js_sys::Math;
+use yew::AttrValue;
+
+#[inline]
+pub fn rand_num_limited(limit: f64) -> f64 {
+    Math::floor(Math::random() * limit)
+}
+
+#[inline]
+pub fn rand_id() -> AttrValue {
+    AttrValue::from(rand_num_limited((1 << 20) as f64).to_string())
+}
 
 pub trait StringExt {
     fn concat_char(&self, c: char) -> String;

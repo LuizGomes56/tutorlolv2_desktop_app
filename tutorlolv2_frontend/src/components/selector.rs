@@ -76,7 +76,7 @@ where
             .enumerate()
             .map(|(index, &name)| {
                 let html = html! {
-                    <U32Options<T>
+                    <SelectorOptions<T>
                         static_iter={props.static_iter}
                         key={index}
                         callback={callback}
@@ -139,14 +139,14 @@ where
 }
 
 #[derive(Properties, PartialEq)]
-pub struct U32OptionsProps<T: PartialEq + UnsafeCast + 'static> {
+pub struct SelectorOptionsProps<T: PartialEq + UnsafeCast + 'static> {
     pub static_iter: StaticIterator,
     pub callback: Callback<T>,
     pub value_id: T,
 }
 
-#[function_component(U32Options)]
-fn u32_options<T>(props: &U32OptionsProps<T>) -> Html
+#[function_component(SelectorOptions)]
+fn selector_options<T>(props: &SelectorOptionsProps<T>) -> Html
 where
     T: Copy + PartialEq + UnsafeCast + 'static,
     T::Repr: TryInto<usize>,

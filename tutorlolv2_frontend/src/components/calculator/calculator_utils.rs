@@ -128,7 +128,7 @@ impl Reducible for InputCurrentPlayer {
         let mut new_state = (*self).clone();
         match action {
             Self::Action::ChampionId(v) => {
-                new_state.champion_id = v;
+                new_state = new_state.create(v);
             }
             Self::Action::Level(v) => {
                 new_state.level = v;
@@ -216,7 +216,7 @@ impl Reducible for InputEnemyPlayer {
         let mut new_state = (*self).clone();
         match action {
             Self::Action::ChampionId(v) => {
-                new_state.champion_id = v;
+                new_state = new_state.create(v);
             }
             Self::Action::Stats(v) => {
                 change_basic_stats(&mut new_state.stats, v);

@@ -1,7 +1,7 @@
 use crate::{
     components::{Image, ImageType},
-    models::calculator::rand_num_limited,
     svg, url,
+    utils::rand_id,
 };
 use generated_code::ChampionId;
 use std::str::FromStr;
@@ -54,13 +54,32 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
     html! {
         <label
             class={classes!(
-                "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
+                "flex", "flex-col", "text-white", "justify-center",
             )}
             title={&props.title}
         >
+            <input
+                type={"number"}
+                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1")}
+                placeholder={"0"}
+                oninput={{
+                    let callback = props.callback.clone();
+                    Callback::from(move |e: InputEvent| {
+                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                        let value = T::parse(&target.value());
+                        callback.emit(value);
+                    })
+                }}
+            />
             {
                 match props.source {
-                    Exception::Image => img_html,
+                    Exception::Image => html! {
+                        <div class={classes!(
+                            "flex", "justify-center", "items-center",
+                        )}>
+                            {img_html}
+                        </div>
+                    },
                     Exception::Stack => {
                         html! {
                             <div
@@ -80,19 +99,6 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
                     },
                 }
             }
-            <input
-                type={"number"}
-                class={classes!("w-full", "text-center", "text-sm")}
-                placeholder={"0"}
-                oninput={{
-                    let callback = props.callback.clone();
-                    Callback::from(move |e: InputEvent| {
-                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                        let value = T::parse(&target.value());
-                        callback.emit(value);
-                    })
-                }}
-            />
         </label>
     }
 }
@@ -107,18 +113,13 @@ pub struct BooleanFieldProps {
 
 #[function_component(BooleanField)]
 pub fn boolean_field(props: &BooleanFieldProps) -> Html {
-    let input_id = AttrValue::from(rand_num_limited((1 << 20) as f64).to_string());
+    let input_id = rand_id();
     html! {
         <label
-            class={classes!(
-                "grid", "gap-x-2", "text-white",
-                "grid-cols-[auto_1fr]", "justify-center",
-                "cursor-pointer", "items-center"
-            )}
+            class={classes!("flex", "flex-col", "cursor-pointer")}
             for={&input_id}
             title={&props.title}
         >
-            {props.image_html.clone()}
             <input
                 id={&input_id}
                 type={"checkbox"}
@@ -132,17 +133,12 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                 }}
                 class={classes!("sr-only", "peer")}
             />
-            <div class={classes!(
-                "relative", "h-6", "w-12", "rounded-full",
-                "bg-pink-800", "transition-colors", "duration-200",
-                "peer-checked:bg-emerald-700"
-            )}>
+            <div class={classes!("flex", "items-center", "justify-center", "py-1")}>
                 <span class={classes!(
-                    "absolute", "left-0.5", "top-0.5",
-                    "w-5", "h-5", "bg-white", "rounded-full",
-                    "transform", "transition-transform", "duration-200",
-                    if props.enabled { "translate-x-6" } else { "" },
-                    "flex", "items-center", "justify-center"
+                    "w-5", "h-5", "rounded-full", "text-white",
+                    "flex", "items-center", "justify-center",
+                    if props.enabled { "bg-emerald-800" }
+                    else { "bg-red-800" },
                 )}>
                     {
                         if props.enabled {
@@ -152,6 +148,11 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                         }
                     }
                 </span>
+            </div>
+            <div class={classes!(
+                "flex", "justify-center", "items-center",
+            )}>
+                {props.image_html.clone()}
             </div>
         </label>
     }
