@@ -18,9 +18,9 @@ impl StringifyEnum for HoverDocs {
     #[inline]
     fn as_str(self) -> &'static str {
         match self {
-            HoverDocs::None => "None",
-            HoverDocs::Partial => "Partial",
-            HoverDocs::Full => "Full",
+            Self::None => "None",
+            Self::Partial => "Partial",
+            Self::Full => "Full",
         }
     }
 }
@@ -29,9 +29,9 @@ impl HoverDocs {
     #[inline]
     pub fn to_array() -> [&'static str; 3] {
         [
-            HoverDocs::None.as_str(),
-            HoverDocs::Partial.as_str(),
-            HoverDocs::Full.as_str(),
+            Self::None.as_str(),
+            Self::Partial.as_str(),
+            Self::Full.as_str(),
         ]
     }
 }

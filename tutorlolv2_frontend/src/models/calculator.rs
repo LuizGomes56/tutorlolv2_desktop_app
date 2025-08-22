@@ -1,21 +1,21 @@
-use super::base::{AbilityLevels, BasicStats, DamageLike, InstanceDamage, Stats};
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
-use serde::{Deserialize, Serialize};
-use yew::{AttrValue, Html, html};
+use super::base::{
+    AbilityLevels, AdaptativeType, Attacks, BasicStats, DamageLike, InstanceDamage, Stats,
+};
+use crate::{components::tables::cells::DisplayDamage, utils::rand_num_limited};
+use bincode::{Decode, Encode};
+use generated_code::{
+    AbilityLike, CHAMPION_ID_TO_NAME, ChampionId, ItemId, RECOMMENDED_ITEMS, RuneId,
+};
+use yew::{Html, html};
 
-#[derive(Debug, Deserialize)]
-pub struct DamageValue {
-    pub minimum_damage: f64,
-    pub maximum_damage: f64,
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct MonsterExpr {
-    pub abilities: Vec<DamageValue>,
-    pub items: Vec<DamageValue>,
+    pub attacks: Attacks,
+    pub abilities: Box<[InstanceDamage]>,
+    pub items: Box<[InstanceDamage]>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct MonsterDamages([MonsterExpr; 7]);
 
 impl MonsterDamages {
@@ -24,74 +24,59 @@ impl MonsterDamages {
             return html! {};
         };
 
-        monster_expr
-            .abilities
-            .iter()
-            .chain(monster_expr.items.iter())
-            .map(|damage_value| {
-                let text = if damage_value.maximum_damage != 0.0 {
-                    let mut s = damage_value.minimum_damage.round().to_string();
-                    s.push_str(" - ");
-                    s.push_str(&damage_value.maximum_damage.round().to_string());
-                    AttrValue::from(s)
-                } else {
-                    AttrValue::from(damage_value.minimum_damage.round().to_string())
-                };
-                html! {
-                    <td
-                        title={text.clone()}
-                        class="text-center text-sm px-2 text-violet-500 max-w-24 truncate"
-                    >
-                        { text }
-                    </td>
-                }
-            })
-            .collect::<Html>()
+        html! {
+            <>
+                {monster_expr.attacks.display_damage()}
+                {monster_expr.abilities.display_damage()}
+                {monster_expr.items.display_damage()}
+            </>
+        }
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
-    pub tower_damage: [f64; 6],
+    pub tower_damage: [f32; 6],
     pub current_player: OutputCurrentPlayer,
-    pub enemies: Vec<(ChampionId, OutputEnemy)>,
-    pub recommended_items: Vec<ItemId>,
+    pub enemies: Box<[(ChampionId, OutputEnemy)]>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputCurrentPlayer {
     pub champion_id: ChampionId,
-    pub damaging_items: Vec<ItemId>,
-    pub damaging_runes: Vec<RuneId>,
+    pub damaging_items: Box<[ItemId]>,
+    pub damaging_runes: Box<[RuneId]>,
     pub level: u8,
+    pub adaptative_type: AdaptativeType,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
-    pub current_stats: Stats,
+    pub stats: Stats,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct CalculatorDamages {
-    pub abilities: Vec<(AbilityLike, InstanceDamage)>,
+    pub attacks: Attacks,
+    pub abilities: Box<[(AbilityLike, InstanceDamage)]>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Decode)]
 pub struct OutputEnemy {
     pub level: u8,
     pub damages: CalculatorDamages,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,
-    pub real_armor: f64,
-    pub real_magic_resist: f64,
+    pub real_armor: f32,
+    pub real_magic_resist: f32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct InputActivePlayer {
+#[derive(Clone, Debug, PartialEq, Encode)]
+pub struct InputCurrentPlayer {
     pub champion_id: ChampionId,
-    pub champion_stats: Stats,
+    pub stats: Stats,
     pub abilities: AbilityLevels,
     pub items: Vec<ItemId>,
     pub runes: Vec<RuneId>,
@@ -100,58 +85,110 @@ pub struct InputActivePlayer {
     pub infer_stats: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct InputEnemyPlayers {
+#[derive(Clone, Debug, PartialEq, Encode)]
+pub struct InputEnemyPlayer {
     pub champion_id: ChampionId,
     pub items: Vec<ItemId>,
     pub level: u8,
     pub stats: BasicStats,
     pub infer_stats: bool,
+    pub stacks: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct InputGame {
-    pub active_player: InputActivePlayer,
-    pub enemy_players: Vec<InputEnemyPlayers>,
+#[derive(Clone, Debug, Encode)]
+pub struct InputGame<'a> {
+    pub active_player: &'a InputCurrentPlayer,
+    pub enemy_players: &'a [std::rc::Rc<InputEnemyPlayer>],
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
-    // pub stack_exceptions: FxHashMap<u32, u32>,
 }
 
-impl Default for InputGame {
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InputDragons {
+    pub ally_earth_dragons: u8,
+    pub ally_fire_dragons: u8,
+    pub enemy_earth_dragons: u8,
+}
+
+impl InputCurrentPlayer {
+    #[inline]
+    pub fn create(&self, champion_id: ChampionId) -> Self {
+        Self {
+            champion_id,
+            items: unsafe {
+                RECOMMENDED_ITEMS
+                    .get_unchecked(champion_id as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
+                    .to_vec()
+            },
+            runes: self.runes.clone(),
+            ..*self
+        }
+    }
+    #[inline]
+    pub fn new() -> Self {
+        let champion_id = unsafe {
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
+            std::mem::transmute::<_, ChampionId>(random_number as u8)
+        };
+        Self::create(&Self::default(), champion_id)
+    }
+}
+
+impl Default for InputCurrentPlayer {
     fn default() -> Self {
         Self {
-            active_player: InputActivePlayer {
-                champion_id: ChampionId::Vex,
-                champion_stats: Default::default(),
-                abilities: AbilityLevels {
-                    q: 5,
-                    w: 5,
-                    e: 5,
-                    r: 3,
-                },
-                level: 15,
-                infer_stats: true,
-                items: vec![
-                    ItemId::NashorsTooth,
-                    ItemId::BladeoftheRuinedKing,
-                    ItemId::LichBane,
-                ],
-                runes: Default::default(),
-                stacks: Default::default(),
+            champion_id: ChampionId::Aatrox,
+            items: Default::default(),
+            level: 18,
+            stats: Default::default(),
+            infer_stats: true,
+            stacks: 0,
+            abilities: AbilityLevels {
+                q: 5,
+                w: 5,
+                e: 5,
+                r: 3,
             },
-            enemy_players: Vec::from_iter([InputEnemyPlayers {
-                champion_id: ChampionId::Gwen,
-                level: 15,
-                infer_stats: true,
-                items: Default::default(),
-                stats: Default::default(),
-            }]),
-            ally_earth_dragons: 0,
-            ally_fire_dragons: 0,
-            enemy_earth_dragons: 0,
-            // stack_exceptions: Default::default(),
+            runes: Default::default(),
         }
+    }
+}
+
+impl Default for InputEnemyPlayer {
+    fn default() -> Self {
+        Self {
+            champion_id: ChampionId::Aatrox,
+            items: Default::default(),
+            level: 18,
+            stats: Default::default(),
+            infer_stats: true,
+            stacks: 0,
+        }
+    }
+}
+
+impl InputEnemyPlayer {
+    #[inline]
+    pub fn create(&self, champion_id: ChampionId) -> Self {
+        Self {
+            champion_id,
+            items: unsafe {
+                RECOMMENDED_ITEMS
+                    .get_unchecked(champion_id as usize)
+                    .get_unchecked(rand_num_limited(5.0) as usize)
+                    .to_vec()
+            },
+            ..*self
+        }
+    }
+    #[inline]
+    pub fn new() -> Self {
+        let champion_id = unsafe {
+            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
+            std::mem::transmute::<_, ChampionId>(random_number as u8)
+        };
+        Self::create(&Self::default(), champion_id)
     }
 }

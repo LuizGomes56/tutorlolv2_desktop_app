@@ -18,8 +18,15 @@ pub struct AbilitySelectorContainerProps {
 pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html {
     html! {
         <label class={classes!(
-            "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
+            "flex", "flex-col", "text-white", "justify-center",
         )}>
+            <input
+                type={"number"}
+                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1")}
+                placeholder={"0"}
+                value={props.value.to_string()}
+                oninput={props.oninput.clone()}
+            />
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
                 <span class={classes!("text-sm", "img-letter")}>{props.text.as_char()}</span>
                 <Image
@@ -30,13 +37,6 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
                     )}
                 />
             </div>
-            <input
-                type={"number"}
-                class={classes!("w-full", "text-center", "text-sm")}
-                placeholder={"0"}
-                value={props.value.to_string()}
-                oninput={props.oninput.clone()}
-            />
         </label>
     }
 }
@@ -67,7 +67,7 @@ pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
                             Callback::from(move |e: InputEvent| {
                                 let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                                 let value = target.value().parse::<u8>().unwrap_or(0).clamp(0, max);
-                                callback.emit(ChangeAbilityLevelsAction::[<Set $field:upper>](value));
+                                callback.emit(ChangeAbilityLevelsAction::[<$field:upper>](value));
                             })
                         }}
                     />

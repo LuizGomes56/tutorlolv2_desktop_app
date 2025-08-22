@@ -2,14 +2,14 @@ use crate::{
     MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL, color,
     components::tables::{
         BaseTable,
-        cells::{ImageCell, Instances, damage_cells},
+        cells::{DisplayDamage, ImageCell, Instances},
     },
     external::api::{decode_bytes, send_bytes},
     global_bool,
     models::realtime::Realtime,
     url,
 };
-use serde::Serialize;
+use bincode::Encode;
 use std::rc::Rc;
 use web_sys::{HtmlInputElement, console};
 use yew::{
@@ -42,7 +42,7 @@ pub fn history() -> Html {
                         break;
                     }
 
-                    #[derive(Serialize)]
+                    #[derive(Encode)]
                     struct GetByCodeBody<'a> {
                         game_code: &'a str,
                     }
@@ -134,9 +134,10 @@ pub fn history() -> Html {
                                                     <td class={classes!("w-10", "h-10")}>
                                                         <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                     </td>
-                                                    {damage_cells(&enemy.damages.abilities)}
-                                                    {damage_cells(&enemy.damages.items)}
-                                                    {damage_cells(&enemy.damages.runes)}
+                                                    {enemy.damages.attacks.display_damage()}
+                                                    {enemy.damages.abilities.display_damage()}
+                                                    {enemy.damages.items.display_damage()}
+                                                    {enemy.damages.runes.display_damage()}
                                                 </tr>
                                             }
                                         })

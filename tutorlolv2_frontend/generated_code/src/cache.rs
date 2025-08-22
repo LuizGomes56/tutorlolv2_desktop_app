@@ -1,31 +1,31 @@
-use serde::{Deserialize, Serialize};
+use bincode::{Decode, Encode};
 
 pub enum StatName {
-    AbilityHaste(f64),
-    AbilityPower(f64),
-    Armor(f64),
-    ArmorPenetration(f64),
-    MagicPenetration(f64),
-    AttackDamage(f64),
-    AttackSpeed(f64),
-    GoldPer10Seconds(f64),
-    AdaptiveForce(f64),
-    CriticalStrikeChance(f64),
-    CriticalStrikeDamage(f64),
-    Health(f64),
-    LifeSteal(f64),
-    MagicResist(f64),
-    Mana(f64),
-    MoveSpeed(f64),
-    Omnivamp(f64),
-    BaseHealthRegen(f64),
-    BaseManaRegen(f64),
-    Tenacity(f64),
-    HealAndShieldPower(f64),
+    AbilityHaste(u16),
+    AbilityPower(u16),
+    Armor(u16),
+    ArmorPenetration(u16),
+    MagicPenetration(u16),
+    AttackDamage(u16),
+    AttackSpeed(u16),
+    GoldPer10Seconds(u16),
+    AdaptiveForce(u16),
+    CriticalStrikeChance(u16),
+    CriticalStrikeDamage(u16),
+    Health(u16),
+    LifeSteal(u16),
+    MagicResist(u16),
+    Mana(u16),
+    MoveSpeed(u16),
+    Omnivamp(u16),
+    BaseHealthRegen(u16),
+    BaseManaRegen(u16),
+    Tenacity(u16),
+    HealAndShieldPower(u16),
 }
 
 impl StatName {
-    pub fn info(&self) -> (&'static str, &'static str, f64) {
+    pub fn info(&self) -> (&'static str, &'static str, u16) {
         match self {
             Self::AbilityPower(value) => ("/img/stats/ability_power.svg", "Ability Power", *value),
             Self::Health(value) => ("/img/stats/health.svg", "Health", *value),
@@ -82,16 +82,16 @@ impl StatName {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Encode, Decode)]
 pub enum AbilityLike {
     P(AbilityName),
     Q(AbilityName),
     W(AbilityName),
     E(AbilityName),
     R(AbilityName),
-    A,
-    C,
-    O,
+    BasicAttack,
+    CriticalStrike,
+    Onhit,
 }
 
 impl AbilityLike {
@@ -102,14 +102,12 @@ impl AbilityLike {
             Self::W(_) => 'W',
             Self::E(_) => 'E',
             Self::R(_) => 'R',
-            Self::A => 'A',
-            Self::C => 'C',
-            Self::O => 'O',
+            _ => 0 as char,
         }
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Copy, Encode, Decode)]
 pub enum AbilityName {
     _1,
     _2,

@@ -1,6 +1,7 @@
 use crate::{
     components::{Image, ImageType},
     svg, url,
+    utils::rand_id,
 };
 use generated_code::ChampionId;
 use std::str::FromStr;
@@ -16,14 +17,14 @@ pub enum Exception {
 }
 
 pub trait Numeric: Copy + 'static + PartialEq + FromStr {
-    fn parse_unsigned(s: String) -> Self;
+    fn parse(s: &str) -> Self;
 }
 
 macro_rules! impl_numeric {
     ($($typename:ty),*) => {
         $(
             impl Numeric for $typename {
-                fn parse_unsigned(s: String) -> Self {
+                fn parse(s: &str) -> Self {
                     s.parse::<$typename>().unwrap_or_default().max(0)
                 }
             }
@@ -53,13 +54,32 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
     html! {
         <label
             class={classes!(
-                "grid", "gap-x-2", "text-white", "grid-cols-[auto_1fr]", "justify-center",
+                "flex", "flex-col", "text-white", "justify-center",
             )}
             title={&props.title}
         >
+            <input
+                type={"number"}
+                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1")}
+                placeholder={"0"}
+                oninput={{
+                    let callback = props.callback.clone();
+                    Callback::from(move |e: InputEvent| {
+                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                        let value = T::parse(&target.value());
+                        callback.emit(value);
+                    })
+                }}
+            />
             {
                 match props.source {
-                    Exception::Image => img_html,
+                    Exception::Image => html! {
+                        <div class={classes!(
+                            "flex", "justify-center", "items-center",
+                        )}>
+                            {img_html}
+                        </div>
+                    },
                     Exception::Stack => {
                         html! {
                             <div
@@ -79,19 +99,6 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
                     },
                 }
             }
-            <input
-                type={"number"}
-                class={classes!("w-full", "text-center", "text-sm")}
-                placeholder={"0"}
-                oninput={{
-                    let callback = props.callback.clone();
-                    Callback::from(move |e: InputEvent| {
-                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                        let value = T::parse_unsigned(target.value());
-                        callback.emit(value);
-                    })
-                }}
-            />
         </label>
     }
 }
@@ -106,17 +113,15 @@ pub struct BooleanFieldProps {
 
 #[function_component(BooleanField)]
 pub fn boolean_field(props: &BooleanFieldProps) -> Html {
+    let input_id = rand_id();
     html! {
         <label
-            class={classes!(
-                "grid", "gap-x-2", "text-white",
-                "grid-cols-[auto_1fr]", "justify-center",
-                "cursor-pointer", "items-center"
-            )}
+            class={classes!("flex", "flex-col", "cursor-pointer")}
+            for={&input_id}
             title={&props.title}
         >
-            {props.image_html.clone()}
             <input
+                id={&input_id}
                 type={"checkbox"}
                 checked={props.enabled}
                 onchange={{
@@ -128,17 +133,12 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                 }}
                 class={classes!("sr-only", "peer")}
             />
-            <div class={classes!(
-                "relative", "h-6", "w-12", "rounded-full",
-                "bg-pink-800", "transition-colors", "duration-200",
-                "peer-checked:bg-emerald-700"
-            )}>
+            <div class={classes!("flex", "items-center", "justify-center", "py-1")}>
                 <span class={classes!(
-                    "absolute", "left-0.5", "top-0.5",
-                    "w-5", "h-5", "bg-white", "rounded-full",
-                    "transform", "transition-transform", "duration-200",
-                    if props.enabled { "translate-x-6" } else { "" },
-                    "flex", "items-center", "justify-center"
+                    "w-5", "h-5", "rounded-full", "text-white",
+                    "flex", "items-center", "justify-center",
+                    if props.enabled { "bg-emerald-800" }
+                    else { "bg-red-800" },
                 )}>
                     {
                         if props.enabled {
@@ -149,43 +149,33 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                     }
                 </span>
             </div>
+            <div class={classes!(
+                "flex", "justify-center", "items-center",
+            )}>
+                {props.image_html.clone()}
+            </div>
         </label>
     }
 }
 
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
-    pub current_player_champion_id: ChampionId,
+    pub champion_id: ChampionId,
     pub attack_form: bool,
     pub infer_stats: bool,
-    pub set_ally_fire_dragons: Callback<u8>,
-    pub set_ally_earth_dragons: Callback<u8>,
-    pub set_current_player_stacks: Callback<u32>,
-    pub set_current_player_attack_form: Callback<bool>,
-    pub set_current_player_infer_stats: Callback<bool>,
+    pub stack_callback: Callback<u32>,
+    pub attack_form_callback: Callback<bool>,
+    pub infer_stats_callback: Callback<bool>,
 }
 
 const SIZE_SVG: &'static str = "32";
 
-/// Pending
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
     html! {
         <>
-            <NumericField<u8>
-                title={"Number of ally fire dragons"}
-                source={Exception::Image}
-                img_url={url!("/img/other/fire_dragon.avif")}
-                callback={props.set_ally_fire_dragons.clone()}
-            />
-            <NumericField<u8>
-                title={"Number of ally earth dragons"}
-                source={Exception::Image}
-                img_url={url!("/img/other/earth_dragon.avif")}
-                callback={props.set_ally_earth_dragons.clone()}
-            />
             {
-                match props.current_player_champion_id {
+                match props.champion_id {
                     ChampionId::Bard | ChampionId::Kindred | ChampionId::Sion |
                     ChampionId::Chogath | ChampionId::Smolder | ChampionId::Nasus
                     | ChampionId::AurelionSol | ChampionId::Veigar => {
@@ -195,9 +185,9 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                                 source={Exception::Stack}
                                 img_url={url!(
                                     "/img/other/{}_stacks.avif",
-                                    props.current_player_champion_id.as_str()
+                                    props.champion_id.as_str()
                                 )}
-                                callback={props.set_current_player_stacks.clone()}
+                                callback={props.stack_callback.clone()}
                             />
                         }
                     }
@@ -205,7 +195,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                         html! {
                             <BooleanField
                                 enabled={props.attack_form}
-                                callback={props.set_current_player_attack_form.clone()}
+                                callback={props.attack_form_callback.clone()}
                                 image_html={svg!("../../../public/svgs/shift", SIZE_SVG)}
                                 title={"Toggle if this champion is melee or ranged"}
                             />
@@ -218,7 +208,7 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
             }
             <BooleanField
                 enabled={props.infer_stats}
-                callback={props.set_current_player_infer_stats.clone()}
+                callback={props.infer_stats_callback.clone()}
                 image_html={svg!("../../../public/svgs/infer", SIZE_SVG)}
                 title={"Determine if this champion's stats will be based on its items, or manually inserted"}
             />

@@ -1,6 +1,6 @@
 use crate::models::{
     base::{AbilityLevels, BasicStats, Stats},
-    calculator::InputGame,
+    calculator::{InputCurrentPlayer, InputDragons, InputEnemyPlayer},
 };
 use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use paste::paste;
@@ -15,22 +15,25 @@ pub enum StaticIterator {
 }
 
 macro_rules! stats_reducer {
-    ($name:ident, $( $stat:ident ),*) => {
+    ($name:ident, $($stat:ident),*) => {
         paste! {
             pub enum [<Change $name Action>] {
-                Replace($name),
+                Replace(*const $name),
                 $(
-                    [<Set $stat:camel>](f64),
+                    [<$stat:camel>](f32),
                 )*
             }
 
+            #[inline]
             fn [<change_ $name:snake>](stats: &mut $name, action: [<Change $name Action>]) {
                 match action {
                     [<Change $name Action>]::Replace(value) => {
-                        *stats = value;
-                    }
+                        unsafe {
+                            *stats = *value;
+                        }
+                    },
                     $(
-                        [<Change $name Action>]::[<Set $stat:camel>](value) => {
+                        [<Change $name Action>]::[<$stat:camel>](value) => {
                             stats.$stat = value;
                         }
                     )*
@@ -66,14 +69,14 @@ macro_rules! ability_level_reducer {
         paste! {
             pub enum $name {
                 $(
-                    [<Set $ability:upper>](u8),
+                    [<$ability:upper>](u8),
                 )*
             }
 
             fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
                 match action {
                     $(
-                        $name::[<Set $ability:upper>](value) => {
+                        $name::[<$ability:upper>](value) => {
                             ability_levels.$ability = value;
                         }
                     )*
@@ -85,131 +88,178 @@ macro_rules! ability_level_reducer {
 
 ability_level_reducer!(ChangeAbilityLevelsAction, q, w, e, r);
 
-pub enum InputGameAction {
-    SetCurrentPlayerChampionId(ChampionId),
-    SetCurrentPlayerLevel(u8),
-    SetCurrentPlayerInferStats(bool),
-    SetCurrentPlayerStacks(u32),
-    SetCurrentPlayerStats(ChangeStatsAction),
-    SetCurrentPlayerAttackForm(bool),
-    InsertCurrentPlayerItem(ItemId),
-    RemoveCurrentPlayerItem(usize),
-    ClearCurrentPlayerItems,
-    InsertCurrentPlayerRune(RuneId),
-    RemoveCurrentPlayerRune(usize),
-    ClearCurrentPlayerRunes,
-    SetAbilityLevels(ChangeAbilityLevelsAction),
-    SetEnemyPlayerChampionId(usize, ChampionId),
-    SetEnemyPlayerStats(usize, ChangeBasicStatsAction),
-    SetEnemyPlayerInferStats(usize, bool),
-    SetEnemyPlayerAttackForm(usize, bool),
-    InsertEnemyPlayerItem(usize, ItemId),
-    RemoveEnemyPlayerItem(usize, usize),
-    ClearEnemyPlayerItems(usize),
-    SetEnemyPlayerLevel(usize, u8),
-    SetAllyFireDragons(u8),
-    SetAllyEarthDragons(u8),
-    SetEnemyEarthDragons(u8),
+pub enum CurrentPlayerAction {
+    ChampionId(ChampionId),
+    Level(u8),
+    InferStats(bool),
+    Stacks(u32),
+    Stats(ChangeStatsAction),
+    AttackForm(bool),
+    InsertItem(ItemId),
+    RemoveItem(usize),
+    ClearItems,
+    InsertRune(RuneId),
+    RemoveRune(usize),
+    ClearRunes,
+    AbilityLevels(ChangeAbilityLevelsAction),
 }
 
-impl Reducible for InputGame {
-    type Action = InputGameAction;
+pub enum DragonAction {
+    AllyFireDragons(u8),
+    AllyEarthDragons(u8),
+    EnemyEarthDragons(u8),
+}
+
+pub enum InputEnemyAction {
+    ChampionId(ChampionId),
+    Stats(ChangeBasicStatsAction),
+    InferStats(bool),
+    AttackForm(bool),
+    InsertItem(ItemId),
+    RemoveItem(usize),
+    ClearItems,
+    Level(u8),
+    Stacks(u32),
+}
+
+impl Reducible for InputCurrentPlayer {
+    type Action = CurrentPlayerAction;
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_state = (*self).clone();
-
         match action {
-            InputGameAction::SetCurrentPlayerLevel(value) => {
-                new_state.active_player.level = value;
+            Self::Action::ChampionId(v) => {
+                new_state = new_state.create(v);
             }
-            InputGameAction::InsertCurrentPlayerItem(value) => {
-                new_state.active_player.items.push(value);
+            Self::Action::Level(v) => {
+                new_state.level = v;
             }
-            InputGameAction::RemoveCurrentPlayerItem(item) => {
-                new_state.active_player.items.remove(item);
+            Self::Action::InferStats(v) => {
+                new_state.infer_stats = v;
             }
-            InputGameAction::ClearCurrentPlayerItems => {
-                new_state.active_player.items.clear();
+            Self::Action::Stats(v) => {
+                change_stats(&mut new_state.stats, v);
             }
-            InputGameAction::InsertCurrentPlayerRune(value) => {
-                new_state.active_player.runes.push(value);
+            Self::Action::AbilityLevels(v) => {
+                change_ability_levels(&mut new_state.abilities, v);
             }
-            InputGameAction::RemoveCurrentPlayerRune(rune) => {
-                new_state.active_player.runes.remove(rune);
+            Self::Action::AttackForm(v) => {}
+            Self::Action::InsertItem(v) => {
+                new_state.items.push(v);
             }
-            InputGameAction::ClearCurrentPlayerRunes => {
-                new_state.active_player.runes.clear();
+            Self::Action::RemoveItem(v) => {
+                new_state.items.swap_remove(v);
             }
-            InputGameAction::SetCurrentPlayerStacks(value) => {
-                new_state.active_player.stacks = value;
+            Self::Action::ClearItems => {
+                new_state.items.clear();
             }
-            InputGameAction::SetCurrentPlayerChampionId(value) => {
-                new_state.active_player.champion_id = value;
+            Self::Action::InsertRune(v) => {
+                new_state.runes.push(v);
             }
-            InputGameAction::SetCurrentPlayerInferStats(value) => {
-                new_state.active_player.infer_stats = value;
+            Self::Action::RemoveRune(v) => {
+                new_state.runes.remove(v);
             }
-            InputGameAction::SetCurrentPlayerStats(action) => {
-                change_stats(&mut new_state.active_player.champion_stats, action);
+            Self::Action::ClearRunes => {
+                new_state.runes.clear();
             }
-            InputGameAction::SetCurrentPlayerAttackForm(value) => {
-                // new_state
-                //     .stack_exceptions
-                //     .insert(u32::MAX - 1, u32::from(value));
-            }
-            InputGameAction::SetEnemyPlayerAttackForm(index, value) => {
-                // new_state
-                //     .stack_exceptions
-                //     .insert(u32::MAX - 1 - index as u32, u32::from(value));
-            }
-            InputGameAction::SetEnemyPlayerStats(index, action) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    change_basic_stats(&mut enemy.stats, action);
-                }
-            }
-            InputGameAction::SetEnemyPlayerInferStats(index, value) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.infer_stats = value;
-                }
-            }
-            InputGameAction::InsertEnemyPlayerItem(index, value) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.items.push(value);
-                }
-            }
-            InputGameAction::RemoveEnemyPlayerItem(index, item) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.items.remove(item);
-                }
-            }
-            InputGameAction::ClearEnemyPlayerItems(index) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.items.clear();
-                }
-            }
-            InputGameAction::SetEnemyPlayerLevel(index, value) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.level = value;
-                }
-            }
-            InputGameAction::SetEnemyPlayerChampionId(index, value) => {
-                if let Some(enemy) = new_state.enemy_players.get_mut(index) {
-                    enemy.champion_id = value;
-                }
-            }
-            InputGameAction::SetAbilityLevels(action) => {
-                change_ability_levels(&mut new_state.active_player.abilities, action);
-            }
-            InputGameAction::SetAllyFireDragons(value) => {
-                new_state.ally_fire_dragons = value;
-            }
-            InputGameAction::SetAllyEarthDragons(value) => {
-                new_state.ally_earth_dragons = value;
-            }
-            InputGameAction::SetEnemyEarthDragons(value) => {
-                new_state.enemy_earth_dragons = value;
+            Self::Action::Stacks(v) => {
+                new_state.stacks = v;
             }
         }
+        Rc::new(new_state)
+    }
+}
 
+#[derive(bincode::Encode, PartialEq, Clone, Debug)]
+#[repr(transparent)]
+pub struct InputEnemies(Vec<Rc<InputEnemyPlayer>>);
+
+impl InputEnemies {
+    #[inline]
+    pub fn new() -> Self {
+        Self(vec![Rc::new(InputEnemyPlayer::new())])
+    }
+
+    #[inline]
+    pub fn as_slice(&self) -> &[Rc<InputEnemyPlayer>] {
+        &self.0
+    }
+}
+
+pub enum EnemiesAction {
+    Push,
+    Remove(usize),
+    Edit(usize, InputEnemyAction),
+}
+
+impl Reducible for InputEnemies {
+    type Action = EnemiesAction;
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+        match action {
+            Self::Action::Push => {
+                new_state.0.push(Rc::new(InputEnemyPlayer::new()));
+            }
+            Self::Action::Remove(v) => {
+                new_state.0.swap_remove(v);
+            }
+            Self::Action::Edit(v, enemy_action) => {
+                new_state.0[v] = new_state.0[v].clone().reduce(enemy_action);
+            }
+        }
+        Rc::new(new_state)
+    }
+}
+
+impl Reducible for InputEnemyPlayer {
+    type Action = InputEnemyAction;
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+        match action {
+            Self::Action::ChampionId(v) => {
+                new_state = new_state.create(v);
+            }
+            Self::Action::Stats(v) => {
+                change_basic_stats(&mut new_state.stats, v);
+            }
+            Self::Action::InferStats(v) => {
+                new_state.infer_stats = v;
+            }
+            Self::Action::AttackForm(v) => {}
+            Self::Action::InsertItem(v) => {
+                new_state.items.push(v);
+            }
+            Self::Action::RemoveItem(v) => {
+                new_state.items.swap_remove(v as usize);
+            }
+            Self::Action::ClearItems => {
+                new_state.items.clear();
+            }
+            Self::Action::Level(v) => {
+                new_state.level = v;
+            }
+            Self::Action::Stacks(v) => {
+                new_state.stacks = v;
+            }
+        }
+        Rc::new(new_state)
+    }
+}
+
+impl Reducible for InputDragons {
+    type Action = DragonAction;
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+        match action {
+            Self::Action::AllyFireDragons(v) => {
+                new_state.ally_fire_dragons = v;
+            }
+            Self::Action::AllyEarthDragons(v) => {
+                new_state.ally_earth_dragons = v;
+            }
+            Self::Action::EnemyEarthDragons(v) => {
+                new_state.enemy_earth_dragons = v;
+            }
+        }
         Rc::new(new_state)
     }
 }
@@ -227,15 +277,16 @@ pub enum StackValue {
 
 pub enum StackAction {
     Push(StackValue),
-    Remove(usize),
+    Remove(u16),
 }
 
 #[derive(Clone, PartialEq, Default)]
+#[repr(transparent)]
 pub struct Stack(Vec<StackValue>);
 
 impl Stack {
-    pub fn get_owned(&self) -> Vec<StackValue> {
-        self.0.clone()
+    pub fn into_boxed_slice(&self) -> Box<[StackValue]> {
+        self.0.clone().into_boxed_slice()
     }
     pub fn get_ref(&self) -> &[StackValue] {
         &self.0
@@ -259,7 +310,7 @@ impl Reducible for Stack {
                 new_state.push(value);
             }
             StackAction::Remove(index) => {
-                new_state.remove(index);
+                new_state.remove(index as usize);
             }
         }
         Rc::new(new_state)

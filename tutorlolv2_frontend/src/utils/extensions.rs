@@ -1,5 +1,17 @@
 use core::convert::TryFrom;
 use generated_code::{ChampionId, ItemId, RuneId};
+use web_sys::js_sys::Math;
+use yew::AttrValue;
+
+#[inline]
+pub fn rand_num_limited(limit: f64) -> f64 {
+    Math::floor(Math::random() * limit)
+}
+
+#[inline]
+pub fn rand_id() -> AttrValue {
+    AttrValue::from(rand_num_limited((1 << 20) as f64).to_string())
+}
 
 pub trait StringExt {
     fn concat_char(&self, c: char) -> String;
@@ -31,7 +43,7 @@ macro_rules! impl_unsafe_cast {
                     let v = <Self::Repr as TryFrom<$ty>>::try_from(n)
                         .ok()
                         .unwrap_or_else(|| unsafe { core::hint::unreachable_unchecked() });
-                    unsafe { Self::from_repr_unchecked(v) }
+                    Self::from_repr_unchecked(v)
                 }
 
                 #[inline]
@@ -41,7 +53,7 @@ macro_rules! impl_unsafe_cast {
                 {
                     <Self::Repr as TryFrom<$ty>>::try_from(n)
                         .ok()
-                        .map(|v| unsafe { Self::from_repr_unchecked(v) })
+                        .map(|v| Self::from_repr_unchecked(v))
                 }
 
                 #[inline]

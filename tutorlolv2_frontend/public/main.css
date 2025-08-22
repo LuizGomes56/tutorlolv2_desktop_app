@@ -60,3 +60,7 @@ input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
 }
+
+table {
+    inline-size: fit-content;
+}
