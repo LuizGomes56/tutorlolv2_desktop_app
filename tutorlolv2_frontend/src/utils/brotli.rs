@@ -14,6 +14,15 @@ pub fn get_cache_slice() -> Uint8Array {
     unsafe { Uint8Array::view(CACHE.as_ref().unwrap_unchecked().as_bytes()) }
 }
 
+#[wasm_bindgen]
+pub fn cache_ptr() -> *const u8 {
+    unsafe { CACHE.as_ref().unwrap_unchecked().as_ptr() }
+}
+#[wasm_bindgen]
+pub fn cache_len() -> usize {
+    unsafe { CACHE.as_ref().unwrap_unchecked().len() }
+}
+
 impl ComptimeCache for (usize, usize) {
     #[inline]
     fn as_str(&self) -> &'static str {

@@ -47,7 +47,7 @@ body {
 }
 
 tr>th:nth-child(n+7)>.cell>.hover-docs {
-    transform: translateX(calc(-100% + 32px));
+    transform: translateX(calc(-50% + 16px)) translateY(calc(50% + 16px));
 }
 
 input[type="number"]::-webkit-outer-spin-button,
