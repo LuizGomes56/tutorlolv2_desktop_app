@@ -6,7 +6,7 @@ use crate::{
     hooks::mouseout::use_mouseout,
     url,
 };
-use generated_code::{CHAMPION_ID_TO_NAME, ChampionId};
+use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ChampionId};
 use yew::{
     Callback, Html, Properties, classes, function_component, html, use_callback, use_memo,
     use_node_ref, use_state,
@@ -48,6 +48,11 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
         |(button_ref, onclick, champion_id)| {
             html! {
                 <div
+                    data-offset={
+                        CHAMPION_FORMULAS
+                            .get(*champion_id as usize)
+                            .and_then(|(s, e)| Some(format!("{s},{e}")))
+                    }
                     class={classes!("relative", "cursor-pointer")}
                     ref={button_ref}
                     {onclick}

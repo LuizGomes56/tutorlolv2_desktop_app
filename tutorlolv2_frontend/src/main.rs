@@ -3,6 +3,7 @@ use crate::{
     utils::init_cache,
 };
 use std::sync::atomic::AtomicBool;
+use web_sys::{js_sys::Function, window};
 use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
@@ -106,4 +107,22 @@ fn main() {
     init_cache();
     let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
     yew::Renderer::<App>::new().render();
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+    let body = document.body().unwrap();
+
+    let _ = body.add_event_listener_with_callback(
+        "keydown", 
+        &Function::new_with_args(
+            "e",
+            concat!(
+                r#"if(e.key==="Shift"){const a=document.querySelectorAll("[data-offset]:hover");if(a.length===0)return;const b=a[a.length-1];if(b.querySelector(".hover-docs"))return;const c=b.getAttribute("data-offset").split(",");const s=parseInt(c[0]);const f=parseInt(c[1]);const t=document.createElement("div");t.className="flex flex-col absolute max-w-md max-h-96 overflow-auto p-2 leading-6 text-base z-50 hover-docs translate-x-[calc(50%-16px)] translate-y-[calc(50%+16px)] border "#,
+                color!(border - 800),
+                " ",
+                color!(bg - 900),
+                r#"";const d=document.createElement("code");d.className="text-[#D4D4D4] font-normal text-left text-wrap";d.innerHTML=window.decodeCacheSlice(s,f);t.appendChild(d);b.appendChild(t);const r=()=>{t.remove();b.removeEventListener("mouseleave",r)};b.addEventListener("mouseleave",r,{once:true})}"#
+            ),
+        ),
+    );
 }

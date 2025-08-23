@@ -1,11 +1,10 @@
 use crate::{
-    color,
-    components::{DocElement, Image, ImageType, hover::item_stats::ItemStatsHover},
+    components::{Image, ImageType},
     url,
 };
 use generated_code::{
-    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ChampionId, ITEM_FORMULAS,
-    ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
+    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CHAMPION_FORMULAS, CRITICAL_STRIKE_OFFSET, ChampionId,
+    ITEM_FORMULAS, ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
 };
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
@@ -30,22 +29,13 @@ fn base_content(
     content: Option<Html>,
 ) -> Html {
     html! {
-        <DocElement
-            offsets={offsets}
+        <div
+            data-offset={offsets.map(|(s, e)| format!("{s},{e}"))}
             class={classes!("flex", "items-center", "justify-center", "relative", "cell")}
         >
             <Image class={classes!("w-8", "h-8")} source={img_path} />
             { content }
-        </DocElement>
-    }
-}
-
-#[inline]
-fn chain_th(content: Html) -> Html {
-    html! {
-        <th class={classes!("group", "min-w-10")}>
-            {content}
-        </th>
+        </div>
     }
 }
 
@@ -54,13 +44,13 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
     macro_rules! insert_attack {
         ($offset:ident, $url:literal) => {
             html! {
-                <>
-                    {chain_th(base_content(
+                <th>
+                    {base_content(
                         ImageType::Other(AttrValue::Static(url!($url))),
                         Some(&$offset),
                         None,
-                    ))}
-                </>
+                    )}
+                </th>
             }
         };
     }
@@ -84,20 +74,22 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                             .into_iter()
                             .map(|(ability_like, coord)| {
                                 let first_char = ability_like.as_char();
-                                chain_th(
-                                    base_content(
-                                        ImageType::Abilities(
-                                            *champion_id, *ability_like
-                                        ),
-                                        Some(coord),
-                                        Some(html! {
-                                            <span class={classes!("text-sm", "img-letter")}>
-                                                {first_char}
-                                                // <sub>{ ability_like..padding_chars() }</sub>
-                                            </span>
-                                        })
-                                    )
-                                )
+                                html! {
+                                    <th>
+                                        {base_content(
+                                            ImageType::Abilities(
+                                                *champion_id, *ability_like
+                                            ),
+                                            Some(coord),
+                                            Some(html! {
+                                                <span class={classes!("text-sm", "img-letter")}>
+                                                    {first_char}
+                                                    // <sub>{ ability_like..padding_chars() }</sub>
+                                                </span>
+                                            })
+                                        )}
+                                    </th>
+                                }
                             })
                             .collect::<Html>()
                         )
@@ -110,16 +102,17 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             ITEM_FORMULAS
                 .get(*item_id as usize)
                 .and_then(|coord| Some(coord)),
-            Some(html! {
-                <div class={classes!(
-                    "group-hover:flex", "flex-col", "absolute", "hover-docs", "hidden",
-                    "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
-                    "z-50", "py-3", "border", color!(border-800), "gap-y-2",
-                    "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
-                )}>
-                    <ItemStatsHover item_id={*item_id} />
-                </div>
-            }),
+            // Some(html! {
+            //     <div class={classes!(
+            //         "group-hover:flex", "flex-col", "absolute", "hover-docs", "hidden",
+            //         "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
+            //         "z-50", "py-3", "border", color!(border-800), "gap-y-2",
+            //         "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
+            //     )}>
+            //         <ItemStatsHover item_id={*item_id} />
+            //     </div>
+            // }),
+            None,
         ),
         Instances::Runes(rune_id) => base_content(
             ImageType::Runes(*rune_id),
@@ -128,8 +121,12 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 .and_then(|coord| Some(coord)),
             None,
         ),
-        Instances::Champions(champion_id) => {
-            base_content(ImageType::Champions(*champion_id), Default::default(), None)
-        }
+        Instances::Champions(champion_id) => base_content(
+            ImageType::Champions(*champion_id),
+            CHAMPION_FORMULAS
+                .get(*champion_id as usize)
+                .and_then(|coord| Some(coord)),
+            None,
+        ),
     }
 }

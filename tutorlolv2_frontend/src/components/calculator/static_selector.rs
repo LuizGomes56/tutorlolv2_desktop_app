@@ -5,7 +5,7 @@ use crate::{
     utils::UnsafeCast,
 };
 use generated_code::{
-    CHAMPION_ID_TO_NAME, ChampionId, ITEM_ID_TO_NAME, ItemId, RUNE_ID_TO_NAME, RuneId,
+    ChampionId, ItemId, RuneId, CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ITEM_FORMULAS, ITEM_ID_TO_NAME, RUNE_FORMULAS, RUNE_ID_TO_NAME
 };
 use yew::{
     Callback, Html, InputEvent, NodeRef, Properties, TargetCast, classes, function_component, html,
@@ -82,10 +82,10 @@ where
     T::Repr: TryInto<usize> + TryFrom<usize>,
 {
     let search_query = use_state(|| String::new());
-    let static_iterator: &[&'static str] = match props.static_iter {
-        StaticIterator::Items => &ITEM_ID_TO_NAME,
-        StaticIterator::Runes => &RUNE_ID_TO_NAME,
-        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
+    let (id_to_name, formulas): (&[&'static str], &[(usize, usize)]) = match props.static_iter {
+        StaticIterator::Items => (&ITEM_ID_TO_NAME, &ITEM_FORMULAS),
+        StaticIterator::Runes => (&RUNE_ID_TO_NAME, &RUNE_FORMULAS),
+        StaticIterator::Champions => (&CHAMPION_ID_TO_NAME, &CHAMPION_FORMULAS),
     };
     let oninput = {
         let search_query = search_query.clone();
@@ -98,13 +98,18 @@ where
     };
 
     let all_values = use_memo((), |_| {
-        let len = static_iterator.len();
-        static_iterator
+        let len = id_to_name.len();
+        id_to_name
             .into_iter()
             .enumerate()
             .map(|(index, &name)| {
                 let html = html! {
-                    <button
+                    <button 
+                        data-offset={
+                            formulas
+                                .get(index)
+                                .map(|(s, e)| format!("{s},{e}"))
+                        }
                         class={classes!(
                             "items-center", "gap-2", "text-sm",
                             "select-none", "border", "relative",

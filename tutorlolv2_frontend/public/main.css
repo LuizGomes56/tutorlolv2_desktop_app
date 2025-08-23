@@ -46,7 +46,7 @@ body {
     background-color: rgba(153, 153, 153, 0.7);
 }
 
-tr>th.group:nth-child(n+7)>.cell>.hover-docs {
+tr>th:nth-child(n+7)>.cell>.hover-docs {
     transform: translateX(calc(-100% + 32px));
 }
 
@@ -63,4 +63,8 @@ input[type="number"] {
 
 table {
     inline-size: fit-content;
+}
+
+[data-offset]:hover {
+    --is-hovered: true;
 }
