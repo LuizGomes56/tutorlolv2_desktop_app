@@ -1,5 +1,5 @@
 use crate::{
-    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL, color,
+    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
     components::tables::{
         BaseTable,
         cells::{DisplayDamage, ImageCell, Instances},
@@ -100,7 +100,7 @@ pub fn history() -> Html {
                 }</span>
                 <input
                     class={classes!(
-                        color!(bg-800), "py-2", "px-4", "rounded-lg",
+                        "_bg-800", "py-2", "px-4", "rounded-lg",
                         "w-48"
                     )}
                     type={"text"}
@@ -128,9 +128,7 @@ pub fn history() -> Html {
                                         .iter()
                                         .map(|(enemy_champion_id, enemy)| {
                                             html! {
-                                                <tr class={classes!(
-                                                    // color!(odd:bg-900), color!(even:bg-800)
-                                                )}>
+                                                <tr>
                                                     <td class={classes!("w-10", "h-10")}>
                                                         <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                     </td>

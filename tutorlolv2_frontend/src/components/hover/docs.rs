@@ -1,4 +1,3 @@
-use crate::color;
 use yew::{AttrValue, Html, classes, html, virtual_dom::VNode};
 
 pub fn hover_docs(formula: AttrValue) -> Html {
@@ -10,7 +9,7 @@ pub fn hover_docs(formula: AttrValue) -> Html {
                 "text-base", "z-50", "hover-docs",
                 "translate-x-[calc(50%-16px)]",
                 "translate-y-[calc(50%+16px)]",
-                "border", color!(border-800), color!(bg-900),
+                "border", "_border-800", "_bg-900",
             )
         }>
             {

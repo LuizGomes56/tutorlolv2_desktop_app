@@ -22,7 +22,7 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
         )}>
             <input
                 type={"number"}
-                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1")}
+                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1", "bg-transparent")}
                 placeholder={"0"}
                 value={props.value.to_string()}
                 oninput={props.oninput.clone()}

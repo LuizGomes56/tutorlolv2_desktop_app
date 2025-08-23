@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::{
         Image, ImageType,
         calculator::{ChangeBasicStatsAction, ChangeStatsAction},
@@ -35,8 +34,8 @@ fn stats_cell<T: ToString + PartialEq>(props: &StatsCellProps<T>) -> Html {
             <input
                 type={"number"}
                 class={classes!(
-                    "text-center", "min-w-0",
-                    if props.disabled { color!(text-400) }
+                    "text-center", "min-w-0", "bg-transparent",
+                    if props.disabled { "_text-400" }
                     else { "text-white" }
                 )}
                 disabled={props.disabled}

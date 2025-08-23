@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
     svg,
     utils::UnsafeCast,
@@ -40,7 +39,7 @@ where
                                 class={classes!(
                                     "items-center", "gap-2", "text-sm",
                                     "select-none", "border", "relative",
-                                    color!(border-700), "cursor-pointer"
+                                    "_border-700", "cursor-pointer"
                                 )}
                                 onclick={{
                                     let remove_callback = props.remove_callback.clone();
@@ -113,7 +112,7 @@ where
                         class={classes!(
                             "items-center", "gap-2", "text-sm",
                             "select-none", "border", "relative",
-                            color!(border-700),
+                            "_border-700", "cursor-pointer"
                         )}
                         onclick={{
                             let callback = props.callback.clone();
@@ -141,8 +140,8 @@ where
                         <div class={classes!(
                             "hidden", "flex-col", "peer-hover:flex",
                             "absolute", "z-50", "py-2", "border",
-                            color!(border-800), "gap-y-1.5", "overflow-auto",
-                            "max-h-96", "px-3.5", color!(bg-900),
+                            "_border-800", "gap-y-1.5", "overflow-auto",
+                            "max-h-96", "px-3.5", "_bg-900",
                             if index % 12 > 6 {
                                 "-translate-x-[calc(100%-41px)]"
                             } else { "-translate-x-[1px]" },
@@ -194,10 +193,10 @@ where
             <label
                 class={classes!(
                     "bg-[#1f1f25]", "flex", "items-center", "gap-2",
-                    color!(text-200), "pl-10", "pr-4", "relative",
+                    "_text-200", "pl-10", "pr-4", "relative",
                 )}
             >
-                <span class={classes!("absolute", "left-4", color!(text-400))}>
+                <span class={classes!("absolute", "left-4", "_text-400")}>
                     {svg!("../../../public/svgs/search", "14")}
                 </span>
                 <input

@@ -1,4 +1,3 @@
 *.env
-build_script.js
 generated_code/src/code.rs
 target

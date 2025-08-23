@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::{Image, ImageType, calculator::StaticIterator},
     hooks::mouseout::use_mouseout,
     svg,
@@ -103,19 +102,19 @@ where
             <label
                 ref={label_ref}
                 class={classes!(
-                    "bg-[#1f1f25]", color!(hover:bg-950),
+                    "bg-[#1f1f25]", "hover:_bg-950",
                     "flex", "items-center", "gap-2", "h-10",
-                    color!(text-200), "pl-10", "pr-4",
+                    "_text-200", "pl-10", "pr-4",
                     "relative", "rounded-md"
                 )}
             >
-                <span class={classes!("absolute", "left-4", color!(text-400))}>
+                <span class={classes!("absolute", "left-4", "_text-400")}>
                     {svg!("../../public/svgs/search", "14")}
                 </span>
                 <input
                     type={"text"}
                     class={classes!(
-                        "text-white", "focus:outline-none", "w-full", "ml-1"
+                        "text-white", "focus:outline-none", "w-full", "ml-1", "bg-transparent"
                     )}
                     value={(*search_query).clone()}
                     placeholder={*id_to_name.get(T::into_usize_unchecked(props.current_value)).unwrap_or(&"Unknown")}
@@ -127,7 +126,7 @@ where
                 ref={dropdown_ref}
                 class={classes!(
                     "absolute", "left-0", "w-full",
-                    "flex-col", color!(bg-900),
+                    "flex-col", "_bg-900",
                     "max-h-64", "overflow-y-auto", "z-10",
                     if *is_open { "flex" } else { "hidden" }
                 )
@@ -160,8 +159,8 @@ where
     html! {
         <button
             class={classes!(
-                "p-1", "cursor-pointer", color!(hover:bg-800),
-                "flex", "items-center", "gap-2", color!(text-200),
+                "p-1", "cursor-pointer", "hover:_bg-800",
+                "flex", "items-center", "gap-2", "_text-200",
                 "text-sm", "select-none"
             )}
             onclick={{

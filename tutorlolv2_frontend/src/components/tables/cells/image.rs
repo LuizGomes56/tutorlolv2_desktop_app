@@ -106,8 +106,8 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             //     <div class={classes!(
             //         "group-hover:flex", "flex-col", "absolute", "hover-docs", "hidden",
             //         "translate-x-[calc(50%-16px)]", "translate-y-[calc(50%+20px)]",
-            //         "z-50", "py-3", "border", color!(border-800), "gap-y-2",
-            //         "overflow-auto", "max-h-96", "px-3.5", color!(bg-900),
+            //         "z-50", "py-3", "border", "_border-800", "gap-y-2",
+            //         "overflow-auto", "max-h-96", "px-3.5", "_bg-900",
             //     )}>
             //         <ItemStatsHover item_id={*item_id} />
             //     </div>

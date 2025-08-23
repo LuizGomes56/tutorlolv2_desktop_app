@@ -117,11 +117,7 @@ fn main() {
         &Function::new_with_args(
             "e",
             concat!(
-                r#"if(e.key==="Shift"){const a=document.querySelectorAll("[data-offset]:hover");if(a.length===0)return;const b=a[a.length-1];if(b.querySelector(".hover-docs"))return;const c=b.getAttribute("data-offset").split(",");const s=parseInt(c[0]);const f=parseInt(c[1]);const t=document.createElement("div");t.className="flex flex-col absolute max-w-md max-h-96 overflow-auto p-2 leading-6 text-base z-50 hover-docs translate-x-[calc(50%-16px)] translate-y-[calc(50%+16px)] border "#,
-                color!(border - 800),
-                " ",
-                color!(bg - 900),
-                r#"";const d=document.createElement("code");d.className="text-[#D4D4D4] font-normal text-left text-wrap";d.innerHTML=window.decodeCacheSlice(s,f);t.appendChild(d);b.appendChild(t);const r=()=>{t.remove();b.removeEventListener("mouseleave",r)};b.addEventListener("mouseleave",r,{once:true})}"#
+                r#"if(e.key==="Shift"){const a=document.querySelectorAll("[data-offset]:hover");if(a.length===0)return;const b=a[a.length-1];if(b.querySelector(".hover-docs"))return;const c=b.getAttribute("data-offset").split(",");const s=parseInt(c[0]);const f=parseInt(c[1]);const t=document.createElement("div");t.className="flex flex-col absolute max-w-md max-h-96 overflow-auto p-2 leading-6 text-base z-50 hover-docs translate-x-[calc(50%-16px)] translate-y-[calc(50%+16px)] border _border-800 _bg-900";const d=document.createElement("code");d.className="text-[#D4D4D4] font-normal text-left text-wrap";d.innerHTML=window.decodeCacheSlice(s,f);t.appendChild(d);b.appendChild(t);const r=()=>{t.remove();b.removeEventListener("mouseleave",r)};b.addEventListener("mouseleave",r,{once:true})}"#
             ),
         ),
     );

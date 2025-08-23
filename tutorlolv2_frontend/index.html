@@ -7,9 +7,9 @@
     <link data-trunk rel="css" href="/public/main.css" />
     <link data-trunk rel="css" href="/public/fonts.css" />
     <link data-trunk rel="css" href="/public/highliter.css" />
-    <!-- <link data-trunk rel="rust" data-wasm-opt="3"
+    <link data-trunk rel="tailwind-css" href="/public/tailwind.css" />
+    <!-- <link data-trunk rel="rust" data-wasm-opt="4"
         data-wasm-opt-params="--strip-debug --fast-math --enable-bulk-memory --enable-nontrapping-float-to-int" /> -->
-    <script defer data-trunk src="/public/tailwind.js"></script>
     <script type="module">
         addEventListener("TrunkApplicationStarted", (event) => {
             const cachedBytes = event.detail.wasm.get_cache_slice();

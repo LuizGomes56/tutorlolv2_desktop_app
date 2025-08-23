@@ -1,4 +1,4 @@
-use crate::{Route, color, svg};
+use crate::{Route, svg};
 use yew::{Html, classes, function_component, html};
 use yew_router::components::Link;
 
@@ -10,12 +10,12 @@ pub fn sidebar() -> Html {
         "flex",
         "items-center",
         "gap-3",
-        color!(text - 300),
+        "_text-300",
         "font-semibold",
         "w-full",
         "px-4",
         "h-12",
-        color!(hover:bg-900),
+        "hover:_bg-900",
         "hover:text-white",
         "cursor-pointer",
         "transition-colors",
@@ -47,9 +47,7 @@ pub fn sidebar() -> Html {
             <div class={classes!(
                 "flex", "flex-col", "gap-2",
             )}>
-                <div class={classes!(
-                    "font-bold", "text-2xl", "cursor-pointer", "p-4", "text-zinc-400"
-                )}>
+                <div class={classes!("font-bold", "_text-500", "text-2xl", "cursor-pointer", "p-4")}>
                     { "TutorLoL" }
                 </div>
                 {make_tabs!(

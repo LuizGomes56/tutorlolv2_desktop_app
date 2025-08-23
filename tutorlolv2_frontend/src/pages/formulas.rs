@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::{Selector, calculator::StaticIterator},
     utils::ComptimeCache,
 };
@@ -94,7 +93,7 @@ pub fn formulas() -> Html {
                         .enumerate()
                         .map(|(index, value)| html! {
                             <label class={classes!(
-                                "px-4", "py-2", color!(text-400), "rounded-md",
+                                "px-4", "py-2", "_text-400", "rounded-md",
                                 "hover:bg-[#1d1d25]", "transition-colors",
                                 "duration-200", "cursor-pointer",
                                 "has-[:checked]:bg-[#1D1D23]", "relative",
