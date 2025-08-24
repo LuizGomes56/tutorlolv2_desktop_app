@@ -14,6 +14,8 @@ use yew::{
 pub struct ChampionBannerProps {
     pub callback: Callback<ChampionId>,
     pub champion_id: ChampionId,
+    #[prop_or_default]
+    pub translate_left: bool,
 }
 
 #[function_component(ChampionBanner)]
@@ -46,6 +48,10 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
         |(button_ref, onclick, champion_id)| {
             html! {
                 <div
+                    data-classes={classes!(
+                        "cursor-default",
+                        props.translate_left.then_some("translate-x-[calc(-100%+240px)]")
+                    )}
                     data-offset={
                         ChampionId::OFFSETS
                             .get(*champion_id as usize)

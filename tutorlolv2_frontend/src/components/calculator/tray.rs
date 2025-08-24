@@ -8,12 +8,15 @@ use yew::{Callback, Html, Properties, classes, function_component, html};
 pub struct TrayProps<T: UnsafeCast + PartialEq> {
     pub remove_callback: Callback<usize>,
     pub array: Vec<T>,
+    #[prop_or_default]
+    pub translate_left: bool,
 }
 
 #[function_component(Tray)]
 pub fn tray<T>(props: &TrayProps<T>) -> Html
 where
     T: UnsafeCast + PartialEq + ImportedEnum + Copy + 'static,
+    T::Repr: TryInto<usize>,
     ImageType: From<T>,
 {
     html! {
@@ -21,9 +24,13 @@ where
             {for props.array.iter().enumerate().map(|(index, value)| {
                 html! {
                     <button
+                        data-classes={classes!(
+                            "cursor-default",
+                            props.translate_left.then_some("translate-x-[calc(-100%+240px)]")
+                        )}
                         data-offset={
                             T::OFFSETS
-                                .get(index)
+                                .get(T::into_usize_unchecked(*value))
                                 .map(|(s, e)| format!("{s},{e}"))
                         }
                         onclick={props.remove_callback.reform(move |_| index)}

@@ -18,6 +18,7 @@ fn base_content(
 ) -> Html {
     html! {
         <div
+            data-classes={offsets.map(|_| "cursor-default")}
             data-offset={offsets.map(|(s, e)| format!("{s},{e}"))}
             onclick={onclick}
             class={classes!(
@@ -294,9 +295,9 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
     );
 
     html! {
-        <div class={classes!("flex", "flex-wrap", "gap-2")}>
-            {(*abilities_memo).clone()}
+        <div id={"i_stack"} class={classes!("flex", "flex-wrap", "gap-2")}>
             {(*attack_memo).clone()}
+            {(*abilities_memo).clone()}
             {(*items_memo).clone()}
             {(*runes_memo).clone()}
         </div>

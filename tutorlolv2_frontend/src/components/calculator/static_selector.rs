@@ -1,10 +1,9 @@
 use crate::{
-    components::{hover::item_stats::ItemStatsHover, Image, ImageType},
+    components::{Image, ImageType, hover::item_stats::ItemStatsHover},
     svg,
     utils::{ImportedEnum, ImportedEnumId, UnsafeCast},
 };
-use generated_code::{ItemId,
-};
+use generated_code::ItemId;
 use yew::{
     Callback, Html, InputEvent, NodeRef, Properties, TargetCast, classes, function_component, html,
     use_callback, use_memo, use_state,
@@ -75,7 +74,7 @@ struct StaticSelectorItem {
 pub fn static_selector<T>(props: &StaticSelectorProps<T>) -> Html
 where
     T: PartialEq + UnsafeCast + ImportedEnum + 'static,
-    T::Repr: TryInto<usize> + TryFrom<usize>,
+    T::Repr: TryFrom<usize>,
 {
     let search_query = use_state(|| String::new());
     let id_to_name = T::ID_TO_NAME;
@@ -96,12 +95,7 @@ where
             .enumerate()
             .map(|(index, &name)| {
                 let html = html! {
-                    <button 
-                        data-offset={
-                            T::OFFSETS
-                                .get(index)
-                                .map(|(s, e)| format!("{s},{e}"))
-                        }
+                    <button
                         class={classes!(
                             "items-center", "gap-2", "text-sm",
                             "select-none", "border", "relative",
@@ -184,16 +178,14 @@ where
                     type={"text"}
                     class={classes!(
                         "text-white", "focus:outline-none", "w-full", "ml-1",
-                        "h-10"
+                        "h-10", "bg-transparent",
                     )}
                     value={(*search_query).clone()}
                     placeholder={"Search by name"}
                     oninput={oninput}
                 />
             </label>
-            <div class={classes!(
-                "grid", "gap-4", "grid-cols-12",
-            )}>
+            <div class={classes!("grid", "gap-4", "grid-cols-12")}>
                 {for visible_values.iter().map(|item| item.html.clone())}
             </div>
         </div>

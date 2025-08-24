@@ -46,8 +46,14 @@ body {
     background-color: rgba(153, 153, 153, 0.7);
 }
 
-tr>th:nth-child(n+7)>.cell>.hover-docs {
+tr>:nth-child(n+7)>.cell>.hover-docs,
+#i_stack>div:nth-child(n+7)>.hover-docs {
     transform: translateX(calc(-50% + 16px)) translateY(calc(50% + 16px));
+}
+
+tr>:nth-child(-n+6)>.cell>.hover-docs,
+#i_stack>div:nth-child(-n+6)>.hover-docs {
+    transform: translateX(calc(50% - 16px)) translateY(calc(50% + 16px));
 }
 
 input[type="number"]::-webkit-outer-spin-button,

@@ -260,9 +260,9 @@ pub fn calculator() -> Html {
         })
     };
 
-    use_effect_with(damage_stack.clone(), move |damage_stack| {
-        web_sys::console::log_1(&format!("{:#?}", damage_stack.clone_inner()).into());
-    });
+    // use_effect_with(damage_stack.clone(), move |damage_stack| {
+    //     web_sys::console::log_1(&format!("{:#?}", damage_stack.clone_inner()).into());
+    // });
 
     {
         let output_game = output_game.clone();
@@ -622,6 +622,7 @@ pub fn calculator() -> Html {
                             <ChampionBanner
                                 callback={set_enemy_champion_id}
                                 champion_id={input_enemy.champion_id}
+                                translate_left={true}
                             />
                             <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
                                 <NumericField<u8>
@@ -649,6 +650,7 @@ pub fn calculator() -> Html {
                             <Tray<ItemId>
                                 array={input_enemy.items.clone()}
                                 remove_callback={remove_enemy_player_items}
+                                translate_left={true}
                             />
                         </>
                     })
