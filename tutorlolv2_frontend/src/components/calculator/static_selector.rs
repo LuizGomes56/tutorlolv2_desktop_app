@@ -1,10 +1,9 @@
 use crate::{
-    components::{Image, ImageType, calculator::StaticIterator, hover::item_stats::ItemStatsHover},
+    components::{hover::item_stats::ItemStatsHover, Image, ImageType},
     svg,
-    utils::UnsafeCast,
+    utils::{ImportedEnum, ImportedEnumId, UnsafeCast},
 };
-use generated_code::{
-    ChampionId, ItemId, RuneId, CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ITEM_FORMULAS, ITEM_ID_TO_NAME, RUNE_FORMULAS, RUNE_ID_TO_NAME
+use generated_code::{ItemId,
 };
 use yew::{
     Callback, Html, InputEvent, NodeRef, Properties, TargetCast, classes, function_component, html,
@@ -15,7 +14,6 @@ use yew::{
 pub struct StaticEventProps<T: PartialEq + 'static> {
     pub remove_callback: Callback<usize>,
     pub iterator: Vec<T>,
-    pub static_iter: StaticIterator,
 }
 
 #[function_component(StaticEvent)]
@@ -63,7 +61,6 @@ where
 #[derive(PartialEq, Properties)]
 pub struct StaticSelectorProps<T: PartialEq> {
     pub callback: Callback<T>,
-    pub static_iter: StaticIterator,
     pub node_ref: NodeRef,
 }
 
@@ -77,15 +74,12 @@ struct StaticSelectorItem {
 #[function_component(StaticSelector)]
 pub fn static_selector<T>(props: &StaticSelectorProps<T>) -> Html
 where
-    T: PartialEq + UnsafeCast + 'static,
+    T: PartialEq + UnsafeCast + ImportedEnum + 'static,
     T::Repr: TryInto<usize> + TryFrom<usize>,
 {
     let search_query = use_state(|| String::new());
-    let (id_to_name, formulas): (&[&'static str], &[(usize, usize)]) = match props.static_iter {
-        StaticIterator::Items => (&ITEM_ID_TO_NAME, &ITEM_FORMULAS),
-        StaticIterator::Runes => (&RUNE_ID_TO_NAME, &RUNE_FORMULAS),
-        StaticIterator::Champions => (&CHAMPION_ID_TO_NAME, &CHAMPION_FORMULAS),
-    };
+    let id_to_name = T::ID_TO_NAME;
+    let offsets = T::OFFSETS;
     let oninput = {
         let search_query = search_query.clone();
         use_callback((), move |e: InputEvent, _| {
@@ -105,7 +99,7 @@ where
                 let html = html! {
                     <button 
                         data-offset={
-                            formulas
+                            offsets
                                 .get(index)
                                 .map(|(s, e)| format!("{s},{e}"))
                         }
@@ -122,19 +116,7 @@ where
                         }}
                     >
                         <Image
-                            source={
-                                match props.static_iter {
-                                    StaticIterator::Items => {
-                                        ImageType::Items(ItemId::from_usize_unchecked(index))
-                                    }
-                                    StaticIterator::Champions => {
-                                        ImageType::Champions(ChampionId::from_usize_unchecked(index))
-                                    }
-                                    StaticIterator::Runes => {
-                                        ImageType::Runes(RuneId::from_usize_unchecked(index))
-                                    }
-                                }
-                            }
+                            source={T::into_image_type_unchecked(index)}
                             class={classes!("h-10", "w-10", "peer")}
                         />
                         <div class={classes!(
@@ -157,7 +139,7 @@ where
                                 {name}
                             </span>
                             {
-                                (props.static_iter == StaticIterator::Items).then_some(
+                                (T::ID == ImportedEnumId::Item).then_some(
                                     html! {
                                         <ItemStatsHover item_id={ItemId::from_usize_unchecked(index)} />
                                     }

@@ -7,13 +7,6 @@ use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum StaticIterator {
-    Runes,
-    Items,
-    Champions,
-}
-
 macro_rules! stats_reducer {
     ($name:ident, $($stat:ident),*) => {
         paste! {
@@ -286,16 +279,15 @@ pub enum StackAction {
 pub struct Stack(Vec<StackValue>);
 
 impl Stack {
-    pub fn into_boxed_slice(&self) -> Box<[StackValue]> {
-        self.0.clone().into_boxed_slice()
-    }
     pub fn get_ref(&self) -> &[StackValue] {
         &self.0
+    }
+    pub fn clone_inner(&self) -> Vec<StackValue> {
+        self.0.clone()
     }
     pub fn push(&mut self, value: StackValue) {
         self.0.push(value);
     }
-
     pub fn remove(&mut self, index: usize) {
         self.0.swap_remove(index);
     }

@@ -2,7 +2,7 @@ use crate::{impl_unsafe_cast, utils::StringifyEnum};
 use std::rc::Rc;
 use yew::{
     Children, ContextProvider, Html, Properties, Reducible, UseReducerHandle, function_component,
-    html, use_effect_with, use_reducer,
+    html, use_reducer,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]

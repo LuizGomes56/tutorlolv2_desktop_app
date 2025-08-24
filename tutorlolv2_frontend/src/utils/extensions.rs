@@ -1,17 +1,10 @@
 use core::convert::TryFrom;
-use generated_code::{ChampionId, ItemId, RuneId};
-use web_sys::js_sys::Math;
-use yew::AttrValue;
+use generated_code::{
+    CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ChampionId, ITEM_FORMULAS, ITEM_ID_TO_NAME, ItemId,
+    RUNE_FORMULAS, RUNE_ID_TO_NAME, RuneId,
+};
 
-#[inline]
-pub fn rand_num_limited(limit: f64) -> f64 {
-    Math::floor(Math::random() * limit)
-}
-
-#[inline]
-pub fn rand_id() -> AttrValue {
-    AttrValue::from(rand_num_limited((1 << 20) as f64).to_string())
-}
+use crate::components::ImageType;
 
 pub trait StringExt {
     fn concat_char(&self, c: char) -> String;
@@ -83,7 +76,7 @@ macro_rules! impl_unsafe_cast {
             type Repr = $repr;
             #[inline]
             fn from_repr_unchecked(n: Self::Repr) -> Self {
-                unsafe { core::mem::transmute::<$repr, Self>(n) }
+                unsafe { core::mem::transmute(n) }
             }
             #[inline]
             fn into_repr_unchecked(self) -> Self::Repr {
@@ -111,3 +104,44 @@ macro_rules! define_unsafe_cast {
 }
 
 define_unsafe_cast!();
+
+#[derive(PartialEq)]
+pub enum ImportedEnumId {
+    Champion,
+    Item,
+    Rune,
+}
+
+pub trait ImportedEnum {
+    const ID: ImportedEnumId;
+    const ID_TO_NAME: &'static [&'static str];
+    const OFFSETS: &'static [(usize, usize)];
+    fn into_image_type_unchecked(index: usize) -> ImageType;
+}
+
+impl ImportedEnum for ChampionId {
+    const ID: ImportedEnumId = ImportedEnumId::Champion;
+    const ID_TO_NAME: &'static [&'static str] = &CHAMPION_ID_TO_NAME;
+    const OFFSETS: &'static [(usize, usize)] = &CHAMPION_FORMULAS;
+    fn into_image_type_unchecked(index: usize) -> ImageType {
+        ImageType::Champions(ChampionId::from_usize_unchecked(index))
+    }
+}
+
+impl ImportedEnum for ItemId {
+    const ID: ImportedEnumId = ImportedEnumId::Item;
+    const ID_TO_NAME: &'static [&'static str] = &ITEM_ID_TO_NAME;
+    const OFFSETS: &'static [(usize, usize)] = &ITEM_FORMULAS;
+    fn into_image_type_unchecked(index: usize) -> ImageType {
+        ImageType::Items(ItemId::from_usize_unchecked(index))
+    }
+}
+
+impl ImportedEnum for RuneId {
+    const ID: ImportedEnumId = ImportedEnumId::Rune;
+    const ID_TO_NAME: &'static [&'static str] = &RUNE_ID_TO_NAME;
+    const OFFSETS: &'static [(usize, usize)] = &RUNE_FORMULAS;
+    fn into_image_type_unchecked(index: usize) -> ImageType {
+        ImageType::Runes(RuneId::from_usize_unchecked(index))
+    }
+}

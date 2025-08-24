@@ -33,17 +33,17 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
         html! {
             <thead>
                 <tr>
-                    <th class={classes!("min-w-10")}></th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th></th>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         {svg!("../../../public/svgs/sigma", "24")}
                     </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         <Image
                             class={classes!("w-6", "h-6")}
                             source={ImageType::Other(AttrValue::Static(url!("/img/stats/health.svg"))) }
                         />
                     </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         {svg!("../../../public/svgs/weakness", "24")}
                     </th>
                 </tr>
@@ -66,7 +66,7 @@ pub struct DamageStackSelectorProps {
     pub champion_id: ChampionId,
     pub items: Box<[ItemId]>,
     pub runes: Box<[RuneId]>,
-    pub stack: Box<[StackValue]>,
+    pub stack: Vec<StackValue>,
     pub push_callback: Callback<StackValue>,
     pub remove_callback: Callback<u16>,
     pub damages: Html,
@@ -101,7 +101,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
 #[derive(Properties, PartialEq)]
 struct RemoveDamageStackSelectorProps {
     champion_id: ChampionId,
-    stack: Box<[StackValue]>,
+    stack: Vec<StackValue>,
     remove_callback: Callback<u16>,
 }
 

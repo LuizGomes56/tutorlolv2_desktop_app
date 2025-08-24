@@ -18,9 +18,7 @@ pub fn turret_table(props: &TurretTableProps) -> Html {
                     {
                         (0..6).into_iter().map(|i| {
                             html! {
-                                <th class={classes!(
-                                    "min-w-10"
-                                )}>
+                                <th>
                                     <div class={classes!(
                                         "flex", "items-center",
                                         "justify-center", "relative"

@@ -1,7 +1,7 @@
 use crate::{
     components::{Image, ImageType},
     svg, url,
-    utils::rand_id,
+    utils::RandomInput,
 };
 use generated_code::ChampionId;
 use std::str::FromStr;
@@ -113,7 +113,7 @@ pub struct BooleanFieldProps {
 
 #[function_component(BooleanField)]
 pub fn boolean_field(props: &BooleanFieldProps) -> Html {
-    let input_id = rand_id();
+    let input_id = RandomInput::rand_id();
     html! {
         <label
             class={classes!("flex", "flex-col", "cursor-pointer")}

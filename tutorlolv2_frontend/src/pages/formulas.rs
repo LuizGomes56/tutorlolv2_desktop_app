@@ -1,6 +1,6 @@
 use crate::{
-    components::{Selector, calculator::StaticIterator},
-    utils::ComptimeCache,
+    components::Selector,
+    utils::{ComptimeCache, RandomInput},
 };
 use generated_code::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
@@ -57,9 +57,9 @@ impl FormulaDropdown {
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
     let current_dropdown_id = use_state(|| FormulaDropdown::Champions);
-    let current_champion = use_state(|| ChampionId::Aatrox);
-    let current_item = use_state(|| ItemId::NashorsTooth);
-    let current_rune = use_state(|| RuneId::Electrocute);
+    let current_champion = use_state(|| RandomInput::champion_id());
+    let current_item = use_state(|| RandomInput::item_id());
+    let current_rune = use_state(|| RandomInput::rune_id());
     let champion_callback = {
         let current_champion = current_champion.clone();
         use_callback((), move |v, _| {
@@ -126,21 +126,18 @@ pub fn formulas() -> Html {
                     match *current_dropdown_id {
                         FormulaDropdown::Champions | FormulaDropdown::Generator => html! {
                             <Selector<ChampionId>
-                                static_iter={StaticIterator::Champions}
                                 callback={champion_callback.clone()}
                                 current_value={*current_champion}
                             />
                         },
                         FormulaDropdown::Items => html! {
                             <Selector<ItemId>
-                                static_iter={StaticIterator::Items}
                                 callback={item_callback.clone()}
                                 current_value={*current_item}
                             />
                         },
                         FormulaDropdown::Runes => html! {
                             <Selector<RuneId>
-                                static_iter={StaticIterator::Runes}
                                 callback={rune_callback.clone()}
                                 current_value={*current_rune}
                             />

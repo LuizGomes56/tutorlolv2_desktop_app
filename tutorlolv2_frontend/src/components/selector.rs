@@ -1,10 +1,9 @@
 use crate::{
-    components::{Image, ImageType, calculator::StaticIterator},
+    components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
     svg,
-    utils::UnsafeCast,
+    utils::{ImportedEnum, UnsafeCast},
 };
-use generated_code::{CHAMPION_ID_TO_NAME, ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
     use_callback, use_memo, use_node_ref, use_state,
@@ -12,7 +11,6 @@ use yew::{
 
 #[derive(Properties, PartialEq)]
 pub struct SelectorProps<T: PartialEq + UnsafeCast + 'static> {
-    pub static_iter: StaticIterator,
     pub callback: Callback<T>,
     pub current_value: T,
 }
@@ -27,17 +25,13 @@ struct SelectorItem {
 #[function_component(Selector)]
 pub fn selector<T>(props: &SelectorProps<T>) -> Html
 where
-    T: PartialEq + UnsafeCast + Copy + 'static,
+    T: PartialEq + UnsafeCast + Copy + ImportedEnum + 'static,
     T::Repr: TryInto<usize> + TryFrom<usize>,
     ImageType: From<T>,
 {
     let is_open = use_state(|| false);
     let search_query = use_state(|| String::new());
-    let id_to_name: &[&'static str] = match props.static_iter {
-        StaticIterator::Items => &ITEM_ID_TO_NAME,
-        StaticIterator::Runes => &RUNE_ID_TO_NAME,
-        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
-    };
+    let id_to_name = T::ID_TO_NAME;
     let callback = {
         let original_callback = props.callback.clone();
         use_callback(original_callback, |v, original_callback| {
@@ -76,7 +70,6 @@ where
             .map(|(index, &name)| {
                 let html = html! {
                     <SelectorOptions<T>
-                        static_iter={props.static_iter}
                         key={index}
                         callback={callback}
                         value_id={T::from_usize_unchecked(index)}
@@ -139,7 +132,6 @@ where
 
 #[derive(Properties, PartialEq)]
 pub struct SelectorOptionsProps<T: PartialEq + UnsafeCast + 'static> {
-    pub static_iter: StaticIterator,
     pub callback: Callback<T>,
     pub value_id: T,
 }
@@ -147,15 +139,11 @@ pub struct SelectorOptionsProps<T: PartialEq + UnsafeCast + 'static> {
 #[function_component(SelectorOptions)]
 fn selector_options<T>(props: &SelectorOptionsProps<T>) -> Html
 where
-    T: Copy + PartialEq + UnsafeCast + 'static,
+    T: Copy + PartialEq + ImportedEnum + UnsafeCast + 'static,
     T::Repr: TryInto<usize>,
     ImageType: From<T>,
 {
-    let id_to_name: &[&'static str] = match props.static_iter {
-        StaticIterator::Items => &ITEM_ID_TO_NAME,
-        StaticIterator::Runes => &RUNE_ID_TO_NAME,
-        StaticIterator::Champions => &CHAMPION_ID_TO_NAME,
-    };
+    let id_to_name = T::ID_TO_NAME;
     html! {
         <button
             class={classes!(

@@ -1,8 +1,5 @@
 use crate::{
-    components::{
-        Image, ImageType,
-        calculator::{StaticIterator, StaticSelector},
-    },
+    components::{Image, ImageType, calculator::StaticSelector},
     hooks::mouseout::use_mouseout,
     url,
 };
@@ -76,7 +73,6 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                 (*is_open).then_some(
                     html! {
                         <StaticSelector<ChampionId>
-                            static_iter={StaticIterator::Champions}
                             callback={selector_callback}
                             node_ref={selector_ref}
                         />
