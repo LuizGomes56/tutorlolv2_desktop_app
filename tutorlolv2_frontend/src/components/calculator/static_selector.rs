@@ -79,7 +79,6 @@ where
 {
     let search_query = use_state(|| String::new());
     let id_to_name = T::ID_TO_NAME;
-    let offsets = T::OFFSETS;
     let oninput = {
         let search_query = search_query.clone();
         use_callback((), move |e: InputEvent, _| {
@@ -99,7 +98,7 @@ where
                 let html = html! {
                     <button 
                         data-offset={
-                            offsets
+                            T::OFFSETS
                                 .get(index)
                                 .map(|(s, e)| format!("{s},{e}"))
                         }

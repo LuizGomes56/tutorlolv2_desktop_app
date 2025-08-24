@@ -1,6 +1,6 @@
 use crate::{
     components::{Image, ImageType},
-    utils::UnsafeCast,
+    utils::{ImportedEnum, UnsafeCast},
 };
 use yew::{Callback, Html, Properties, classes, function_component, html};
 
@@ -13,7 +13,7 @@ pub struct TrayProps<T: UnsafeCast + PartialEq> {
 #[function_component(Tray)]
 pub fn tray<T>(props: &TrayProps<T>) -> Html
 where
-    T: UnsafeCast + PartialEq + Copy + 'static,
+    T: UnsafeCast + PartialEq + ImportedEnum + Copy + 'static,
     ImageType: From<T>,
 {
     html! {
@@ -21,6 +21,11 @@ where
             {for props.array.iter().enumerate().map(|(index, value)| {
                 html! {
                     <button
+                        data-offset={
+                            T::OFFSETS
+                                .get(index)
+                                .map(|(s, e)| format!("{s},{e}"))
+                        }
                         onclick={props.remove_callback.reform(move |_| index)}
                     >
                         <Image

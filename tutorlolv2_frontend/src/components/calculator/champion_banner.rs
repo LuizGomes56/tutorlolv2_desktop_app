@@ -2,8 +2,9 @@ use crate::{
     components::{Image, ImageType, calculator::StaticSelector},
     hooks::mouseout::use_mouseout,
     url,
+    utils::ImportedEnum,
 };
-use generated_code::{CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ChampionId};
+use generated_code::ChampionId;
 use yew::{
     Callback, Html, Properties, classes, function_component, html, use_callback, use_memo,
     use_node_ref, use_state,
@@ -46,7 +47,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
             html! {
                 <div
                     data-offset={
-                        CHAMPION_FORMULAS
+                        ChampionId::OFFSETS
                             .get(*champion_id as usize)
                             .and_then(|(s, e)| Some(format!("{s},{e}")))
                     }
@@ -59,7 +60,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                         source={ImageType::Other(url!("/img/centered/{}_0.avif", champion_id.as_str()).into())}
                     />
                     <span class={classes!("img-letter", "left-2", "bottom-1", "text-sm")}>
-                        {*CHAMPION_ID_TO_NAME.get(*champion_id as usize).unwrap_or(&"Unknown")}
+                        {*ChampionId::ID_TO_NAME.get(*champion_id as usize).unwrap_or(&"Unknown")}
                     </span>
                 </div>
             }
