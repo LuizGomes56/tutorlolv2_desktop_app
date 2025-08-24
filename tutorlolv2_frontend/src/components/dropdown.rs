@@ -1,4 +1,8 @@
-use crate::{hooks::mouseout::use_mouseout, svg, utils::StringifyEnum, utils::UnsafeCast};
+use crate::{
+    hooks::mouseout::use_mouseout,
+    svg,
+    utils::{RandomInput, StringifyEnum, UnsafeCast},
+};
 use yew::{Callback, Html, Properties, classes, function_component, html, use_node_ref, use_state};
 
 #[derive(Properties, PartialEq)]
@@ -73,8 +77,9 @@ where
                         .iter()
                         .enumerate()
                         .map(|(index, field)| {
+                            let random_id = RandomInput::rand_id();
                             html! {
-                                <label class={classes!(
+                                <label for={&random_id} class={classes!(
                                     "cursor-pointer",
                                     "has-[:checked]:bg-rose-900", "relative",
                                     "py-1.5", "px-5", "hover:_bg-700",
@@ -82,6 +87,7 @@ where
                                     "has-[:checked]:font-medium",
                                 )}>
                                     <input
+                                        id={random_id}
                                         checked={index == T::into_usize_unchecked(props.current_index)}
                                         onchange={{
                                             let callback = props.callback.clone();
@@ -92,7 +98,7 @@ where
                                         type={"radio"}
                                         name={props.name}
                                         class={classes!(
-                                            "appearance-none", "absolute", "peer", "bg-transparent"
+                                            "appearance-none", "absolute", "bg-transparent"
                                         )}
                                     />
                                     <span class={classes!("_text-200")}>

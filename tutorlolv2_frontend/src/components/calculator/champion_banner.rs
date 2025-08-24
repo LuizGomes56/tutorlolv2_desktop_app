@@ -84,7 +84,8 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                             node_ref={selector_ref}
                         />
                     }
-                )}
+                )
+            }
         </>
     }
 }

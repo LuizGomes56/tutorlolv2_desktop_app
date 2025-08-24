@@ -421,9 +421,17 @@ pub fn calculator() -> Html {
                         attack_form_callback={set_current_player_attack_form}
                     />
                 </div>
+                <OpenTray<ItemId>
+                    insert_callback={insert_current_player_items}
+                    title={"Search items"}
+                />
                 <Tray<ItemId>
                     array={input_current_player.items.clone()}
                     remove_callback={remove_current_player_items}
+                />
+                <OpenTray<RuneId>
+                    insert_callback={insert_current_player_runes}
+                    title={"Search runes"}
                 />
                 <Tray<RuneId>
                     array={input_current_player.runes.clone()}
@@ -646,6 +654,10 @@ pub fn calculator() -> Html {
                                 set_stats_callback={set_enemy_stats}
                                 set_level_callback={set_enemy_level}
                                 level={input_enemy.level}
+                            />
+                            <OpenTray<ItemId>
+                                insert_callback={insert_enemy_player_items}
+                                title={"Search items"}
                             />
                             <Tray<ItemId>
                                 array={input_enemy.items.clone()}

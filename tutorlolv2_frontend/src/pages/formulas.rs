@@ -91,33 +91,37 @@ pub fn formulas() -> Html {
                         FormulaDropdown::to_array()
                         .into_iter()
                         .enumerate()
-                        .map(|(index, value)| html! {
-                            <label class={classes!(
-                                "px-4", "py-2", "_text-400", "rounded-md",
-                                "hover:bg-[#1d1d25]", "transition-colors",
-                                "duration-200", "cursor-pointer",
-                                "has-[:checked]:bg-[#1D1D23]", "relative",
-                                "text-center", "has-[:checked]:text-white",
-                                "hover:text-[#c3c3c3]",
-                            )}>
-                                <input
-                                    checked={index == *current_dropdown_id as usize}
-                                    onchange={{
-                                        let current_dropdown_id = current_dropdown_id.clone();
-                                        Callback::from(move |_| {
-                                            current_dropdown_id.set(FormulaDropdown::from_index(index));
-                                        })
-                                    }}
-                                    type={"radio"}
-                                    name={"formula_dropdown"}
-                                    class={classes!(
-                                        "appearance-none", "absolute", "peer"
-                                    )}
-                                />
-                                <span>
-                                    {value}
-                                </span>
-                            </label>
+                        .map(|(index, value)| {
+                            let random_id = RandomInput::rand_id();
+                            html! {
+                                <label for={&random_id} class={classes!(
+                                    "px-4", "py-2", "_text-400", "rounded-md",
+                                    "hover:bg-[#1d1d25]", "transition-colors",
+                                    "duration-200", "cursor-pointer",
+                                    "has-[:checked]:bg-[#1D1D23]", "relative",
+                                    "text-center", "has-[:checked]:text-white",
+                                    "hover:text-[#c3c3c3]",
+                                )}>
+                                    <input
+                                        id={random_id}
+                                        checked={index == *current_dropdown_id as usize}
+                                        onchange={{
+                                            let current_dropdown_id = current_dropdown_id.clone();
+                                            Callback::from(move |_| {
+                                                current_dropdown_id.set(FormulaDropdown::from_index(index));
+                                            })
+                                        }}
+                                        type={"radio"}
+                                        name={"formula_dropdown"}
+                                        class={classes!(
+                                            "appearance-none", "absolute"
+                                        )}
+                                    />
+                                    <span>
+                                        {value}
+                                    </span>
+                                </label>
+                            }
                         })
                         .collect::<Html>()
                     }

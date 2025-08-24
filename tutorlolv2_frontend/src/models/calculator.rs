@@ -3,7 +3,7 @@ use super::base::{
 };
 use crate::{components::tables::cells::DisplayDamage, utils::RandomInput};
 use bincode::{Decode, Encode};
-use generated_code::{AbilityLike, ChampionId, ItemId, RECOMMENDED_ITEMS, RuneId};
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]
@@ -114,12 +114,7 @@ impl InputCurrentPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: unsafe {
-                RECOMMENDED_ITEMS
-                    .get_unchecked(champion_id as usize)
-                    .get_unchecked(RandomInput::rand_num_limited(5.0) as usize)
-                    .to_vec()
-            },
+            items: RandomInput::recommended_items(champion_id),
             runes: self.runes.clone(),
             ..*self
         }
@@ -168,12 +163,7 @@ impl InputEnemyPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: unsafe {
-                RECOMMENDED_ITEMS
-                    .get_unchecked(champion_id as usize)
-                    .get_unchecked(RandomInput::rand_num_limited(5.0) as usize)
-                    .to_vec()
-            },
+            items: RandomInput::recommended_items(champion_id),
             ..*self
         }
     }

@@ -51,14 +51,18 @@ pub fn numeric_field<T: Numeric>(props: &ExceptionField<T>) -> Html {
         />
     };
 
+    let random_id = RandomInput::rand_id();
+
     html! {
         <label
+            for={&random_id}
             class={classes!(
                 "flex", "flex-col", "text-white", "justify-center",
             )}
             title={&props.title}
         >
             <input
+                id={&random_id}
                 type={"number"}
                 class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1", "bg-transparent")}
                 placeholder={"0"}
@@ -131,7 +135,7 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
                         callback.emit(target.checked());
                     })
                 }}
-                class={classes!("sr-only", "peer")}
+                class={classes!("sr-only")}
             />
             <div class={classes!("flex", "items-center", "justify-center", "py-1")}>
                 <span class={classes!(

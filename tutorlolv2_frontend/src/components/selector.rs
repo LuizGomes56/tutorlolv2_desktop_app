@@ -2,7 +2,7 @@ use crate::{
     components::{Image, ImageType},
     hooks::mouseout::use_mouseout,
     svg,
-    utils::{ImportedEnum, UnsafeCast},
+    utils::{ImportedEnum, RandomInput, UnsafeCast},
 };
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
@@ -90,9 +90,12 @@ where
         })
         .collect::<Vec<_>>();
 
+    let random_id = RandomInput::rand_id();
+
     html! {
         <div class={classes!("relative")}>
             <label
+                for={&random_id}
                 ref={label_ref}
                 class={classes!(
                     "bg-[#1f1f25]", "hover:_bg-950",
@@ -105,6 +108,7 @@ where
                     {svg!("../../public/svgs/search", "14")}
                 </span>
                 <input
+                    id={random_id}
                     type={"text"}
                     class={classes!(
                         "text-white", "focus:outline-none", "w-full", "ml-1", "bg-transparent"

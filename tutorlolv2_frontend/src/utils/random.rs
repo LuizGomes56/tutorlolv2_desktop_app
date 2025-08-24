@@ -1,4 +1,6 @@
-use generated_code::{CHAMPION_ID_TO_NAME, ITEM_ID_TO_NAME, RUNE_ID_TO_NAME};
+use generated_code::{
+    CHAMPION_ID_TO_NAME, CHAMPION_POSITIONS, ITEM_ID_TO_NAME, RECOMMENDED_ITEMS, RUNE_ID_TO_NAME,
+};
 use generated_code::{ChampionId, ItemId, RuneId};
 use web_sys::js_sys::Math;
 use yew::AttrValue;
@@ -18,6 +20,20 @@ macro_rules! impl_random_input {
             }
         }
     };
+}
+
+impl RandomInput {
+    pub fn recommended_items(champion_id: ChampionId) -> Vec<ItemId> {
+        unsafe {
+            let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
+            let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
+            let position = positions.get_unchecked(random_index);
+            RECOMMENDED_ITEMS
+                .get_unchecked(champion_id as usize)
+                .get_unchecked(*position as usize)
+                .to_vec()
+        }
+    }
 }
 
 impl_random_input!(ChampionId, u8, CHAMPION_ID_TO_NAME);
