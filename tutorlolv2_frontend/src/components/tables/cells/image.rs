@@ -25,7 +25,7 @@ pub struct ImageCellProps {
 #[inline]
 fn base_content(
     img_path: ImageType,
-    offsets: Option<&'static (usize, usize)>,
+    offsets: Option<&'static (u32, u32)>,
     content: Option<Html>,
 ) -> Html {
     html! {

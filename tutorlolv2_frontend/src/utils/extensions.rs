@@ -105,42 +105,31 @@ macro_rules! define_unsafe_cast {
 
 define_unsafe_cast!();
 
-#[derive(PartialEq)]
-pub enum ImportedEnumId {
-    Champion,
-    Item,
-    Rune,
-}
-
 pub trait ImportedEnum {
-    const ID: ImportedEnumId;
     const ID_TO_NAME: &'static [&'static str];
-    const OFFSETS: &'static [(usize, usize)];
+    const OFFSETS: &'static [(u32, u32)];
     fn into_image_type_unchecked(index: usize) -> ImageType;
 }
 
 impl ImportedEnum for ChampionId {
-    const ID: ImportedEnumId = ImportedEnumId::Champion;
     const ID_TO_NAME: &'static [&'static str] = &CHAMPION_ID_TO_NAME;
-    const OFFSETS: &'static [(usize, usize)] = &CHAMPION_FORMULAS;
+    const OFFSETS: &'static [(u32, u32)] = &CHAMPION_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
         ImageType::Champions(ChampionId::from_usize_unchecked(index))
     }
 }
 
 impl ImportedEnum for ItemId {
-    const ID: ImportedEnumId = ImportedEnumId::Item;
     const ID_TO_NAME: &'static [&'static str] = &ITEM_ID_TO_NAME;
-    const OFFSETS: &'static [(usize, usize)] = &ITEM_FORMULAS;
+    const OFFSETS: &'static [(u32, u32)] = &ITEM_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
         ImageType::Items(ItemId::from_usize_unchecked(index))
     }
 }
 
 impl ImportedEnum for RuneId {
-    const ID: ImportedEnumId = ImportedEnumId::Rune;
     const ID_TO_NAME: &'static [&'static str] = &RUNE_ID_TO_NAME;
-    const OFFSETS: &'static [(usize, usize)] = &RUNE_FORMULAS;
+    const OFFSETS: &'static [(u32, u32)] = &RUNE_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
         ImageType::Runes(RuneId::from_usize_unchecked(index))
     }

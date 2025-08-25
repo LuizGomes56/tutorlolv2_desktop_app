@@ -12,7 +12,7 @@ use yew::{
 
 #[derive(Properties, PartialEq)]
 pub struct SourceCodeProps {
-    pub offset: Option<&'static (usize, usize)>,
+    pub offset: Option<&'static (u32, u32)>,
 }
 
 #[function_component(SourceCode)]

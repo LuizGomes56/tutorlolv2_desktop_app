@@ -12,7 +12,7 @@ use yew::{
 
 fn base_content(
     img_path: ImageType,
-    offsets: Option<&'static (usize, usize)>,
+    offsets: Option<&'static (u32, u32)>,
     onclick: Callback<MouseEvent>,
     content: Option<Html>,
 ) -> Html {
