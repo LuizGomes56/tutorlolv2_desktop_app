@@ -1,5 +1,4 @@
 use crate::{
-    color,
     components::Dropdown,
     context::{GlobalContextActions, HoverDocs, SettingsContext},
 };
@@ -7,7 +6,7 @@ use yew::{Html, classes, function_component, html, use_callback, use_context};
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
-    let context = use_context::<SettingsContext>().expect("SettingsContext não encontrado");
+    let context = use_context::<SettingsContext>().expect("SettingsContext not found");
     let hover_docs_callback = {
         let context = context.clone();
         use_callback((), move |v, _| {
@@ -52,14 +51,14 @@ pub fn settings() -> Html {
             */
             <div class={classes!(
                 "w-full", "border-b",
-                color!(border-700),
+                "_border-700",
                 "pb-5", "flex", "flex-col", "gap-4"
             )}>
                 <div class={classes!(
                     "flex", "flex-col", "gap-4"
                 )}>
                     <h2>{ "Object-hover behavior" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p>{ "Choose how hover interactions reveal object information:" }</p>
                         <ol class="list-disc list-inside mt-2 space-y-1">
                             <li>

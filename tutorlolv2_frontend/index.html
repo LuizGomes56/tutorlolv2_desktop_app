@@ -7,9 +7,30 @@
     <link data-trunk rel="css" href="/public/main.css" />
     <link data-trunk rel="css" href="/public/fonts.css" />
     <link data-trunk rel="css" href="/public/highliter.css" />
-    <link data-trunk rel="rust" data-wasm-opt="3"
-        data-wasm-opt-params="--strip-debug --fast-math --enable-bulk-memory --enable-nontrapping-float-to-int" />
-    <script defer data-trunk src="/public/tailwind.js"></script>
+    <link data-trunk rel="tailwind-css" href="/public/tailwind.css" />
+    <!-- <link data-trunk rel="rust" data-wasm-opt="4"
+        data-wasm-opt-params="--strip-debug --fast-math --enable-bulk-memory --enable-nontrapping-float-to-int" /> -->
+    <script type="module">
+        addEventListener("TrunkApplicationStarted", (event) => {
+            const wasm = event.detail.wasm;
+            const ptr = wasm.cache_ptr();
+            const len = wasm.cache_len();
+            let buf = wasm.memory.buffer;
+            let view = new Uint8Array(buf, ptr, len);
+            function ensureView() {
+                if (buf !== wasm.memory.buffer) {
+                    buf = wasm.memory.buffer;
+                    view = new Uint8Array(buf, ptr, len);
+                }
+                return view;
+            }
+            const textDecoder = new TextDecoder("utf-8");
+            window.decodeCacheSlice = function (s, e) {
+                const arrView = ensureView();
+                return textDecoder.decode(arrView.subarray(s, e));
+            };
+        });
+    </script>
 </head>
 
 <body></body>

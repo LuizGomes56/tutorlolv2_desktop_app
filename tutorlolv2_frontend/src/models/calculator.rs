@@ -1,11 +1,9 @@
 use super::base::{
     AbilityLevels, AdaptativeType, Attacks, BasicStats, DamageLike, InstanceDamage, Stats,
 };
-use crate::{components::tables::cells::DisplayDamage, utils::rand_num_limited};
+use crate::{components::tables::cells::DisplayDamage, utils::RandomInput};
 use bincode::{Decode, Encode};
-use generated_code::{
-    AbilityLike, CHAMPION_ID_TO_NAME, ChampionId, ItemId, RECOMMENDED_ITEMS, RuneId,
-};
+use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]
@@ -116,30 +114,21 @@ impl InputCurrentPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: unsafe {
-                RECOMMENDED_ITEMS
-                    .get_unchecked(champion_id as usize)
-                    .get_unchecked(rand_num_limited(5.0) as usize)
-                    .to_vec()
-            },
+            items: RandomInput::recommended_items(champion_id),
             runes: self.runes.clone(),
             ..*self
         }
     }
     #[inline]
     pub fn new() -> Self {
-        let champion_id = unsafe {
-            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
-            std::mem::transmute::<_, ChampionId>(random_number as u8)
-        };
-        Self::create(&Self::default(), champion_id)
+        Self::create(&Self::default(), RandomInput::champion_id())
     }
 }
 
 impl Default for InputCurrentPlayer {
     fn default() -> Self {
         Self {
-            champion_id: ChampionId::Aatrox,
+            champion_id: RandomInput::champion_id(),
             items: Default::default(),
             level: 18,
             stats: Default::default(),
@@ -159,7 +148,7 @@ impl Default for InputCurrentPlayer {
 impl Default for InputEnemyPlayer {
     fn default() -> Self {
         Self {
-            champion_id: ChampionId::Aatrox,
+            champion_id: RandomInput::champion_id(),
             items: Default::default(),
             level: 18,
             stats: Default::default(),
@@ -174,21 +163,12 @@ impl InputEnemyPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: unsafe {
-                RECOMMENDED_ITEMS
-                    .get_unchecked(champion_id as usize)
-                    .get_unchecked(rand_num_limited(5.0) as usize)
-                    .to_vec()
-            },
+            items: RandomInput::recommended_items(champion_id),
             ..*self
         }
     }
     #[inline]
     pub fn new() -> Self {
-        let champion_id = unsafe {
-            let random_number = rand_num_limited(CHAMPION_ID_TO_NAME.len() as f64);
-            std::mem::transmute::<_, ChampionId>(random_number as u8)
-        };
-        Self::create(&Self::default(), champion_id)
+        Self::create(&Self::default(), RandomInput::champion_id())
     }
 }

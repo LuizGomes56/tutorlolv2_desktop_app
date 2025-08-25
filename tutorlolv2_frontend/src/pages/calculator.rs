@@ -14,6 +14,7 @@ use crate::{
     },
     url,
 };
+use generated_code::{ItemId, RuneId};
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -127,19 +128,26 @@ pub fn calculator() -> Html {
     };
     let set_ally_fire_dragons = {
         let input_dragons = input_dragons.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_dragons.dispatch(DragonAction::AllyFireDragons(v));
         })
     };
     let set_ally_earth_dragons = {
         let input_dragons = input_dragons.clone();
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::CurrentPlayer);
             input_dragons.dispatch(DragonAction::AllyEarthDragons(v));
         })
     };
     let set_enemy_earth_dragons = {
         let input_dragons = input_dragons.clone();
+        let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
             input_dragons.dispatch(DragonAction::EnemyEarthDragons(v));
         })
     };
@@ -227,10 +235,34 @@ pub fn calculator() -> Html {
             ));
         })
     };
+    let insert_enemy_player_items = {
+        let input_enemy_players = input_enemy_players.clone();
+        let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
+        use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
+            input_enemy_players.dispatch(EnemiesAction::Edit(
+                input_enemy_index,
+                InputEnemyAction::InsertItem(v),
+            ));
+        })
+    };
+    let remove_enemy_player_items = {
+        let input_enemy_players = input_enemy_players.clone();
+        let input_enemy_index = *input_enemy_index;
+        let action_tracker = action_tracker.clone();
+        use_callback(input_enemy_index, move |v, _| {
+            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
+            input_enemy_players.dispatch(EnemiesAction::Edit(
+                input_enemy_index,
+                InputEnemyAction::RemoveItem(v),
+            ));
+        })
+    };
 
-    use_effect_with(damage_stack.clone(), move |damage_stack| {
-        web_sys::console::log_1(&format!("{:#?}", damage_stack.into_boxed_slice()).into());
-    });
+    // use_effect_with(damage_stack.clone(), move |damage_stack| {
+    //     web_sys::console::log_1(&format!("{:#?}", damage_stack.clone_inner()).into());
+    // });
 
     {
         let output_game = output_game.clone();
@@ -389,6 +421,22 @@ pub fn calculator() -> Html {
                         attack_form_callback={set_current_player_attack_form}
                     />
                 </div>
+                <OpenTray<ItemId>
+                    insert_callback={insert_current_player_items}
+                    title={"Search items"}
+                />
+                <Tray<ItemId>
+                    array={input_current_player.items.clone()}
+                    remove_callback={remove_current_player_items}
+                />
+                <OpenTray<RuneId>
+                    insert_callback={insert_current_player_runes}
+                    title={"Search runes"}
+                />
+                <Tray<RuneId>
+                    array={input_current_player.runes.clone()}
+                    remove_callback={remove_current_player_runes}
+                />
                 <StatsSelector
                     champion_stats={input_current_player.stats}
                     infer_stats={input_current_player.infer_stats}
@@ -431,7 +479,7 @@ pub fn calculator() -> Html {
                                     items={output_game.current_player.damaging_items.clone()}
                                     runes={output_game.current_player.damaging_runes.clone()}
                                     champion_id={current_player_champion_id}
-                                    stack={(*damage_stack).into_boxed_slice()}
+                                    stack={(*damage_stack).clone_inner()}
                                     push_callback={push_stack_callback}
                                     remove_callback={remove_stack_callback}
                                     damages={
@@ -541,12 +589,12 @@ pub fn calculator() -> Html {
                                                     {
                                                         for (0..4).map(|i| {
                                                             html!{
-                                                                <td class={classes!("min-w-10","h-10","justify-items-center")}>
+                                                                <td class={classes!("h-10", "justify-items-center")}>
                                                                     {
                                                                         if let Some(&icon_url) = urls.get(i) {
                                                                             html! {
                                                                                 <Image
-                                                                                    class={classes!("w-8","h-8")}
+                                                                                    class={classes!("w-8", "h-8")}
                                                                                     source={ImageType::Other(AttrValue::Static(icon_url))}
                                                                                 />
                                                                             }
@@ -582,6 +630,7 @@ pub fn calculator() -> Html {
                             <ChampionBanner
                                 callback={set_enemy_champion_id}
                                 champion_id={input_enemy.champion_id}
+                                translate_left={true}
                             />
                             <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
                                 <NumericField<u8>
@@ -605,6 +654,15 @@ pub fn calculator() -> Html {
                                 set_stats_callback={set_enemy_stats}
                                 set_level_callback={set_enemy_level}
                                 level={input_enemy.level}
+                            />
+                            <OpenTray<ItemId>
+                                insert_callback={insert_enemy_player_items}
+                                title={"Search items"}
+                            />
+                            <Tray<ItemId>
+                                array={input_enemy.items.clone()}
+                                remove_callback={remove_enemy_player_items}
+                                translate_left={true}
                             />
                         </>
                     })

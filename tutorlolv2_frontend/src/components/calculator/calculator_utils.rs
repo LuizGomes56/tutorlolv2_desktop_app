@@ -7,13 +7,6 @@ use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum StaticIterator {
-    Runes,
-    Items,
-    Champions,
-}
-
 macro_rules! stats_reducer {
     ($name:ident, $($stat:ident),*) => {
         paste! {
@@ -73,6 +66,7 @@ macro_rules! ability_level_reducer {
                 )*
             }
 
+            #[inline]
             fn change_ability_levels(ability_levels: &mut AbilityLevels, action: $name) {
                 match action {
                     $(
@@ -156,7 +150,7 @@ impl Reducible for InputCurrentPlayer {
                 new_state.runes.push(v);
             }
             Self::Action::RemoveRune(v) => {
-                new_state.runes.remove(v);
+                new_state.runes.swap_remove(v);
             }
             Self::Action::ClearRunes => {
                 new_state.runes.clear();
@@ -285,18 +279,17 @@ pub enum StackAction {
 pub struct Stack(Vec<StackValue>);
 
 impl Stack {
-    pub fn into_boxed_slice(&self) -> Box<[StackValue]> {
-        self.0.clone().into_boxed_slice()
-    }
     pub fn get_ref(&self) -> &[StackValue] {
         &self.0
+    }
+    pub fn clone_inner(&self) -> Vec<StackValue> {
+        self.0.clone()
     }
     pub fn push(&mut self, value: StackValue) {
         self.0.push(value);
     }
-
     pub fn remove(&mut self, index: usize) {
-        self.0.remove(index);
+        self.0.swap_remove(index);
     }
 }
 

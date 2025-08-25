@@ -7,46 +7,6 @@ macro_rules! svg {
 }
 
 #[macro_export]
-macro_rules! color {
-    (@inner) => { "zinc" };
-    ($property:ident-$weight:literal) => {
-        concat!(stringify!($property), "-", color!(@inner), "-", $weight)
-    };
-    (checked:$property:ident-$weight:literal) => {
-        concat!(
-            "has-[:checked]:",
-            stringify!($property),
-            "-",
-            color!(@inner),
-            "-",
-            $weight
-        )
-    };
-    ($property:ident-$alignment:ident-$weight:literal) => {
-        concat!(
-            stringify!($property),
-            "-",
-            stringify!($alignment),
-            "-",
-            color!(@inner),
-            "-",
-            $weight
-        )
-    };
-    ($modifier:ident:$property:ident-$weight:literal) => {
-        concat!(
-            stringify!($modifier),
-            ":",
-            stringify!($property),
-            "-",
-            color!(@inner),
-            "-",
-            $weight
-        )
-    };
-}
-
-#[macro_export]
 macro_rules! url {
     (@inner) => { "http://localhost:8082" };
     (static $path:expr) => {

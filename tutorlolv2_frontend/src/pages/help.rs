@@ -1,4 +1,3 @@
-use crate::color;
 use yew::{Html, classes, function_component, html};
 
 #[function_component(Help)]
@@ -15,22 +14,22 @@ pub fn help() -> Html {
             </h1>
             <div class={classes!(
                 "w-full", "border-b",
-                color!(border-700),
+                "_border-700",
                 "pb-5", "flex", "flex-col", "gap-5"
             )}>
                 <div class={classes!(
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "How does the section \"Realtime\" work?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "While you are playing a game in League of Legends, data in JSON format will be available at " }
-                            <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                            <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                 { "https://127.0.0.1:2999/liveclientdata/allgamedata" }
                             </span>
                             { ", which is sent to my server and there I calculate your damages using the same formulas as those
                             you can see when hovering over an item with the setting " }
-                            <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                            <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                 { "[<Object-hover behavior>]" }
                             </span>
                             { " set to full." }
@@ -58,7 +57,7 @@ pub fn help() -> Html {
                                     { "Summoner name of all the players that played that game, their items, runes, kills, deaths, assists,
                                     creep score, and name of the champion you played. No private information about your account is in there.
                                     You can see its model by " }
-                                    <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                                    <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                         { "clicking here" }
                                     </span>
                                 </p>
@@ -82,7 +81,7 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "Why do I need to download the App to use the \"Realtime\" section?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "The only way to access your live game data is to have permission to access your machine's port 2999
                             during your game, and this is impossible to do with a regular browser like Microsoft Edge or Chrome" }
@@ -93,7 +92,7 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "Is TutorLoL safe to use?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "Yes. It was authorized and the first version of TutorLoL was released on July 1, 2023.
                             This is just a newer version of the same program, using different technologies and achieving 
@@ -105,7 +104,7 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "Are the calculated damages correct?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "Numbers will never be 100% accurate since I have no access to the current stats of
                             any of the champions in the enemy team, and some champions or items have very complex formulas. 
@@ -124,18 +123,18 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "I don't want to see the source code when I hover over an item, how do I disable it?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "Go to Settings and set the configuration of " }
-                            <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                            <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                 { "[<Object-hover behavior>]" }
                             </span>
                             { " to " }
-                            <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                            <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                 { "None" }
                             </span>
                             { " or " }
-                            <span class={classes!("font-semibold", color!(text-300), "whitespace-nowrap")}>
+                            <span class={classes!("font-semibold", "_text-300", "whitespace-nowrap")}>
                                 { "Partial" }
                             </span>
                         </p>
@@ -145,7 +144,7 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "How do I report a bug or request a feature?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "DM me on Discord or open an issue on GitHub in the applicable repository. If
                             the problem is related to mathematical calculations, go to the tutorlolv2 repository. 
@@ -157,7 +156,7 @@ pub fn help() -> Html {
                     "flex", "flex-col", "gap-3"
                 )}>
                     <h2 class={classes!("text-xl", "oxanium")}>{ "Using it during a game can reduce my FPS?" }</h2>
-                    <div class={classes!("mx-4", color!(text-400))}>
+                    <div class={classes!("mx-4", "_text-400")}>
                         <p class={classes!("mb-3")}>
                             { "Obviously, since there's a new process running on your machine while you play, there's
                             an extra task for your processor to handle. However, TutorLoL is optimized to the most 

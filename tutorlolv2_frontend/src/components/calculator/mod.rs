@@ -1,21 +1,20 @@
 pub mod ability_selector;
 pub mod calculator_utils;
 pub mod champion_banner;
-pub mod champion_selector;
 pub mod damage_stack;
 pub mod exception_selector;
 pub mod main_selector;
 pub mod static_selector;
 pub mod stats_selector;
+pub mod tray;
 pub mod turret_table;
 
 pub use ability_selector::*;
 pub use calculator_utils::*;
 pub use champion_banner::*;
-pub use champion_selector::*;
 pub use damage_stack::*;
 pub use exception_selector::*;
-pub use main_selector::*;
 pub use static_selector::*;
 pub use stats_selector::*;
+pub use tray::*;
 pub use turret_table::*;

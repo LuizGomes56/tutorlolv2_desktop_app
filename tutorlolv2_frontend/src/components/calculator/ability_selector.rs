@@ -1,6 +1,7 @@
 use crate::{
     components::{Image, ImageType, calculator::ChangeAbilityLevelsAction},
     models::base::AbilityLevels,
+    utils::RandomInput,
 };
 use generated_code::{AbilityLike, AbilityName, ChampionId};
 use paste::paste;
@@ -16,13 +17,15 @@ pub struct AbilitySelectorContainerProps {
 
 #[function_component(AbilitySelectorContainer)]
 pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html {
+    let random_id = RandomInput::rand_id();
     html! {
-        <label class={classes!(
+        <label for={&random_id} class={classes!(
             "flex", "flex-col", "text-white", "justify-center",
         )}>
             <input
+                id={&random_id}
                 type={"number"}
-                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1")}
+                class={classes!("w-full", "text-center", "text-sm", "pt-1.5", "pb-1", "bg-transparent")}
                 placeholder={"0"}
                 value={props.value.to_string()}
                 oninput={props.oninput.clone()}

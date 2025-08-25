@@ -1,6 +1,6 @@
 use crate::components::tables::cells::{ImageCell, Instances};
 use generated_code::{ChampionId, ItemId, RuneId};
-use yew::{Html, Properties, classes, function_component, html, use_memo};
+use yew::{Html, Properties, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]
 pub struct BaseTableProps {
@@ -23,14 +23,14 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                 <thead>
                     <tr>
                         {for (0..props.empty_headers).into_iter().map(|_| {
-                            html! { <th class={classes!("h-10")}></th> }
+                            html! { <th></th> }
                         })}
                         <ImageCell instance={Instances::Attacks} />
                         <ImageCell instance={Instances::Abilities(props.champion_id)} />
                         {
                             for props.damaging_items.iter().map(|key| {
                                 html! {
-                                    <th class={classes!("group", "min-w-10")}>
+                                    <th>
                                         <ImageCell instance={Instances::Items(*key)} />
                                     </th>
                                 }
@@ -39,7 +39,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
                         {
                             for props.damaging_runes.iter().map(|key| {
                                 html! {
-                                    <th class={classes!("group", "min-w-10")}>
+                                    <th>
                                         <ImageCell instance={Instances::Runes(*key)} />
                                     </th>
                                 }

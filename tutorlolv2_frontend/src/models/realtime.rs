@@ -1,6 +1,6 @@
 use super::base::{AdaptativeType, Attacks, BasicStats, DamageLike, Stats};
 use bincode::Decode;
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
+use generated_code::{AbilityLike, ChampionId, ItemId, Position, RuneId};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Decode)]
@@ -39,15 +39,6 @@ pub struct CurrentPlayer {
 pub enum Team {
     Blue,
     Red,
-}
-
-#[derive(Debug, Copy, Clone, Decode)]
-pub enum Position {
-    Top,
-    Jungle,
-    Middle,
-    Bottom,
-    Support,
 }
 
 #[derive(Debug, Decode)]

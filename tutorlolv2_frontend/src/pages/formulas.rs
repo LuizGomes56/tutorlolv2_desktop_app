@@ -1,7 +1,6 @@
 use crate::{
-    color,
-    components::{Selector, calculator::StaticIterator},
-    utils::ComptimeCache,
+    components::Selector,
+    utils::{ComptimeCache, RandomInput},
 };
 use generated_code::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
@@ -58,9 +57,9 @@ impl FormulaDropdown {
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
     let current_dropdown_id = use_state(|| FormulaDropdown::Champions);
-    let current_champion = use_state(|| ChampionId::Aatrox);
-    let current_item = use_state(|| ItemId::NashorsTooth);
-    let current_rune = use_state(|| RuneId::Electrocute);
+    let current_champion = use_state(|| RandomInput::champion_id());
+    let current_item = use_state(|| RandomInput::item_id());
+    let current_rune = use_state(|| RandomInput::rune_id());
     let champion_callback = {
         let current_champion = current_champion.clone();
         use_callback((), move |v, _| {
@@ -92,33 +91,37 @@ pub fn formulas() -> Html {
                         FormulaDropdown::to_array()
                         .into_iter()
                         .enumerate()
-                        .map(|(index, value)| html! {
-                            <label class={classes!(
-                                "px-4", "py-2", color!(text-400), "rounded-md",
-                                "hover:bg-[#1d1d25]", "transition-colors",
-                                "duration-200", "cursor-pointer",
-                                "has-[:checked]:bg-[#1D1D23]", "relative",
-                                "text-center", "has-[:checked]:text-white",
-                                "hover:text-[#c3c3c3]",
-                            )}>
-                                <input
-                                    checked={index == *current_dropdown_id as usize}
-                                    onchange={{
-                                        let current_dropdown_id = current_dropdown_id.clone();
-                                        Callback::from(move |_| {
-                                            current_dropdown_id.set(FormulaDropdown::from_index(index));
-                                        })
-                                    }}
-                                    type={"radio"}
-                                    name={"formula_dropdown"}
-                                    class={classes!(
-                                        "appearance-none", "absolute", "peer"
-                                    )}
-                                />
-                                <span>
-                                    {value}
-                                </span>
-                            </label>
+                        .map(|(index, value)| {
+                            let random_id = RandomInput::rand_id();
+                            html! {
+                                <label for={&random_id} class={classes!(
+                                    "px-4", "py-2", "_text-400", "rounded-md",
+                                    "hover:bg-[#1d1d25]", "transition-colors",
+                                    "duration-200", "cursor-pointer",
+                                    "has-[:checked]:bg-[#1D1D23]", "relative",
+                                    "text-center", "has-[:checked]:text-white",
+                                    "hover:text-[#c3c3c3]",
+                                )}>
+                                    <input
+                                        id={random_id}
+                                        checked={index == *current_dropdown_id as usize}
+                                        onchange={{
+                                            let current_dropdown_id = current_dropdown_id.clone();
+                                            Callback::from(move |_| {
+                                                current_dropdown_id.set(FormulaDropdown::from_index(index));
+                                            })
+                                        }}
+                                        type={"radio"}
+                                        name={"formula_dropdown"}
+                                        class={classes!(
+                                            "appearance-none", "absolute"
+                                        )}
+                                    />
+                                    <span>
+                                        {value}
+                                    </span>
+                                </label>
+                            }
                         })
                         .collect::<Html>()
                     }
@@ -127,21 +130,18 @@ pub fn formulas() -> Html {
                     match *current_dropdown_id {
                         FormulaDropdown::Champions | FormulaDropdown::Generator => html! {
                             <Selector<ChampionId>
-                                static_iter={StaticIterator::Champions}
                                 callback={champion_callback.clone()}
                                 current_value={*current_champion}
                             />
                         },
                         FormulaDropdown::Items => html! {
                             <Selector<ItemId>
-                                static_iter={StaticIterator::Items}
                                 callback={item_callback.clone()}
                                 current_value={*current_item}
                             />
                         },
                         FormulaDropdown::Runes => html! {
                             <Selector<RuneId>
-                                static_iter={StaticIterator::Runes}
                                 callback={rune_callback.clone()}
                                 current_value={*current_rune}
                             />

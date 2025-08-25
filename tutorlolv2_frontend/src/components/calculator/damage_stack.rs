@@ -2,14 +2,24 @@ use crate::{
     components::{Image, ImageType, calculator::StackValue},
     svg, url,
 };
-use generated_code::{CHAMPION_ABILITIES, ChampionId, ItemId, RuneId};
+use generated_code::{
+    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CRITICAL_STRIKE_OFFSET, ChampionId, ITEM_FORMULAS,
+    ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
+};
 use yew::{
     AttrValue, Callback, Html, MouseEvent, Properties, classes, function_component, html, use_memo,
 };
 
-fn base_content(img_path: ImageType, onclick: Callback<MouseEvent>, content: Option<Html>) -> Html {
+fn base_content(
+    img_path: ImageType,
+    offsets: Option<&'static (usize, usize)>,
+    onclick: Callback<MouseEvent>,
+    content: Option<Html>,
+) -> Html {
     html! {
         <div
+            data-classes={offsets.map(|_| "cursor-default")}
+            data-offset={offsets.map(|(s, e)| format!("{s},{e}"))}
             onclick={onclick}
             class={classes!(
                 "flex", "items-center", "justify-center", "relative",
@@ -33,17 +43,17 @@ pub fn damage_stack_table(props: &DamageStackTableProps) -> Html {
         html! {
             <thead>
                 <tr>
-                    <th class={classes!("min-w-10")}></th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th></th>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         {svg!("../../../public/svgs/sigma", "24")}
                     </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         <Image
                             class={classes!("w-6", "h-6")}
                             source={ImageType::Other(AttrValue::Static(url!("/img/stats/health.svg"))) }
                         />
                     </th>
-                    <th class={classes!("min-w-10", "h-10", "justify-items-center")}>
+                    <th class={classes!("h-10", "justify-items-center")}>
                         {svg!("../../../public/svgs/weakness", "24")}
                     </th>
                 </tr>
@@ -66,7 +76,7 @@ pub struct DamageStackSelectorProps {
     pub champion_id: ChampionId,
     pub items: Box<[ItemId]>,
     pub runes: Box<[RuneId]>,
-    pub stack: Box<[StackValue]>,
+    pub stack: Vec<StackValue>,
     pub push_callback: Callback<StackValue>,
     pub remove_callback: Callback<u16>,
     pub damages: Html,
@@ -101,7 +111,7 @@ pub fn damage_stack_selector(props: &DamageStackSelectorProps) -> Html {
 #[derive(Properties, PartialEq)]
 struct RemoveDamageStackSelectorProps {
     champion_id: ChampionId,
-    stack: Box<[StackValue]>,
+    stack: Vec<StackValue>,
     remove_callback: Callback<u16>,
 }
 
@@ -139,6 +149,7 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
                         };
                         base_content(
                             image_url,
+                            None,
                             {
                                 let remove_callback = remove_callback.clone();
                                 Callback::from(move |_| {
@@ -171,6 +182,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
             <>
                 {base_content(
                     ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png"))),
+                    Some(&BASIC_ATTACK_OFFSET),
                     {
                         let push_callback = push_callback.clone();
                         Callback::from(move |_| {
@@ -181,6 +193,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 )}
                 {base_content(
                     ImageType::Other(AttrValue::Static(url!("/img/stats/crit_chance.svg"))),
+                    Some(&CRITICAL_STRIKE_OFFSET),
                     {
                         let push_callback = push_callback.clone();
                         Callback::from(move |_| {
@@ -191,6 +204,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 )}
                 {base_content(
                     ImageType::Other(AttrValue::Static(url!("/img/stats/onhit.svg"))),
+                    Some(&ONHIT_EFFECT_OFFSET),
                     {
                         let push_callback = push_callback.clone();
                         Callback::from(move |_| {
@@ -211,6 +225,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .map(|item_id| {
                     base_content(
                         ImageType::Items(*item_id),
+                        ITEM_FORMULAS.get(*item_id as usize),
                         {
                             let push_callback = push_callback.clone();
                             let item_id = *item_id;
@@ -231,6 +246,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .map(|rune_id| {
                     base_content(
                         ImageType::Runes(*rune_id),
+                        RUNE_FORMULAS.get(*rune_id as usize),
                         {
                             let push_callback = push_callback.clone();
                             let rune_id = *rune_id;
@@ -252,10 +268,11 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                     Some(
                         value
                             .into_iter()
-                            .map(|(ability_name, _)| {
+                            .map(|(ability_name, offset)| {
                                 let first_char = ability_name.as_char();
                                 base_content(
                                     ImageType::Abilities(props.champion_id, *ability_name),
+                                    Some(offset),
                                     {
                                         let push_callback = push_callback.clone();
                                         Callback::from(move |_| {
@@ -278,9 +295,9 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
     );
 
     html! {
-        <div class={classes!("flex", "flex-wrap", "gap-2")}>
-            {(*abilities_memo).clone()}
+        <div id={"i_stack"} class={classes!("flex", "flex-wrap", "gap-2")}>
             {(*attack_memo).clone()}
+            {(*abilities_memo).clone()}
             {(*items_memo).clone()}
             {(*runes_memo).clone()}
         </div>
