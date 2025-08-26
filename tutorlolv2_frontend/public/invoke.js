@@ -16,5 +16,5 @@ export async function invoke_get_live_game() {
     if (!invoke) {
         return "Desktop application is not in use. Extern calls must not be performed";
     }
-    return await invoke?.("invoke_get_live_game");
+    return await invoke?.("get_live_game");
 }

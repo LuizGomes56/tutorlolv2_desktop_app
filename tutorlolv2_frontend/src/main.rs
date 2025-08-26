@@ -1,6 +1,6 @@
 use crate::{
-    components::sidebar::Sidebar, context::SettingsProvider, external::invoke, pages::*,
-    utils::init_cache,
+    components::sidebar::Sidebar, context::SettingsProvider, external::invoke, overlay::Process1,
+    pages::*, utils::init_cache,
 };
 use std::sync::atomic::AtomicBool;
 use web_sys::{js_sys::Function, window};
@@ -13,6 +13,7 @@ mod external;
 mod hooks;
 mod macros;
 mod models;
+mod overlay;
 mod pages;
 mod utils;
 
@@ -87,8 +88,8 @@ fn switch(routes: Route) -> Html {
         }
     };
     match routes {
-        Route::Help => make(html! { <Help /> }),
         Route::Home => make(html! { <Home /> }),
+        Route::Help => make(html! { <Help /> }),
         Route::History => {
             global_bool!(set HISTORY_LOOP_FLAG, false);
             make(html! { <History /> })
@@ -98,7 +99,10 @@ fn switch(routes: Route) -> Html {
         Route::Calculator => make(html! { <Calculator /> }),
         Route::Settings => make(html! { <Settings /> }),
         Route::Overlay { id } => match id {
-            1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
+            1 => {
+                global_bool!(set REALTIME_LOOP_FLAG, false);
+                html! { <Process1 /> }
+            }
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },
         },
     }

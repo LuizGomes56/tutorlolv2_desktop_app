@@ -1,7 +1,6 @@
 use super::base::{AdaptativeType, Attacks, BasicStats, DamageLike, Stats};
 use bincode::Decode;
 use generated_code::{AbilityLike, ChampionId, ItemId, Position, RuneId};
-use std::collections::BTreeMap;
 
 #[derive(Debug, Decode)]
 pub struct GameInformation {
@@ -59,6 +58,7 @@ pub struct DragonMultipliers {
 
 #[derive(Debug, Decode)]
 pub struct SimulatedDamages {
+    pub attacks: Attacks,
     pub abilities: DamageLike<AbilityLike>,
     pub items: DamageLike<ItemId>,
     pub runes: DamageLike<RuneId>,
@@ -81,9 +81,8 @@ pub struct Enemy {
 #[derive(Decode, Debug)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
-    pub enemies: BTreeMap<ChampionId, Enemy>,
+    pub enemies: Box<[(ChampionId, Enemy)]>,
     pub game_information: GameInformation,
-    pub recommended_items: Box<[ItemId]>,
     pub scoreboard: Scoreboard,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,
