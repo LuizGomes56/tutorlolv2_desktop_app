@@ -26,14 +26,12 @@ pub fn run() {
                 .always_on_top(true)
                 .closable(false)
                 .shadow(false)
-                .center()
                 .accept_first_mouse(false)
                 .focused(false)
                 .resizable(false)
                 .minimizable(false)
                 .maximizable(false)
                 .skip_taskbar(true)
-                .fullscreen(true)
                 .build()?;
 
             window.set_ignore_cursor_events(true).ok();
