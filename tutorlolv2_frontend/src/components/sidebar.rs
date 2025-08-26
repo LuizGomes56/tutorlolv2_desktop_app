@@ -47,7 +47,7 @@ pub fn sidebar() -> Html {
             <div class={classes!(
                 "flex", "flex-col", "gap-2",
             )}>
-                <div class={classes!("font-bold", "_text-500", "text-2xl", "cursor-pointer", "p-4")}>
+                <div class={classes!("font-bold", "_text-500", "text-2xl", "p-4")}>
                     { "TutorLoL" }
                 </div>
                 {make_tabs!(

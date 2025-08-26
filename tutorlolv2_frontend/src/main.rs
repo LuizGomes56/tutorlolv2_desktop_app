@@ -58,8 +58,8 @@ pub enum Route {
     #[at("/settings")]
     Settings,
 
-    #[at("/child_process/:id")]
-    ChildProcess { id: u8 },
+    #[at("/overlay/:id")]
+    Overlay { id: u8 },
 }
 
 #[function_component(App)]
@@ -67,17 +67,7 @@ fn app() -> Html {
     html! {
         <SettingsProvider>
             <BrowserRouter>
-                <div class={classes!(
-                    "flex", "w-full"
-                )}>
-                    <Sidebar />
-                    <div class={classes!(
-                        "flex", "flex-1", "bg-[#121214]",
-                        "h-screen", "overflow-y-auto",
-                    )}>
-                        <Switch<Route> render={switch} />
-                    </div>
-                </div>
+                <Switch<Route> render={switch} />
             </BrowserRouter>
         </SettingsProvider>
     }
@@ -85,28 +75,39 @@ fn app() -> Html {
 
 fn switch(routes: Route) -> Html {
     global_bool!(set HISTORY_LOOP_FLAG, true);
+    let make = |component| {
+        html! {
+            <div class={classes!("flex", "w-full")}>
+                <Sidebar />
+                <div class={classes!(
+                    "flex", "flex-1", "bg-[#121214]",
+                    "h-screen", "overflow-y-auto",
+                )}>{component}</div>
+            </div>
+        }
+    };
     match routes {
-        Route::Help => html! { <Help /> },
-        Route::Home => html! { <Home /> },
+        Route::Help => make(html! { <Help /> }),
+        Route::Home => make(html! { <Home /> }),
         Route::History => {
             global_bool!(set HISTORY_LOOP_FLAG, false);
-            html! { <History /> }
+            make(html! { <History /> })
         }
-        Route::Formulas => html! { <Formulas /> },
-        Route::Realtime => html! { <Realtime /> },
-        Route::Calculator => html! { <Calculator /> },
-        Route::ChildProcess { id } => match id {
+        Route::Formulas => make(html! { <Formulas /> }),
+        Route::Realtime => make(html! { <Realtime /> }),
+        Route::Calculator => make(html! { <Calculator /> }),
+        Route::Settings => make(html! { <Settings /> }),
+        Route::Overlay { id } => match id {
             1..10 => html! { <h1>{ format!("Child Process {id}") }</h1> },
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },
         },
-        Route::Settings => html! { <Settings /> },
     }
 }
 
 fn main() {
+    yew::Renderer::<App>::new().render();
     init_cache();
     let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
-    yew::Renderer::<App>::new().render();
 
     let window = window().unwrap();
     let document = window.document().unwrap();

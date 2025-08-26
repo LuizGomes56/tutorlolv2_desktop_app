@@ -1,4 +1,4 @@
-use bincode::{Decode, Encode};
+use bincode::Decode;
 
 pub enum StatName {
     AbilityHaste(u16),
@@ -82,16 +82,13 @@ impl StatName {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Encode, Decode)]
+#[derive(PartialEq, Debug, Copy, Clone, Decode)]
 pub enum AbilityLike {
     P(AbilityName),
     Q(AbilityName),
     W(AbilityName),
     E(AbilityName),
     R(AbilityName),
-    BasicAttack,
-    CriticalStrike,
-    Onhit,
 }
 
 impl AbilityLike {
@@ -102,12 +99,11 @@ impl AbilityLike {
             Self::W(_) => 'W',
             Self::E(_) => 'E',
             Self::R(_) => 'R',
-            _ => 0 as char,
         }
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Copy, Encode, Decode)]
+#[derive(PartialEq, Debug, Clone, Copy, Decode)]
 pub enum AbilityName {
     _1,
     _2,

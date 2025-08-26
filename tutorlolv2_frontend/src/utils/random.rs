@@ -42,12 +42,17 @@ impl_random_input!(RuneId, u8, RUNE_ID_TO_NAME);
 
 impl RandomInput {
     #[inline]
-    pub fn rand_num_limited(limit: f64) -> f64 {
+    fn rand_num_limited(limit: f64) -> f64 {
         Math::floor(Math::random() * limit)
     }
 
     #[inline]
+    pub fn rand_u8(n: u8) -> u8 {
+        Self::rand_num_limited(n as f64) as u8
+    }
+
+    #[inline]
     pub fn rand_id() -> AttrValue {
-        AttrValue::from((Self::rand_num_limited((1 << 20) as f64) as usize).to_string())
+        AttrValue::from((Self::rand_num_limited((u32::MAX) as f64) as usize).to_string())
     }
 }

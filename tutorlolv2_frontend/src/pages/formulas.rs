@@ -56,7 +56,8 @@ impl FormulaDropdown {
 
 #[function_component(Formulas)]
 pub fn formulas() -> Html {
-    let current_dropdown_id = use_state(|| FormulaDropdown::Champions);
+    let current_dropdown_id =
+        use_state(|| FormulaDropdown::from_index(RandomInput::rand_u8(4) as usize));
     let current_champion = use_state(|| RandomInput::champion_id());
     let current_item = use_state(|| RandomInput::item_id());
     let current_rune = use_state(|| RandomInput::rune_id());
