@@ -15,7 +15,7 @@
         "title": "tutorlolv2",
         "width": 800,
         "height": 600,
-        "alwaysOnTop": true,
+        "alwaysOnTop": false,
         "x": 0,
         "y": 0,
         "resizable": true,

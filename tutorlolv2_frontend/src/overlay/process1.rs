@@ -4,7 +4,7 @@ use crate::{
         BaseTable,
         cells::{DisplayDamage, ImageCell, Instances},
     },
-    external::invoke::invoke_get_live_game,
+    external::invoke::{invoke_get_live_game, take_live_game},
     global_bool,
     models::realtime::Realtime,
 };
@@ -31,37 +31,18 @@ pub fn process1() -> Html {
                 console::log_1(&"starting loop #1".into());
 
                 loop {
+                    web_sys::console::log_1(&"loop #1".into());
                     if global_bool!(get REALTIME_LOOP_FLAG) {
                         break;
                     }
 
-                    console::log_1(&"getting realtime data".into());
+                    let _ = invoke_get_live_game().await;
 
-                    let response = invoke_get_live_game().await;
-
-                    console::log_1(&"got response".into());
-
-                    if let Ok(data) = response {
-                        match bincode::decode_from_slice::<Realtime, _>(
-                            &data.to_vec(),
-                            bincode::config::standard(),
-                        ) {
-                            Ok((realtime_data, _)) => {
-                                console::log_1(&"got realtime data".into());
-                                // print bytes
-                                console::log_1(&format!("vec:{:?}", data.to_vec()).into());
-                                overlay_data.set(Rc::new(Some(realtime_data)));
-                                failures = 0;
-                            }
-                            Err(e) => {
-                                console::log_1(
-                                    &format!("Decode Error: {:#?}", e).to_string().into(),
-                                );
-                                failures += 1;
-                            }
-                        }
+                    if let Some(data) = take_live_game() {
+                        overlay_data.set(Rc::new(Some(data)));
+                        failures = 0;
                     } else {
-                        console::log_1(&response.unwrap_err().to_string().into());
+                        web_sys::console::log_1(&"no data".into());
                         failures += 1;
                     };
 
@@ -80,7 +61,7 @@ pub fn process1() -> Html {
     }
 
     html! {
-        <>
+        <div class={classes!("flex", "w-full", "justify-center")}>
             {
                 if let Some(ref data) = **overlay_data {
                     html! {
@@ -132,6 +113,6 @@ pub fn process1() -> Html {
                     html!()
                 }
             }
-        </>
+        </div>
     }
 }

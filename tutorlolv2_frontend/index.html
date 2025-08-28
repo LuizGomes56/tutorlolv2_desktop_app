@@ -12,7 +12,8 @@
         data-wasm-opt-params="--strip-debug --fast-math --enable-bulk-memory --enable-nontrapping-float-to-int" /> -->
     <script type="module">
         addEventListener("TrunkApplicationStarted", (event) => {
-            const wasm = event.detail.wasm;
+            let wasm = event.detail.wasm;
+            window.wasm = wasm;
             const ptr = wasm.cache_ptr();
             const len = wasm.cache_len();
             let buf = wasm.memory.buffer;

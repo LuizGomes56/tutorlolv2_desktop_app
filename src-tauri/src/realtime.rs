@@ -15,6 +15,8 @@ pub async fn get_live_game(client: Client) -> Result<Vec<u8>, String> {
 
     println!("byte len: {:#?}", bytes.len());
 
+    // let bytes = std::fs::read("example.json").unwrap();
+
     let mut headers = HeaderMap::with_capacity(1);
     headers.insert(
         header::CONTENT_TYPE,
