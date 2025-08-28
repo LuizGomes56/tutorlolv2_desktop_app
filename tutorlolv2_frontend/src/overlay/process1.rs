@@ -4,7 +4,7 @@ use crate::{
         BaseTable,
         cells::{DisplayDamage, ImageCell, Instances},
     },
-    external::invoke::invoke_get_live_game,
+    external::invoke::{invoke_get_live_game, take_live_game},
     global_bool,
     models::realtime::Realtime,
 };
@@ -31,37 +31,18 @@ pub fn process1() -> Html {
                 console::log_1(&"starting loop #1".into());
 
                 loop {
+                    web_sys::console::log_1(&"loop #1".into());
                     if global_bool!(get REALTIME_LOOP_FLAG) {
                         break;
                     }
 
-                    console::log_1(&"getting realtime data".into());
+                    let _ = invoke_get_live_game().await;
 
-                    let response = invoke_get_live_game().await;
-
-                    console::log_1(&"got response".into());
-
-                    if let Ok(data) = response {
-                        match bincode::decode_from_slice::<Realtime, _>(
-                            &data.to_vec(),
-                            bincode::config::standard(),
-                        ) {
-                            Ok((realtime_data, _)) => {
-                                console::log_1(&"got realtime data".into());
-                                // print bytes
-                                console::log_1(&format!("vec:{:?}", data.to_vec()).into());
-                                overlay_data.set(Rc::new(Some(realtime_data)));
-                                failures = 0;
-                            }
-                            Err(e) => {
-                                console::log_1(
-                                    &format!("Decode Error: {:#?}", e).to_string().into(),
-                                );
-                                failures += 1;
-                            }
-                        }
+                    if let Some(data) = take_live_game() {
+                        overlay_data.set(Rc::new(Some(data)));
+                        failures = 0;
                     } else {
-                        console::log_1(&response.unwrap_err().to_string().into());
+                        web_sys::console::log_1(&"no data".into());
                         failures += 1;
                     };
 
@@ -80,7 +61,7 @@ pub fn process1() -> Html {
     }
 
     html! {
-        <>
+        <div class={classes!("flex", "w-full", "justify-center")}>
             {
                 if let Some(ref data) = **overlay_data {
                     html! {
@@ -89,8 +70,26 @@ pub fn process1() -> Html {
                                 damaging_items={data.current_player.damaging_items.clone()}
                                 damaging_runes={data.current_player.damaging_runes.clone()}
                                 champion_id={data.current_player.champion_id.clone()}
+                                // damages={
+                                //     data.enemies
+                                //         .iter()
+                                //         .map(|(enemy_champion_id, enemy)| {
+                                //             html! {
+                                //                 <tr>
+                                //                     <td class={classes!("w-10", "h-10")}>
+                                //                         <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
+                                //                     </td>
+                                //                     {enemy.damages.attacks.display_damage()}
+                                //                     {enemy.damages.abilities.display_damage()}
+                                //                     {enemy.damages.items.display_damage()}
+                                //                     {enemy.damages.runes.display_damage()}
+                                //                 </tr>
+                                //             }
+                                //         })
+                                //         .collect::<Html>()
+                                // }
                                 damages={
-                                    data.enemies
+                                    [data.enemies.first().unwrap()]
                                         .iter()
                                         .map(|(enemy_champion_id, enemy)| {
                                             html! {
@@ -114,6 +113,6 @@ pub fn process1() -> Html {
                     html!()
                 }
             }
-        </>
+        </div>
     }
 }

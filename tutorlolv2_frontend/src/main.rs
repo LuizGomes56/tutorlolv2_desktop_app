@@ -22,8 +22,8 @@ pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 
 pub const MAX_FAILURES: usize = 10; /* Attempts */
-pub const RETRY_INTERVAL: u64 = 60; /* Seconds */
-pub const REFRESH_RATE: u64 = 1_000_000; /* Millis */
+pub const RETRY_INTERVAL: u64 = 10; /* Seconds */
+pub const REFRESH_RATE: u64 = 1_000; /* Millis */
 
 #[macro_export]
 macro_rules! global_bool {
@@ -88,6 +88,7 @@ fn switch(routes: Route) -> Html {
         }
     };
     match routes {
+        // Route::Home => html! { <Process1 /> },
         Route::Home => make(html! { <Home /> }),
         Route::Help => make(html! { <Help /> }),
         Route::History => {
