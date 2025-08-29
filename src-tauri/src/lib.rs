@@ -1,11 +1,12 @@
 use std::time::Duration;
-use tauri::{Manager, State, WebviewWindowBuilder, utils::config::Position};
+use tauri::{Manager, State, WebviewWindowBuilder};
 use tauri_plugin_http::reqwest::Client;
 
 pub struct AppState {
     client: Client,
 }
 
+mod keyboard;
 mod realtime;
 
 #[tauri::command]
