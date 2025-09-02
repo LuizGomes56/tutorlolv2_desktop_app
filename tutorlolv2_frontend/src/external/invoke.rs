@@ -38,6 +38,7 @@ pub fn parse_live_game(ptr: u32, len: usize) {
 pub fn take_live_game() -> Option<Realtime> {
     unsafe {
         if DATA_PTR.is_null() {
+            let _ = invoke_get_live_game();
             None
         } else {
             let b = Box::from_raw(DATA_PTR);

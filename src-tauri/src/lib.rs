@@ -1,5 +1,5 @@
 use std::time::Duration;
-use tauri::{Manager, State, WebviewWindowBuilder};
+use tauri::{Manager, State, WebviewWindowBuilder, ipc::InvokeResponseBody};
 use tauri_plugin_http::reqwest::Client;
 
 pub struct AppState {
@@ -7,11 +7,22 @@ pub struct AppState {
 }
 
 mod keyboard;
-mod realtime;
 
 #[tauri::command]
-async fn get_live_game(state: State<'_, AppState>) -> Result<Vec<u8>, String> {
-    realtime::get_live_game(state.client.clone()).await
+async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody, ()> {
+    // let response = state.client
+    //     .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
+    //     .send()
+    //     .await
+    //     .map_err(|e| format!("Error when fetching local: {:#?}", e))?;
+
+    // let bytes = response
+    //     .bytes()
+    //     .await
+    //     .map_err(|e| format!("Error transforming response to bytes: {:#?}", e))?;
+
+    let bytes = std::fs::read("example.json").unwrap();
+    Ok(InvokeResponseBody::Raw(bytes))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -43,6 +54,7 @@ pub fn run() {
             let _ = window.set_ignore_cursor_events(true);
 
             window.set_ignore_cursor_events(true).ok();
+            window.open_devtools();
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(

@@ -1,6 +1,6 @@
 [package]
 name = "tutorlolv2_desktop_app"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tutorlolv2 desktop app with support to overlay"
 authors = ["Luiz Gustavo Santana"]
 license = ""
@@ -8,18 +8,22 @@ repository = ""
 edition = "2024"
 rust-version = "1.89.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
 name = "tutorlolv2_desktop_app"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.4.0", features = [] }
+tauri-build = { version = "2.4.1", features = [] }
 
 [dependencies]
 log = "0.4"
-tauri = { version = "2.8.4", features = [] }
-tauri-plugin-http = { version = "2.5.2", default-features = false, features = ["http2", "rustls-tls"] }
+tauri = { version = "2.8.5", features = [] }
+tauri-plugin-http = { version = "2.5.2", default-features = false, features = [
+    "http2",
+    "rustls-tls",
+] }
 tauri-plugin-log = "2.0.0-rc"
-windows = { version = "0.61.3", features = ["Foundation", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.61.3", features = [
+    "Foundation",
+    "Win32_UI_WindowsAndMessaging",
+] }
