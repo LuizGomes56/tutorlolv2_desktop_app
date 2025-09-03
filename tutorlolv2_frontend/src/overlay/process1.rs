@@ -16,7 +16,7 @@ use yew::{
 
 #[function_component(Process1)]
 pub fn process1() -> Html {
-    let overlay_data = use_state(|| Rc::new(None::<Realtime>));
+    let overlay_data = use_state(|| None::<Realtime>);
 
     {
         let overlay_data = overlay_data.clone();
@@ -29,6 +29,7 @@ pub fn process1() -> Html {
                 let mut failures = 0usize;
 
                 console::log_1(&"starting loop #1".into());
+                let _ = invoke_get_live_game().await;
 
                 loop {
                     web_sys::console::log_1(&"loop #1".into());
@@ -36,12 +37,11 @@ pub fn process1() -> Html {
                         break;
                     }
 
-                    let _ = invoke_get_live_game().await;
-
                     if let Some(data) = take_live_game() {
-                        overlay_data.set(Rc::new(Some(data)));
+                        overlay_data.set(Some(data));
                         failures = 0;
                     } else {
+                        let _ = invoke_get_live_game().await;
                         web_sys::console::log_1(&"no data".into());
                         failures += 1;
                     };
@@ -63,7 +63,7 @@ pub fn process1() -> Html {
     html! {
         <div class={classes!("flex", "w-full", "justify-center")}>
             {
-                if let Some(ref data) = **overlay_data {
+                if let Some(ref data) = *overlay_data {
                     html! {
                         <div>
                             <BaseTable

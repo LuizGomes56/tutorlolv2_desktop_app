@@ -9,19 +9,21 @@ pub struct AppState {
 mod keyboard;
 
 #[tauri::command]
-async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody, ()> {
-    // let response = state.client
-    //     .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
-    //     .send()
-    //     .await
-    //     .map_err(|e| format!("Error when fetching local: {:#?}", e))?;
+async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody, String> {
+    let response = state
+        .client
+        .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
+        .send()
+        .await
+        .map_err(|e| format!("Error when fetching local: {:#?}", e))?;
 
-    // let bytes = response
-    //     .bytes()
-    //     .await
-    //     .map_err(|e| format!("Error transforming response to bytes: {:#?}", e))?;
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Error transforming response to bytes: {:#?}", e))?
+        .to_vec();
 
-    let bytes = std::fs::read("example.json").unwrap();
+    // let bytes = std::fs::read("example.json").unwrap();
     Ok(InvokeResponseBody::Raw(bytes))
 }
 

@@ -70,8 +70,10 @@ export function invoke_get_live_game() {
                     }
                     try {
                         totalLen = new Uint32Array(serverData.slice(0, 4))[0];
+                        console.log(`Receiving ${totalLen} bytes`);
                         ptr = wasmBindings.alloc_live_game_buffer(totalLen);
                     } catch (e) {
+                        console.error(`Rejected promise: ${e}`);
                         cleanup();
                         reject(e);
                         return;
@@ -81,6 +83,7 @@ export function invoke_get_live_game() {
 
                     const remainder = serverData.byteLength - 4;
                     if (remainder > 0) {
+                        console.log(`Receiving ${remainder} more bytes`);
                         const chunk = new Uint8Array(serverData, 4, remainder);
                         const view = new Uint8Array(window.wasm.memory.buffer, ptr + written, Math.min(chunk.byteLength, totalLen - written));
                         view.set(chunk.subarray(0, view.byteLength));
@@ -99,8 +102,10 @@ export function invoke_get_live_game() {
 
                 if (!expectingHeader && written === totalLen) {
                     try {
+                        console.log(`Parsing ${written} bytes`);
                         wasmBindings.parse_live_game(ptr, written);
                     } catch (e) {
+                        console.error(`[1] Rejected promise: ${e}`);
                         cleanup();
                         reject(e);
                         return;
