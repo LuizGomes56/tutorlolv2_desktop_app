@@ -21,9 +21,9 @@ pub static IS_DEKTOP_PLATFORM: AtomicBool = AtomicBool::new(false);
 pub static HISTORY_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 pub static REALTIME_LOOP_FLAG: AtomicBool = AtomicBool::new(false);
 
-pub const MAX_FAILURES: usize = 10; /* Attempts */
-pub const RETRY_INTERVAL: u64 = 10; /* Seconds */
-pub const REFRESH_RATE: u64 = 1_000; /* Millis */
+pub const MAX_FAILURES: usize = 10;
+pub const RETRY_INTERVAL: u64 = 10_000;
+pub const REFRESH_RATE: u64 = 1_000;
 
 #[macro_export]
 macro_rules! global_bool {

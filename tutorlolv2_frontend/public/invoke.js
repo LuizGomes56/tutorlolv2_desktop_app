@@ -71,7 +71,7 @@ export function invoke_get_live_game() {
                     try {
                         totalLen = new Uint32Array(serverData.slice(0, 4))[0];
                         console.log(`Receiving ${totalLen} bytes`);
-                        ptr = wasmBindings.alloc_live_game_buffer(totalLen);
+                        ptr = wasmBindings.alloc_bytes(totalLen);
                     } catch (e) {
                         console.error(`Rejected promise: ${e}`);
                         cleanup();

@@ -8,7 +8,6 @@ use crate::{
     global_bool,
     models::realtime::Realtime,
 };
-use std::rc::Rc;
 use web_sys::console;
 use yew::{
     Html, classes, function_component, html, platform::spawn_local, use_effect_with, use_state,
@@ -48,11 +47,11 @@ pub fn process1() -> Html {
 
                     console::log_1(&"sleeping".into());
 
-                    let delay = if failures > MAX_FAILURES {
-                        std::time::Duration::from_secs(RETRY_INTERVAL)
+                    let delay = std::time::Duration::from_millis(if failures > MAX_FAILURES {
+                        RETRY_INTERVAL
                     } else {
-                        std::time::Duration::from_millis(REFRESH_RATE)
-                    };
+                        REFRESH_RATE
+                    });
 
                     gloo_timers::future::sleep(delay).await;
                 }

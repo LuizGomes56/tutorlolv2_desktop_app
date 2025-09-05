@@ -10,10 +10,10 @@ pub struct GameInformation {
 
 #[derive(Debug, Decode)]
 pub struct Scoreboard {
-    pub assists: u16,
+    pub assists: u8,
     pub creep_score: u16,
-    pub deaths: u16,
-    pub kills: u16,
+    pub deaths: u8,
+    pub kills: u8,
     pub riot_id: Box<str>,
     pub champion_id: ChampionId,
     pub position: Position,

@@ -1,6 +1,5 @@
-use std::mem::MaybeUninit;
-
 use crate::models::realtime::Realtime;
+use std::mem::MaybeUninit;
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 
 #[wasm_bindgen(module = "/public/invoke.js")]
@@ -15,7 +14,7 @@ unsafe extern "C" {
 static mut DATA_PTR: *mut Realtime = core::ptr::null_mut();
 
 #[wasm_bindgen]
-pub fn alloc_live_game_buffer(len: usize) -> u32 {
+pub fn alloc_bytes(len: usize) -> u32 {
     let mut buf: Box<[MaybeUninit<u8>]> = Box::new_uninit_slice(len);
     let ptr = buf.as_mut_ptr();
     core::mem::forget(buf);
