@@ -70,7 +70,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::AttackDamage(value));
         })
     };
@@ -78,7 +78,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::AbilityPower(value));
         })
     };
@@ -86,7 +86,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::MaxHealth(value));
         })
     };
@@ -94,7 +94,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::CurrentHealth(value));
         })
     };
@@ -102,7 +102,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::Armor(value));
         })
     };
@@ -110,7 +110,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::ArmorPenetrationFlat(value));
         })
     };
@@ -118,7 +118,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::ArmorPenetrationPercent(value));
         })
     };
@@ -126,7 +126,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::MagicResist(value));
         })
     };
@@ -134,7 +134,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::MagicPenetrationFlat(value));
         })
     };
@@ -142,7 +142,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::MagicPenetrationPercent(value));
         })
     };
@@ -150,7 +150,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::CritChance(value));
         })
     };
@@ -158,7 +158,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::CritDamage(value));
         })
     };
@@ -166,7 +166,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::AttackSpeed(value));
         })
     };
@@ -174,7 +174,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::MaxMana(value));
         })
     };
@@ -182,7 +182,7 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeStatsAction::CurrentMana(value));
         })
     };
@@ -191,10 +191,10 @@ pub fn stats_selector(props: &StatsSelectorProps) -> Html {
         ($path:literal, $stat:ident, $display:literal) => {
             paste::paste! {
                 html! {
-                    <StatsCell<f32>
+                    <StatsCell<i32>
                         path={$path}
                         disabled={props.infer_stats}
-                        value={props.champion_stats.$stat.round()}
+                        value={props.champion_stats.$stat}
                         display={$display}
                         oninput={[<set_ $stat _callback>].clone()}
                     />
@@ -257,7 +257,7 @@ pub fn basic_stats_selector(props: &BasicStatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeBasicStatsAction::Health(value));
         })
     };
@@ -265,7 +265,7 @@ pub fn basic_stats_selector(props: &BasicStatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeBasicStatsAction::Armor(value));
         })
     };
@@ -273,7 +273,7 @@ pub fn basic_stats_selector(props: &BasicStatsSelectorProps) -> Html {
         let set_stats_callback = props.set_stats_callback.clone();
         use_callback((), move |e: InputEvent, _| {
             let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-            let value = target.value().parse::<f32>().unwrap_or(0.0).max(0.0);
+            let value = target.value().parse::<i32>().unwrap_or(0).max(0);
             set_stats_callback.emit(ChangeBasicStatsAction::MagicResist(value));
         })
     };
@@ -282,10 +282,10 @@ pub fn basic_stats_selector(props: &BasicStatsSelectorProps) -> Html {
         ($path:literal, $stat:ident, $display:literal) => {
             paste::paste! {
                 html! {
-                    <StatsCell<f32>
+                    <StatsCell<i32>
                         path={$path}
                         disabled={props.infer_stats}
-                        value={props.champion_stats.$stat.round()}
+                        value={props.champion_stats.$stat}
                         display={$display}
                         oninput={[<set_ $stat _callback>].clone()}
                     />

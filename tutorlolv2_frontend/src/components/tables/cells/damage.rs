@@ -3,8 +3,8 @@ use yew::{AttrValue, Html, classes, html};
 
 pub struct DamageCell {
     pub damage_type: DamageType,
-    pub minimum_damage: f32,
-    pub maximum_damage: f32,
+    pub minimum_damage: i32,
+    pub maximum_damage: i32,
 }
 
 impl DamageValue {
@@ -31,13 +31,13 @@ impl Into<DamageCell> for &InstanceDamage {
 
 pub fn damage_cell<'a, T: Into<DamageCell>>(value: T) -> Html {
     let value: DamageCell = value.into();
-    let text = if value.maximum_damage != 0.0 {
-        let mut s = value.minimum_damage.round().to_string();
+    let text = if value.maximum_damage != 0 {
+        let mut s = value.minimum_damage.to_string();
         s.push_str(" - ");
-        s.push_str(&value.maximum_damage.round().to_string());
+        s.push_str(&value.maximum_damage.to_string());
         AttrValue::from(s)
     } else {
-        AttrValue::from(value.minimum_damage.round().to_string())
+        AttrValue::from(value.minimum_damage.to_string())
     };
     html! {
         <td title={&text} class={classes!{

@@ -41,46 +41,46 @@ impl DamageType {
 
 #[derive(Debug, Decode)]
 pub struct InstanceDamage {
-    pub minimum_damage: f32,
-    pub maximum_damage: f32,
+    pub minimum_damage: i32,
+    pub maximum_damage: i32,
     pub damage_type: DamageType,
 }
 
 #[derive(Debug, Encode, Clone, Copy, Decode, PartialEq, Default)]
 pub struct Stats {
-    pub ability_power: f32,
-    pub armor: f32,
-    pub armor_penetration_flat: f32,
-    pub armor_penetration_percent: f32,
-    pub attack_damage: f32,
-    pub attack_range: f32,
-    pub attack_speed: f32,
-    pub crit_chance: f32,
-    pub crit_damage: f32,
-    pub current_health: f32,
-    pub magic_penetration_flat: f32,
-    pub magic_penetration_percent: f32,
-    pub magic_resist: f32,
-    pub max_health: f32,
-    pub max_mana: f32,
-    pub current_mana: f32,
+    pub ability_power: i32,
+    pub armor: i32,
+    pub armor_penetration_flat: i32,
+    pub armor_penetration_percent: i32,
+    pub attack_damage: i32,
+    pub attack_range: i32,
+    pub attack_speed: i32,
+    pub crit_chance: i32,
+    pub crit_damage: i32,
+    pub current_health: i32,
+    pub magic_penetration_flat: i32,
+    pub magic_penetration_percent: i32,
+    pub magic_resist: i32,
+    pub max_health: i32,
+    pub max_mana: i32,
+    pub current_mana: i32,
 }
 
 pub type DamageLike<T> = Box<[(T, InstanceDamage)]>;
 
 #[derive(Debug, Encode, Decode, Copy, Clone, PartialEq, Default)]
 pub struct BasicStats {
-    pub armor: f32,
-    pub health: f32,
-    pub attack_damage: f32,
-    pub magic_resist: f32,
-    pub mana: f32,
+    pub armor: i32,
+    pub health: i32,
+    pub attack_damage: i32,
+    pub magic_resist: i32,
+    pub mana: i32,
 }
 
 #[derive(Debug, Decode)]
 pub struct DamageValue {
-    pub minimum_damage: f32,
-    pub maximum_damage: f32,
+    pub minimum_damage: i32,
+    pub maximum_damage: i32,
 }
 
 #[derive(Debug, Decode)]

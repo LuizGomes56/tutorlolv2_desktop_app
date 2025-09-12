@@ -35,7 +35,7 @@ impl MonsterDamages {
 #[derive(Debug, Decode)]
 pub struct OutputGame {
     pub monster_damages: MonsterDamages,
-    pub tower_damage: [f32; 6],
+    pub tower_damage: [i32; 6],
     pub current_player: OutputCurrentPlayer,
     pub enemies: Box<[(ChampionId, OutputEnemy)]>,
 }
@@ -67,8 +67,8 @@ pub struct OutputEnemy {
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,
-    pub real_armor: f32,
-    pub real_magic_resist: f32,
+    pub real_armor: i32,
+    pub real_magic_resist: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Encode)]

@@ -371,13 +371,13 @@ pub fn calculator() -> Html {
         );
     }
 
-    let make_td = |text: f32, damage_type: DamageType| -> Html {
+    let make_td = |text: i32, damage_type: DamageType| -> Html {
         html! {
             <td class={classes!{
                 "text-center", "text-sm", "px-2", "h-10",
                 "max-w-24", "truncate", damage_type.get_color(),
             }}>
-                {text.round()}
+                {text}
             </td>
         }
     };
@@ -486,7 +486,7 @@ pub fn calculator() -> Html {
                                         output_game.enemies
                                             .iter()
                                             .map(|(enemy_champion_id, enemy)| {
-                                                let mut total_damage = 0.0;
+                                                let mut total_damage = 0;
                                                 for value in (*damage_stack).get_ref() {
                                                     match value {
                                                         StackValue::Ability(ability) => {
@@ -523,9 +523,9 @@ pub fn calculator() -> Html {
                                                         <td class={classes!("w-10", "h-10")}>
                                                             <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
                                                         </td>
-                                                        {make_td(total_damage.round(), DamageType::Mixed)}
-                                                        {make_td((enemy.current_stats.health - total_damage).round(), DamageType::Unknown)}
-                                                        {make_td((total_damage / enemy.current_stats.health * 100.0).round(), DamageType::True)}
+                                                        {make_td(total_damage, DamageType::Mixed)}
+                                                        {make_td(enemy.current_stats.health - total_damage, DamageType::Unknown)}
+                                                        {make_td(total_damage / enemy.current_stats.health * 100, DamageType::True)}
                                                     </tr>
                                                 }
                                             })
@@ -541,7 +541,7 @@ pub fn calculator() -> Html {
                                                     "px-2", output_game.current_player.adaptative_type.get_color(),
                                                     "max-w-24", "truncate", "h-10"
                                                 )}>
-                                                    {output_game.tower_damage[i].round()}
+                                                    {output_game.tower_damage[i]}
                                                 </td>
                                             }
                                         })
@@ -669,15 +669,5 @@ pub fn calculator() -> Html {
                 })}
             </div>
         </div>
-        // <MainSelector
-        //     set_current_player_champion_id_callback={set_current_player_champion_id}
-        //     insert_item_callback={insert_current_player_items}
-        //     remove_item_callback={remove_current_player_items}
-        //     insert_rune_callback={insert_current_player_runes}
-        //     remove_rune_callback={remove_current_player_runes}
-        //     items_iterator={input_current_player.items.clone()}
-        //     runes_iterator={input_current_player.runes.clone()}
-        //     current_player_champion_id={current_player_champion_id}
-        // />
     }
 }

@@ -4,7 +4,7 @@ use generated_code::{AbilityLike, ChampionId, ItemId, Position, RuneId};
 
 #[derive(Debug, Decode)]
 pub struct GameInformation {
-    pub game_time: f32,
+    pub game_time: i32,
     pub map_number: u8,
 }
 
@@ -51,9 +51,9 @@ pub struct Damages {
 
 #[derive(Debug, Decode)]
 pub struct DragonMultipliers {
-    pub earth: f32,
-    pub fire: f32,
-    pub chemtech: f32,
+    pub earth: i32,
+    pub fire: i32,
+    pub chemtech: i32,
 }
 
 #[derive(Debug, Decode)]
@@ -74,8 +74,8 @@ pub struct Enemy {
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
     pub current_stats: BasicStats,
-    pub real_armor: f32,
-    pub real_magic_resist: f32,
+    pub real_armor: i32,
+    pub real_magic_resist: i32,
 }
 
 #[derive(Decode, Debug)]
