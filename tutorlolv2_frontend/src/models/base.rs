@@ -97,8 +97,3 @@ pub struct AbilityLevels {
     pub e: u8,
     pub r: u8,
 }
-
-#[derive(Debug, Decode)]
-pub struct ApiError {
-    pub message: Box<str>,
-}

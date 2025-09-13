@@ -1,5 +1,5 @@
 use crate::{
-    components::sidebar::Sidebar, context::SettingsProvider, external::invoke, overlay::Process1,
+    components::sidebar::Sidebar, context::SettingsProvider, external::invoke, overlay::*,
     pages::*, utils::init_cache,
 };
 use std::sync::atomic::AtomicBool;
@@ -103,6 +103,10 @@ fn switch(routes: Route) -> Html {
             1 => {
                 global_bool!(set REALTIME_LOOP_FLAG, false);
                 html! { <Process1 /> }
+            }
+            2 => {
+                global_bool!(set REALTIME_LOOP_FLAG, false);
+                html! { <Process2 /> }
             }
             _ => html! { <h1>{ "No Child Process with this id" }</h1> },
         },

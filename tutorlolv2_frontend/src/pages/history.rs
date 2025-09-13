@@ -9,9 +9,8 @@ use crate::{
     models::realtime::Realtime,
     url,
 };
-use bincode::Encode;
 use std::rc::Rc;
-use web_sys::{HtmlInputElement, console};
+use web_sys::HtmlInputElement;
 use yew::{
     Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
     use_effect_with, use_state,
@@ -42,38 +41,23 @@ pub fn history() -> Html {
                         break;
                     }
 
-                    #[derive(Encode)]
-                    struct GetByCodeBody<'a> {
-                        game_code: &'a str,
-                    }
+                    let response =
+                        send_bytes(url!("/api/games/get_by_code"), &*game_code, None).await;
 
-                    let response = send_bytes(
-                        url!("/api/games/get_by_code"),
-                        &GetByCodeBody {
-                            game_code: &*game_code,
-                        },
-                        None,
-                    )
-                    .await;
-
-                    if let Ok(data) = response {
-                        match decode_bytes::<Realtime>(data).await {
-                            Ok(req_realtime) => {
-                                game_data.set(Rc::new(Some(req_realtime)));
-                                failures = 0;
-                            }
-                            Err(e) => {
-                                console::log_1(&e.to_string().into());
-                                failures += 1;
-                            }
+                    if let Some(data) = response {
+                        if let Some(req_realtime) = decode_bytes::<Realtime>(data).await {
+                            game_data.set(Rc::new(Some(req_realtime)));
+                            failures = 0;
+                        } else {
+                            failures += 1;
                         }
                     };
 
-                    let delay = if failures > MAX_FAILURES {
-                        std::time::Duration::from_secs(RETRY_INTERVAL)
+                    let delay = std::time::Duration::from_millis(if failures > MAX_FAILURES {
+                        RETRY_INTERVAL
                     } else {
-                        std::time::Duration::from_millis(REFRESH_RATE)
-                    };
+                        REFRESH_RATE
+                    });
 
                     gloo_timers::future::sleep(delay).await;
                 }
