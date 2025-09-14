@@ -3,7 +3,7 @@ use crate::{
     models::base::AbilityLevels,
     utils::RandomInput,
 };
-use generated_code::{AbilityLike, AbilityName, ChampionId};
+use tutorlolv2_imports::{AbilityLike, AbilityName, ChampionId};
 use paste::paste;
 use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 

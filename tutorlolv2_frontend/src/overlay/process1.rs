@@ -28,7 +28,7 @@ pub fn process1() -> Html {
                 let mut failures = 0usize;
 
                 console::log_1(&"starting loop #1".into());
-                let _ = invoke_get_live_game().await;
+                let _ = invoke_get_live_game();
 
                 loop {
                     web_sys::console::log_1(&"loop #1".into());
@@ -40,7 +40,7 @@ pub fn process1() -> Html {
                         overlay_data.set(Some(data));
                         failures = 0;
                     } else {
-                        let _ = invoke_get_live_game().await;
+                        let _ = invoke_get_live_game();
                         web_sys::console::log_1(&"no data".into());
                         failures += 1;
                     };

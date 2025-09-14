@@ -1,5 +1,5 @@
 use crate::{url, utils::StringExt};
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{AttrValue, Classes, Html, Properties, function_component, html};
 
 #[derive(PartialEq)]

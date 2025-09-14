@@ -57,6 +57,6 @@
 
 ### How to run
 
-- It is necessary to download the backend service, run in debug mode and call `buildscript.js`. This way, the `generated_code` crate will receive its data that will be compiled with the final WASM binary. This includes many `enum`, `struct`, and `static` definitions that are essential for the program to run.
+- It is necessary to download the backend service, run in debug mode and call `buildscript.js`. This way, the `tutorlolv2_imports` crate will receive its data that will be compiled with the final WASM binary. This includes many `enum`, `struct`, and `static` definitions that are essential for the program to run.
 
 - The necessary steps to run the backend service are listed in its README file

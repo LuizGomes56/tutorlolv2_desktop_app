@@ -2,7 +2,7 @@ use crate::{
     components::Selector,
     utils::{ComptimeCache, RandomInput},
 };
-use generated_code::{
+use tutorlolv2_imports::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
 };
 use yew::{

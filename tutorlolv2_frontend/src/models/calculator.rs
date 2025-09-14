@@ -3,7 +3,8 @@ use super::base::{
 };
 use crate::{components::tables::cells::DisplayDamage, utils::RandomInput};
 use bincode::{Decode, Encode};
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
+use std::rc::Rc;
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]
@@ -96,10 +97,11 @@ pub struct InputEnemyPlayer {
 #[derive(Clone, Debug, Encode)]
 pub struct InputGame<'a> {
     pub active_player: &'a InputCurrentPlayer,
-    pub enemy_players: &'a [std::rc::Rc<InputEnemyPlayer>],
+    pub enemy_players: &'a [Rc<InputEnemyPlayer>],
     pub ally_earth_dragons: u8,
     pub ally_fire_dragons: u8,
     pub enemy_earth_dragons: u8,
+    pub stack_exceptions: Vec<(u8, u16, u8)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default)]

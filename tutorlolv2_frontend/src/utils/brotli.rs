@@ -1,6 +1,6 @@
 #![allow(static_mut_refs)]
 use brotli::BrotliDecompress;
-use generated_code::{MEGA_BLOCK, UNCOMPRESSED_MEGA_BLOCK_SIZE};
+use tutorlolv2_imports::{MEGA_BLOCK, UNCOMPRESSED_MEGA_BLOCK_SIZE};
 use std::io::Write;
 use wasm_bindgen::prelude::wasm_bindgen;
 

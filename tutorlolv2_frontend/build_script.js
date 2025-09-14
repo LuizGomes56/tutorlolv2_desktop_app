@@ -46,4 +46,4 @@ if (!res.ok) {
 }
 
 const code = await res.text();
-writeFileSync("generated_code/src/code.rs", code);
+writeFileSync("tutorlolv2_imports/src/code.rs", code);

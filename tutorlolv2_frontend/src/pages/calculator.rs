@@ -14,7 +14,7 @@ use crate::{
     },
     url,
 };
-use generated_code::{ItemId, RuneId};
+use tutorlolv2_imports::{ItemId, RuneId};
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
@@ -301,6 +301,7 @@ pub fn calculator() -> Html {
                         ally_earth_dragons: input_dragons.ally_earth_dragons,
                         ally_fire_dragons: input_dragons.ally_fire_dragons,
                         enemy_earth_dragons: input_dragons.enemy_earth_dragons,
+                        stack_exceptions: vec![],
                     };
 
                     // web_sys::console::log_1(&format!("{:#?}", input_game).into());
@@ -308,62 +309,55 @@ pub fn calculator() -> Html {
                     let response =
                         send_bytes(url!("/api/games/calculator"), &input_game, signal).await;
 
-                    if let Ok(res) = response {
-                        match decode_bytes::<OutputGame>(res).await {
-                            Ok(data) => {
-                                let last_action = *action_tracker.borrow();
-                                let mut action_ref_mut = action_tracker.borrow_mut();
-                                macro_rules! infer_current_player_stats {
-                                    () => {
-                                        if input_current_player.infer_stats {
-                                            *action_ref_mut = ActionTracker::Replace;
-                                            input_current_player.dispatch(
-                                                CurrentPlayerAction::Stats(
-                                                    ChangeStatsAction::Replace(
-                                                        &data.current_player.stats as *const _,
-                                                    ),
-                                                ),
-                                            );
-                                        }
-                                    };
-                                }
-                                macro_rules! infer_enemy_player_stats {
-                                    ($index:expr) => {
-                                        if input_enemy_players.as_slice()[$index].infer_stats {
-                                            *action_ref_mut = ActionTracker::Replace;
-                                            input_enemy_players.dispatch(EnemiesAction::Edit(
-                                                $index,
-                                                InputEnemyAction::Stats(
-                                                    ChangeBasicStatsAction::Replace(
-                                                        &data.enemies[$index].1.current_stats
-                                                            as *const _,
-                                                    ),
-                                                ),
-                                            ));
-                                        }
-                                    };
-                                }
-                                match last_action {
-                                    ActionTracker::Init => {
-                                        infer_current_player_stats!();
-                                        for i in 0..data.enemies.len() {
-                                            infer_enemy_player_stats!(i);
-                                        }
+                    if let Some(res) = response {
+                        if let Some(data) = decode_bytes::<OutputGame>(res).await {
+                            let last_action = *action_tracker.borrow();
+                            let mut action_ref_mut = action_tracker.borrow_mut();
+                            macro_rules! infer_current_player_stats {
+                                () => {
+                                    if input_current_player.infer_stats {
+                                        *action_ref_mut = ActionTracker::Replace;
+                                        input_current_player.dispatch(CurrentPlayerAction::Stats(
+                                            ChangeStatsAction::Replace(
+                                                &data.current_player.stats as *const _,
+                                            ),
+                                        ));
                                     }
-                                    ActionTracker::CurrentPlayer => {
-                                        infer_current_player_stats!();
-                                    }
-                                    ActionTracker::EnemyPlayer(index) => {
-                                        infer_enemy_player_stats!(index);
-                                    }
-                                    _ => {}
                                 };
-                                // web_sys::console::log_1(&format!("{:#?}", data).into());
-                                output_game.set(Some(data));
                             }
-                            Err(e) => {
-                                web_sys::console::log_1(&format!("{:#?}", e).into());
+                            macro_rules! infer_enemy_player_stats {
+                                ($index:expr) => {
+                                    if input_enemy_players.as_slice()[$index].infer_stats {
+                                        *action_ref_mut = ActionTracker::Replace;
+                                        input_enemy_players.dispatch(EnemiesAction::Edit(
+                                            $index,
+                                            InputEnemyAction::Stats(
+                                                ChangeBasicStatsAction::Replace(
+                                                    &data.enemies[$index].1.current_stats
+                                                        as *const _,
+                                                ),
+                                            ),
+                                        ));
+                                    }
+                                };
                             }
+                            match last_action {
+                                ActionTracker::Init => {
+                                    infer_current_player_stats!();
+                                    for i in 0..data.enemies.len() {
+                                        infer_enemy_player_stats!(i);
+                                    }
+                                }
+                                ActionTracker::CurrentPlayer => {
+                                    infer_current_player_stats!();
+                                }
+                                ActionTracker::EnemyPlayer(index) => {
+                                    infer_enemy_player_stats!(index);
+                                }
+                                _ => {}
+                            };
+                            // web_sys::console::log_1(&format!("{:#?}", data).into());
+                            output_game.set(Some(data));
                         }
                     }
                 });

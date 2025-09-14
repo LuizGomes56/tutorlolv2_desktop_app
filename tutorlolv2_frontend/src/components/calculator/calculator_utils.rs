@@ -2,7 +2,7 @@ use crate::models::{
     base::{AbilityLevels, BasicStats, Stats},
     calculator::{InputCurrentPlayer, InputDragons, InputEnemyPlayer},
 };
-use generated_code::{AbilityLike, ChampionId, ItemId, RuneId};
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use paste::paste;
 use std::{rc::Rc, u32};
 use yew::Reducible;

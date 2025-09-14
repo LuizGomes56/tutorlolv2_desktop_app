@@ -19,7 +19,7 @@ pub fn realtime() -> Html {
     }
 
     spawn_local(async move {
-        let result = invoke::invoke_get_live_game().await;
+        let result = invoke::invoke_get_live_game();
         console::log_1(&format!("Result invoke: {:#?}", result).into());
     });
 

@@ -2,7 +2,7 @@ use crate::{
     components::{Image, ImageType},
     url,
 };
-use generated_code::{
+use tutorlolv2_imports::{
     BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CHAMPION_FORMULAS, CRITICAL_STRIKE_OFFSET, ChampionId,
     ITEM_FORMULAS, ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
 };

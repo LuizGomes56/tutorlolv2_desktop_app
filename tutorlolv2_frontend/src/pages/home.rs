@@ -1,5 +1,5 @@
 use crate::components::image::{Image, ImageType};
-use generated_code::ItemId;
+use tutorlolv2_imports::ItemId;
 use yew::{Html, classes, function_component, html};
 
 #[function_component(Home)]
