@@ -4,7 +4,7 @@ use crate::{
     url,
     utils::ImportedEnum,
 };
-use generated_code::ChampionId;
+use tutorlolv2_imports::ChampionId;
 use yew::{
     Callback, Html, Properties, classes, function_component, html, use_callback, use_memo,
     use_node_ref, use_state,

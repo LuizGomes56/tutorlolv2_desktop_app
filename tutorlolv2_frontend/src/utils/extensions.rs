@@ -1,5 +1,5 @@
 use core::convert::TryFrom;
-use generated_code::{
+use tutorlolv2_imports::{
     CHAMPION_FORMULAS, CHAMPION_ID_TO_NAME, ChampionId, ITEM_FORMULAS, ITEM_ID_TO_NAME, ItemId,
     RUNE_FORMULAS, RUNE_ID_TO_NAME, RuneId,
 };

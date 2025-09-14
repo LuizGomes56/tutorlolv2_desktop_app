@@ -3,7 +3,6 @@ use crate::{
     pages::*, utils::init_cache,
 };
 use std::sync::atomic::AtomicBool;
-use web_sys::{js_sys::Function, window};
 use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
@@ -83,7 +82,9 @@ fn switch(routes: Route) -> Html {
                 <div class={classes!(
                     "flex", "flex-1", "bg-[#121214]",
                     "h-screen", "overflow-y-auto",
-                )}>{component}</div>
+                )}>
+                    {component}
+                </div>
             </div>
         }
     };
@@ -117,16 +118,4 @@ fn main() {
     yew::Renderer::<App>::new().render();
     init_cache();
     let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
-
-    let window = window().unwrap();
-    let document = window.document().unwrap();
-    let body = document.body().unwrap();
-
-    let _ = body.add_event_listener_with_callback(
-        "keydown", 
-        &Function::new_with_args(
-        "e",
-        r#"if(e.key==="Shift"){const a=document.querySelectorAll("[data-offset]:hover");if(a.length===0)return;const b=a[a.length-1];if(b.querySelector(".hover-docs"))return;const c=b.getAttribute("data-offset").split(",");const s=parseInt(c[0]);const f=parseInt(c[1]);const t=document.createElement("div");const l=b.getAttribute("data-classes")||"";t.className="flex flex-col absolute max-w-md max-h-96 overflow-auto p-2 leading-6 text-base z-50 hover-docs border _border-800 _bg-900"+(l?" "+l:"");const d=document.createElement("code");d.className="text-[#D4D4D4] font-normal text-left text-wrap";d.innerHTML=window.decodeCacheSlice(s,f);t.appendChild(d);b.appendChild(t);const r=()=>{t.remove();b.removeEventListener("mouseleave",r)};b.addEventListener("mouseleave",r,{once:true})}"#
-        ),
-    );
 }

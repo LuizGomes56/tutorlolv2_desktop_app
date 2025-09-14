@@ -1,5 +1,5 @@
 use crate::components::tables::cells::{ImageCell, Instances};
-use generated_code::{ChampionId, ItemId, RuneId};
+use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 use yew::{Html, Properties, function_component, html, use_memo};
 
 #[derive(Properties, PartialEq)]

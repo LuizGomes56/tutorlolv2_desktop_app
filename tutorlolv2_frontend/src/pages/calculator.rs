@@ -14,7 +14,7 @@ use crate::{
     },
     url,
 };
-use generated_code::{ItemId, RuneId};
+use tutorlolv2_imports::{ItemId, RuneId};
 use web_sys::AbortController;
 use yew::{
     AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,

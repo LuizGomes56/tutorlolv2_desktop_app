@@ -1,3 +1,3 @@
 *.env
-generated_code/src/code.rs
+tutorlolv2_imports/src/code.rs
 target

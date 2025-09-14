@@ -1,7 +1,7 @@
-use generated_code::{
+use tutorlolv2_imports::{
     CHAMPION_ID_TO_NAME, CHAMPION_POSITIONS, ITEM_ID_TO_NAME, RECOMMENDED_ITEMS, RUNE_ID_TO_NAME,
 };
-use generated_code::{ChampionId, ItemId, RuneId};
+use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 use web_sys::js_sys::Math;
 use yew::AttrValue;
 

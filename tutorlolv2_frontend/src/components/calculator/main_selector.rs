@@ -1,6 +1,6 @@
 // use super::*;
 // use crate::color;
-// use generated_code::{ChampionId, ItemId, RuneId};
+// use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 // use yew::{
 //     AttrValue, Callback, Html, Properties, classes, function_component, html, use_callback,
 //     use_memo, use_state,

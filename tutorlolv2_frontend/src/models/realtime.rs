@@ -1,6 +1,6 @@
 use super::base::{AdaptativeType, Attacks, BasicStats, DamageLike, Stats};
 use bincode::Decode;
-use generated_code::{AbilityLike, ChampionId, ItemId, Position, RuneId};
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, Position, RuneId};
 
 #[derive(Debug, Decode)]
 pub struct GameInformation {

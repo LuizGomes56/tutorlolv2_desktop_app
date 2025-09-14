@@ -3,7 +3,7 @@ use crate::{
     svg, url,
     utils::RandomInput,
 };
-use generated_code::ChampionId;
+use tutorlolv2_imports::ChampionId;
 use std::str::FromStr;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
