@@ -77,7 +77,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                 html! {
                                     <th>
                                         {base_content(
-                                            ImageType::Abilities(
+                                            ImageType::Ability(
                                                 *champion_id, *ability_like
                                             ),
                                             Some(coord),
@@ -98,24 +98,24 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             }
         }
         Instances::Items(item_id) => base_content(
-            ImageType::Items(*item_id),
+            ImageType::Item(*item_id),
             ITEM_FORMULAS
                 .get(*item_id as usize)
-                .and_then(|coord| Some(coord)),
+                .and_then(|offset| Some(offset)),
             None,
         ),
         Instances::Runes(rune_id) => base_content(
-            ImageType::Runes(*rune_id),
+            ImageType::Rune(*rune_id),
             RUNE_FORMULAS
                 .get(*rune_id as usize)
-                .and_then(|coord| Some(coord)),
+                .and_then(|offset| Some(offset)),
             None,
         ),
         Instances::Champions(champion_id) => base_content(
-            ImageType::Champions(*champion_id),
+            ImageType::Champion(*champion_id),
             CHAMPION_FORMULAS
                 .get(*champion_id as usize)
-                .and_then(|coord| Some(coord)),
+                .and_then(|offset| Some(offset)),
             None,
         ),
     }

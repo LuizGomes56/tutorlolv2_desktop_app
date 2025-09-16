@@ -115,7 +115,7 @@ impl ImportedEnum for ChampionId {
     const ID_TO_NAME: &'static [&'static str] = &CHAMPION_ID_TO_NAME;
     const OFFSETS: &'static [(u32, u32)] = &CHAMPION_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
-        ImageType::Champions(ChampionId::from_usize_unchecked(index))
+        ImageType::Champion(Self::from_usize_unchecked(index))
     }
 }
 
@@ -123,7 +123,7 @@ impl ImportedEnum for ItemId {
     const ID_TO_NAME: &'static [&'static str] = &ITEM_ID_TO_NAME;
     const OFFSETS: &'static [(u32, u32)] = &ITEM_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
-        ImageType::Items(ItemId::from_usize_unchecked(index))
+        ImageType::Item(Self::from_usize_unchecked(index))
     }
 }
 
@@ -131,6 +131,6 @@ impl ImportedEnum for RuneId {
     const ID_TO_NAME: &'static [&'static str] = &RUNE_ID_TO_NAME;
     const OFFSETS: &'static [(u32, u32)] = &RUNE_FORMULAS;
     fn into_image_type_unchecked(index: usize) -> ImageType {
-        ImageType::Runes(RuneId::from_usize_unchecked(index))
+        ImageType::Rune(Self::from_usize_unchecked(index))
     }
 }

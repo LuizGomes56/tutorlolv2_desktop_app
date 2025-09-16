@@ -509,7 +509,9 @@ pub fn calculator() -> Html {
                                                                 total_damage += instance_damage.minimum_damage;
                                                             }
                                                         },
-                                                        _ => {},
+                                                        StackValue::Ignite => {
+                                                            total_damage += 50i32 + 20i32 * input_current_player.level as i32;
+                                                        }
                                                     }
                                                 }
                                                 html! {

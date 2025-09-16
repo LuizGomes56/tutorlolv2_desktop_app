@@ -24,20 +24,12 @@ function loadEnv(path = ".env") {
 
 loadEnv();
 
-const password = process.env["SYSTEM_PASSWORD"];
-
-if (!password) {
-    console.error("SYSTEM_PASSWORD is not set on .env");
-    process.exit(1);
-}
-
 const res = await fetch("http://localhost:8082/api/static/comptime", {
-    method: "POST",
+    method: "GET",
     headers: {
         "Content-Type": "application/json",
         "Accept": "text/plain",
     },
-    body: JSON.stringify({ password })
 });
 
 if (!res.ok) {

@@ -128,12 +128,12 @@ fn remove_damage_stack_selector(props: &RemoveDamageStackSelectorProps) -> Html 
                     .enumerate()
                     .map(|(index, value)| {
                         let image_url = match value {
-                            StackValue::Ability(name) => ImageType::Abilities(
+                            StackValue::Ability(name) => ImageType::Ability(
                                 props.champion_id,
                                 *name,
                             ),
-                            StackValue::Item(val) => ImageType::Items(*val),
-                            StackValue::Rune(val) => ImageType::Runes(*val),
+                            StackValue::Item(val) => ImageType::Item(*val),
+                            StackValue::Rune(val) => ImageType::Rune(*val),
                             StackValue::BasicAttack => {
                                 ImageType::Other(AttrValue::Static(url!("/img/other/basic_attack.png")))
                             }
@@ -224,7 +224,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .iter()
                 .map(|item_id| {
                     base_content(
-                        ImageType::Items(*item_id),
+                        ImageType::Item(*item_id),
                         ITEM_FORMULAS.get(*item_id as usize),
                         {
                             let push_callback = push_callback.clone();
@@ -245,7 +245,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .iter()
                 .map(|rune_id| {
                     base_content(
-                        ImageType::Runes(*rune_id),
+                        ImageType::Rune(*rune_id),
                         RUNE_FORMULAS.get(*rune_id as usize),
                         {
                             let push_callback = push_callback.clone();
@@ -271,7 +271,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                             .map(|(ability_name, offset)| {
                                 let first_char = ability_name.as_char();
                                 base_content(
-                                    ImageType::Abilities(props.champion_id, *ability_name),
+                                    ImageType::Ability(props.champion_id, *ability_name),
                                     Some(offset),
                                     {
                                         let push_callback = push_callback.clone();

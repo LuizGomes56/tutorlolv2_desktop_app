@@ -39,7 +39,7 @@ pub fn process2() -> Html {
                                     html! {
                                         <Image
                                             class={classes!("w-8", "h-8")}
-                                            source={ImageType::Champions(*x)}
+                                            source={ImageType::Champion(*x)}
                                         />
                                     }
                                 })

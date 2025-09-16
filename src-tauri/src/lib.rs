@@ -56,6 +56,7 @@ pub fn run() {
             let _ = window.set_ignore_cursor_events(true);
 
             window.set_ignore_cursor_events(true).ok();
+            #[cfg(debug_assertions)]
             window.open_devtools();
 
             if cfg!(debug_assertions) {

@@ -3,8 +3,8 @@ use crate::{
     models::base::AbilityLevels,
     utils::RandomInput,
 };
-use tutorlolv2_imports::{AbilityLike, AbilityName, ChampionId};
 use paste::paste;
+use tutorlolv2_imports::{AbilityLike, AbilityName, ChampionId};
 use yew::{Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html};
 
 #[derive(PartialEq, Properties)]
@@ -34,7 +34,7 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
                 <span class={classes!("text-sm", "img-letter")}>{props.text.as_char()}</span>
                 <Image
                     class={classes!("w-8", "h-8")}
-                    source={ImageType::Abilities(
+                    source={ImageType::Ability(
                         props.current_player_champion_id,
                         props.text,
                     )}

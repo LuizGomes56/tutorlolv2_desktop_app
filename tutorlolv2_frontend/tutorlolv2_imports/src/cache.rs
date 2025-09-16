@@ -143,9 +143,3 @@ pub enum AbilityName {
     _7Min,
     _8Min,
 }
-
-pub struct ItemDescription {
-    pub name: &'static str,
-    pub prettified_stats: &'static [StatName],
-    pub gold_cost: u16,
-}
