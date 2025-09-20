@@ -20,14 +20,14 @@ pub enum AdaptativeType {
 impl AdaptativeType {
     pub const fn get_color(&self) -> &'static str {
         match self {
-            Self::Magic => DamageType::get_color(&DamageType::Magic),
-            Self::Physical => DamageType::get_color(&DamageType::Physical),
+            Self::Magic => DamageType::get_color(DamageType::Magic),
+            Self::Physical => DamageType::get_color(DamageType::Physical),
         }
     }
 }
 
 impl DamageType {
-    pub const fn get_color(&self) -> &'static str {
+    pub const fn get_color(self) -> &'static str {
         match self {
             Self::Physical => "text-orange-500",
             Self::Magic => "text-sky-500",

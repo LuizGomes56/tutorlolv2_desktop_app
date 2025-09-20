@@ -10,20 +10,20 @@ mod keyboard;
 
 #[tauri::command]
 async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody, String> {
-    let response = state
-        .client
-        .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
-        .send()
-        .await
-        .map_err(|e| format!("Error when fetching local: {:#?}", e))?;
+    // let response = state
+    //     .client
+    //     .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
+    //     .send()
+    //     .await
+    //     .map_err(|e| format!("Error when fetching local: {:#?}", e))?;
 
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Error transforming response to bytes: {:#?}", e))?
-        .to_vec();
+    // let bytes = response
+    //     .bytes()
+    //     .await
+    //     .map_err(|e| format!("Error transforming response to bytes: {:#?}", e))?
+    //     .to_vec();
 
-    // let bytes = std::fs::read("example.json").unwrap();
+    let bytes = std::fs::read("example.json").unwrap();
     Ok(InvokeResponseBody::Raw(bytes))
 }
 
@@ -67,11 +67,13 @@ pub fn run() {
                 )?;
             }
 
-            let client = Client::builder()
-                .danger_accept_invalid_certs(true)
-                .timeout(Duration::from_secs(1 << 4))
-                .build()
-                .unwrap();
+            let client = unsafe {
+                Client::builder()
+                    .danger_accept_invalid_certs(true)
+                    .timeout(Duration::from_secs(1 << 4))
+                    .build()
+                    .unwrap_unchecked()
+            };
 
             app.manage(AppState { client });
 

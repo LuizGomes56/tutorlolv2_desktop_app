@@ -24,7 +24,7 @@ static mut REALTIME_PTR: *mut Realtime = core::ptr::null_mut();
 
 #[wasm_bindgen]
 pub fn alloc_bytes(len: usize) -> u32 {
-    let mut buf: Box<[MaybeUninit<u8>]> = Box::new_uninit_slice(len);
+    let mut buf = Box::<[MaybeUninit<u8>]>::new_uninit_slice(len);
     let ptr = buf.as_mut_ptr();
     core::mem::forget(buf);
     ptr as u32
@@ -32,22 +32,24 @@ pub fn alloc_bytes(len: usize) -> u32 {
 
 #[wasm_bindgen]
 pub fn parse_live_game(ptr: u32, len: usize) {
-    let buf = unsafe { std::slice::from_raw_parts(ptr as *mut u8, len) };
-    match bincode::decode_from_slice::<Realtime, _>(buf, bincode::config::standard()) {
-        Ok((realtime, _)) => unsafe {
-            if !REALTIME_PTR.is_null() {
-                drop(Box::from_raw(REALTIME_PTR));
-                REALTIME_PTR = core::ptr::null_mut();
+    unsafe {
+        let buf = std::slice::from_raw_parts(ptr as *mut u8, len);
+        match bincode::decode_from_slice::<Realtime, _>(buf, bincode::config::standard()) {
+            Ok((realtime, _)) => {
+                if !REALTIME_PTR.is_null() {
+                    drop(Box::from_raw(REALTIME_PTR));
+                    REALTIME_PTR = core::ptr::null_mut();
+                }
+                let game_time = realtime.game_information.game_time;
+                if GAME_TIME.get() > game_time || RT_ENEMY_IDS.take().is_none() {
+                    GAME_TIME.set(game_time);
+                    RT_ENEMY_IDS.replace(Some(realtime.enemies.iter().map(|(x, _)| *x).collect()));
+                }
+                REALTIME_PTR = Box::into_raw(Box::new(realtime));
             }
-            let game_time = realtime.game_information.game_time;
-            if GAME_TIME.get() > game_time || RT_ENEMY_IDS.take().is_none() {
-                GAME_TIME.set(game_time);
-                RT_ENEMY_IDS.replace(Some(realtime.enemies.iter().map(|(x, _)| *x).collect()));
-            }
-            REALTIME_PTR = Box::into_raw(Box::new(realtime));
-        },
-        Err(e) => web_sys::console::log_1(&format!("{:#?}", e).into()),
-    };
+            Err(e) => web_sys::console::log_1(&format!("Decode error: {:#?}", e).into()),
+        };
+    }
 }
 
 pub fn take_live_game() -> Option<Realtime> {
@@ -55,9 +57,9 @@ pub fn take_live_game() -> Option<Realtime> {
         if REALTIME_PTR.is_null() {
             None
         } else {
-            let b = Box::from_raw(REALTIME_PTR);
+            let data = Box::from_raw(REALTIME_PTR);
             REALTIME_PTR = core::ptr::null_mut();
-            Some(*b)
+            Some(*data)
         }
     }
 }
