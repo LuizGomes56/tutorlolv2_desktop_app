@@ -43,10 +43,10 @@ pub fn image(props: &ImageProps) -> Html {
     let url = match &props.source {
         ImageType::Ability(champion_id, ability) => url!(
             "/img/abilities/{}.avif",
-            champion_id.as_str().concat_char(ability.as_char())
+            format!("{champion_id:?}").concat_char(ability.data().0)
         )
         .into(),
-        ImageType::Champion(v) => url!("/img/champions/{}.avif", v.as_str()).into(),
+        ImageType::Champion(v) => url!("/img/champions/{:?}.avif", v).into(),
         ImageType::Item(v) => url!("/img/items/{}.avif", v.to_riot_id()).into(),
         ImageType::Rune(v) => url!("/img/runes/{}.avif", v.to_riot_id()).into(),
         ImageType::Other(v) => v.clone(),

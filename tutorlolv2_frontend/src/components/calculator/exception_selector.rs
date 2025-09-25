@@ -3,8 +3,8 @@ use crate::{
     svg, url,
     utils::RandomInput,
 };
-use tutorlolv2_imports::ChampionId;
 use std::str::FromStr;
+use tutorlolv2_imports::ChampionId;
 use yew::{
     AttrValue, Callback, Html, InputEvent, Properties, TargetCast, classes, function_component,
     html, html::onchange::Event,
@@ -165,14 +165,12 @@ pub fn boolean_field(props: &BooleanFieldProps) -> Html {
 #[derive(PartialEq, Properties)]
 pub struct ExceptionSelectorProps {
     pub champion_id: ChampionId,
-    pub attack_form: bool,
     pub infer_stats: bool,
     pub stack_callback: Callback<u32>,
-    pub attack_form_callback: Callback<bool>,
     pub infer_stats_callback: Callback<bool>,
 }
 
-const SIZE_SVG: &'static str = "32";
+const SIZE_SVG: &str = "32";
 
 #[function_component(ExceptionSelector)]
 pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
@@ -187,21 +185,8 @@ pub fn exception_selector(props: &ExceptionSelectorProps) -> Html {
                             <NumericField<u32>
                                 title={"Number of this champion's stacks"}
                                 source={Exception::Stack}
-                                img_url={url!(
-                                    "/img/other/{}_stacks.avif",
-                                    props.champion_id.as_str()
-                                )}
+                                img_url={url!("/img/other/{:?}_stacks.avif", props.champion_id)}
                                 callback={props.stack_callback.clone()}
-                            />
-                        }
-                    }
-                    ChampionId::Gnar | ChampionId::Nidalee => {
-                        html! {
-                            <BooleanField
-                                enabled={props.attack_form}
-                                callback={props.attack_form_callback.clone()}
-                                image_html={svg!("../../../public/svgs/shift", SIZE_SVG)}
-                                title={"Toggle if this champion is melee or ranged"}
                             />
                         }
                     }

@@ -1,7 +1,7 @@
 use crate::{
-    components::{Image, ImageType},
+    components::Image,
     svg,
-    utils::{ImportedEnum, RandomInput, UnsafeCast},
+    utils::{ImportedEnum, RandomInput},
 };
 use yew::{
     Callback, Html, InputEvent, NodeRef, Properties, TargetCast, classes, function_component, html,
@@ -15,11 +15,7 @@ pub struct StaticEventProps<T: PartialEq + 'static> {
 }
 
 #[function_component(StaticEvent)]
-pub fn static_event<T>(props: &StaticEventProps<T>) -> Html
-where
-    T: PartialEq + 'static + Copy,
-    ImageType: From<T>,
-{
+pub fn static_event<T: ImportedEnum>(props: &StaticEventProps<T>) -> Html {
     html! {
         <div class={classes!(
             "grid", "gap-4", "grid-cols-8",
@@ -46,7 +42,7 @@ where
                             >
                                 <Image
                                     class={classes!("h-10", "w-10")}
-                                    source={ImageType::from(*id)}
+                                    source={id.into_image_type()}
                                 />
                             </button>
                         }
@@ -70,12 +66,8 @@ struct StaticSelectorItem {
 }
 
 #[function_component(StaticSelector)]
-pub fn static_selector<T>(props: &StaticSelectorProps<T>) -> Html
-where
-    T: PartialEq + UnsafeCast + ImportedEnum + 'static,
-    T::Repr: TryFrom<usize>,
-{
-    let search_query = use_state(|| String::new());
+pub fn static_selector<T: ImportedEnum>(props: &StaticSelectorProps<T>) -> Html {
+    let search_query = use_state(String::new);
     let id_to_name = T::ID_TO_NAME;
     let oninput = {
         let search_query = search_query.clone();
@@ -89,7 +81,7 @@ where
 
     let all_values = use_memo((), |_| {
         id_to_name
-            .into_iter()
+            .iter()
             .enumerate()
             .map(|(index, &name)| {
                 let html = html! {

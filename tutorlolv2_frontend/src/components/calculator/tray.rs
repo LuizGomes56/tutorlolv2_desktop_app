@@ -1,7 +1,7 @@
 use crate::{
-    components::{Image, ImageType, calculator::StaticSelector},
+    components::{Image, calculator::StaticSelector},
     hooks::mouseout::use_mouseout,
-    utils::{ImportedEnum, UnsafeCast},
+    utils::ImportedEnum,
 };
 use yew::{Callback, Html, Properties, classes, function_component, html, use_node_ref, use_state};
 
@@ -12,11 +12,7 @@ pub struct OpenTrayProps<T: PartialEq> {
 }
 
 #[function_component(OpenTray)]
-pub fn open_tray<T>(props: &OpenTrayProps<T>) -> Html
-where
-    T: PartialEq + UnsafeCast + ImportedEnum + 'static,
-    T::Repr: TryFrom<usize>,
-{
+pub fn open_tray<T: ImportedEnum>(props: &OpenTrayProps<T>) -> Html {
     let is_open = use_state(|| false);
     let selector_ref = use_node_ref();
     let button_ref = {
@@ -61,12 +57,7 @@ pub struct TrayProps<T: PartialEq> {
 }
 
 #[function_component(Tray)]
-pub fn tray<T>(props: &TrayProps<T>) -> Html
-where
-    T: UnsafeCast + PartialEq + ImportedEnum + Copy + 'static,
-    T::Repr: TryInto<usize>,
-    ImageType: From<T>,
-{
+pub fn tray<T: ImportedEnum>(props: &TrayProps<T>) -> Html {
     html! {
         <div class={classes!("grid", "grid-cols-5", "gap-2", "px-4")}>
             {for props.array.iter().enumerate().map(|(index, value)| {
@@ -78,13 +69,13 @@ where
                         )}
                         data-offset={
                             T::OFFSETS
-                                .get(T::into_usize_unchecked(*value))
+                                .get(T::into_usize(*value))
                                 .map(|(s, e)| format!("{s},{e}"))
                         }
                         onclick={props.remove_callback.reform(move |_| index)}
                     >
                         <Image
-                            source={ImageType::from(*value)}
+                            source={value.into_image_type()}
                             class={classes!("w-8", "h-8")}
                         />
                     </button>

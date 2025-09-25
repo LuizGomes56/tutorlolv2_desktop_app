@@ -3,8 +3,8 @@ use super::base::{
 };
 use crate::{components::tables::cells::DisplayDamage, utils::RandomInput};
 use bincode::{Decode, Encode};
-use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use std::rc::Rc;
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{Html, html};
 
 #[derive(Debug, Decode)]

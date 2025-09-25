@@ -16,8 +16,8 @@ unsafe extern "C" {
 }
 
 thread_local! {
-    pub static RT_ENEMY_IDS: RefCell<Option<Vec<ChampionId>>> = RefCell::new(None);
-    static GAME_TIME: Cell<i32> = Cell::new(0);
+    pub static RT_ENEMY_IDS: RefCell<Option<Vec<ChampionId>>> = const { RefCell::new(None) };
+    static GAME_TIME: Cell<i32> = const { Cell::new(0) };
 }
 
 static mut REALTIME_PTR: *mut Realtime = core::ptr::null_mut();

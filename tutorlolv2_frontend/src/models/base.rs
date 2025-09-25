@@ -39,7 +39,7 @@ impl DamageType {
     }
 }
 
-#[derive(Debug, Decode)]
+#[derive(Copy, Clone, Debug, Decode)]
 pub struct InstanceDamage {
     pub minimum_damage: i32,
     pub maximum_damage: i32,
@@ -77,7 +77,7 @@ pub struct BasicStats {
     pub mana: i32,
 }
 
-#[derive(Debug, Decode)]
+#[derive(Copy, Clone, Debug, Decode)]
 pub struct DamageValue {
     pub minimum_damage: i32,
     pub maximum_damage: i32,

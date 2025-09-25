@@ -54,8 +54,7 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                     )}
                     data-offset={
                         ChampionId::OFFSETS
-                            .get(*champion_id as usize)
-                            .and_then(|(s, e)| Some(format!("{s},{e}")))
+                            .get(*champion_id as usize).map(|(s, e)| format!("{s},{e}"))
                     }
                     class={classes!("relative", "cursor-pointer")}
                     ref={button_ref}
@@ -63,9 +62,9 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                 >
                     <Image
                         class={classes!("w-full", "img-clipped", "h-16")}
-                        source={ImageType::Other(url!("/img/centered/{}_0.avif", champion_id.as_str()).into())}
+                        source={ImageType::Other(url!("/img/centered/{:?}_0.avif", champion_id).into())}
                     />
-                    <span class={classes!("img-letter", "left-2", "bottom-1", "text-sm")}>
+                    <span class={classes!("img-letter", "h-auto", "w-auto", "left-2", "bottom-1", "text-sm")}>
                         {*ChampionId::ID_TO_NAME.get(*champion_id as usize).unwrap_or(&"Unknown")}
                     </span>
                 </div>

@@ -106,7 +106,7 @@ pub fn history() -> Html {
                             <BaseTable
                                 damaging_items={data.current_player.damaging_items.clone()}
                                 damaging_runes={data.current_player.damaging_runes.clone()}
-                                champion_id={data.current_player.champion_id.clone()}
+                                champion_id={data.current_player.champion_id}
                                 damages={
                                     data.enemies
                                         .iter()

@@ -1,13 +1,12 @@
 use crate::{
     hooks::mouseout::use_mouseout,
     svg,
-    utils::{RandomInput, StringifyEnum, UnsafeCast},
+    utils::{IndexCast, RandomInput, ToStaticStr},
 };
 use yew::{Callback, Html, Properties, classes, function_component, html, use_node_ref, use_state};
 
 #[derive(Properties, PartialEq)]
-pub struct DropdownProps<const N: usize, T: Copy + 'static + StringifyEnum + UnsafeCast + PartialEq>
-{
+pub struct DropdownProps<const N: usize, T: Copy + 'static + ToStaticStr + IndexCast + PartialEq> {
     pub current_index: T,
     pub callback: Callback<T>,
     pub iterator: [&'static str; N],
@@ -17,8 +16,7 @@ pub struct DropdownProps<const N: usize, T: Copy + 'static + StringifyEnum + Uns
 #[function_component(Dropdown)]
 pub fn dropdown<const N: usize, T>(props: &DropdownProps<N, T>) -> Html
 where
-    T: PartialEq + UnsafeCast + StringifyEnum + Copy + 'static,
-    T::Repr: TryInto<usize> + TryFrom<usize>,
+    T: PartialEq + IndexCast + ToStaticStr + Copy + 'static,
 {
     let is_open = use_state(|| false);
 
@@ -56,7 +54,7 @@ where
                 <div class={classes!(
                     "flex", "items-center", "gap-4", "_text-200"
                 )}>
-                    <span>{props.current_index.as_str()}</span>
+                    <span>{props.current_index.as_static_str()}</span>
                 </div>
                 <span class={classes!("_text-400")}>
                     {svg!("../../public/svgs/chevron_down", "20")}
@@ -88,7 +86,7 @@ where
                                 )}>
                                     <input
                                         id={random_id}
-                                        checked={index == T::into_usize_unchecked(props.current_index)}
+                                        checked={index == T::into_usize(props.current_index)}
                                         onchange={{
                                             let callback = props.callback.clone();
                                             Callback::from(move |_| {

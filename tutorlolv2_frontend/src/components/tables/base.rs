@@ -17,7 +17,7 @@ pub fn base_table(props: &BaseTableProps) -> Html {
     let thead = {
         let items = props.damaging_items.clone();
         let runes = props.damaging_runes.clone();
-        let champion_id = props.champion_id.clone();
+        let champion_id = props.champion_id;
         use_memo((items, runes, champion_id), move |_| {
             html! {
                 <thead>

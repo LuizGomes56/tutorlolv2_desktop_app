@@ -1,14 +1,11 @@
 #![allow(static_mut_refs)]
+use crate::utils::ToStaticStr;
 use brotli::BrotliDecompress;
-use tutorlolv2_imports::{MEGA_BLOCK, UNCOMPRESSED_MEGA_BLOCK_SIZE};
 use std::io::Write;
+use tutorlolv2_imports::{MEGA_BLOCK, UNCOMPRESSED_MEGA_BLOCK_SIZE};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 static mut CACHE: [u8; UNCOMPRESSED_MEGA_BLOCK_SIZE] = [0; UNCOMPRESSED_MEGA_BLOCK_SIZE];
-
-pub trait ComptimeCache {
-    fn as_str(&self) -> &str;
-}
 
 pub struct FixedBuffer<const N: usize> {
     buffer: &'static mut [u8; N],
@@ -32,9 +29,9 @@ impl<const N: usize> Write for FixedBuffer<N> {
     }
 }
 
-impl ComptimeCache for (u32, u32) {
+impl ToStaticStr for (u32, u32) {
     #[inline]
-    fn as_str(&self) -> &'static str {
+    fn as_static_str(&self) -> &'static str {
         unsafe {
             core::str::from_utf8_unchecked(CACHE.get_unchecked(self.0 as usize..self.1 as usize))
         }
@@ -55,13 +52,14 @@ pub fn cache_len() -> usize {
 pub fn init_cache() {
     web_sys::console::time();
     unsafe {
-        let _ = BrotliDecompress(
+        BrotliDecompress(
             &mut (&MEGA_BLOCK as &[u8]),
             &mut (&mut FixedBuffer {
                 buffer: &mut CACHE,
                 position: 0,
             }),
-        );
+        )
+        .unwrap_unchecked();
     }
     web_sys::console::time_end();
 }

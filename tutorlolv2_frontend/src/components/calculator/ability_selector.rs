@@ -31,7 +31,7 @@ pub fn ability_selector_container(props: &AbilitySelectorContainerProps) -> Html
                 oninput={props.oninput.clone()}
             />
             <div class={classes!("flex", "justify-center", "items-center", "relative")}>
-                <span class={classes!("text-sm", "img-letter")}>{props.text.as_char()}</span>
+                <span class={classes!("text-sm", "img-letter")}>{props.text.data().0}</span>
                 <Image
                     class={classes!("w-8", "h-8")}
                     source={ImageType::Ability(

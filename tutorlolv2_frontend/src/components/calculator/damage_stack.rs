@@ -1,5 +1,5 @@
 use crate::{
-    components::{Image, ImageType, calculator::StackValue},
+    components::{Image, ImageType, calculator::StackValue, tables::cells::image::label_html},
     svg, url,
 };
 use tutorlolv2_imports::{
@@ -260,35 +260,27 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
     );
 
     let abilities_memo = use_memo(
-        (props.champion_id.clone(), push_callback.clone()),
+        (props.champion_id, push_callback.clone()),
         move |(champion_id, push_callback)| {
             CHAMPION_ABILITIES
                 .get(*champion_id as usize)
-                .and_then(|value| {
-                    Some(
-                        value
-                            .into_iter()
-                            .map(|(ability_name, offset)| {
-                                let first_char = ability_name.as_char();
-                                base_content(
-                                    ImageType::Ability(props.champion_id, *ability_name),
-                                    Some(offset),
-                                    {
-                                        let push_callback = push_callback.clone();
-                                        Callback::from(move |_| {
-                                            push_callback.emit(StackValue::Ability(*ability_name));
-                                        })
-                                    },
-                                    Some(html! {
-                                        <span class={classes!("text-sm", "img-letter")}>
-                                            {first_char}
-                                            // <sub>{ ability_name.padding_chars() }</sub>
-                                        </span>
-                                    }),
-                                )
-                            })
-                            .collect::<Html>(),
-                    )
+                .map(|value| {
+                    value
+                        .iter()
+                        .map(|(ability_name, offset)| {
+                            base_content(
+                                ImageType::Ability(props.champion_id, *ability_name),
+                                Some(offset),
+                                {
+                                    let push_callback = push_callback.clone();
+                                    Callback::from(move |_| {
+                                        push_callback.emit(StackValue::Ability(*ability_name));
+                                    })
+                                },
+                                Some(label_html(ability_name)),
+                            )
+                        })
+                        .collect::<Html>()
                 })
                 .unwrap_or_default()
         },

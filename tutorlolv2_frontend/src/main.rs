@@ -27,10 +27,10 @@ pub const REFRESH_RATE: u64 = 1_000;
 #[macro_export]
 macro_rules! global_bool {
     (set $varname:ident, $boolean:expr) => {
-        crate::$varname.store($boolean, std::sync::atomic::Ordering::SeqCst)
+        $crate::$varname.store($boolean, std::sync::atomic::Ordering::SeqCst)
     };
     (get $varname:ident) => {
-        crate::$varname.load(std::sync::atomic::Ordering::SeqCst)
+        $crate::$varname.load(std::sync::atomic::Ordering::SeqCst)
     };
 }
 
@@ -117,5 +117,5 @@ fn switch(routes: Route) -> Html {
 fn main() {
     yew::Renderer::<App>::new().render();
     init_cache();
-    let _ = global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
+    global_bool!(set IS_DEKTOP_PLATFORM, invoke::invoke_checkup());
 }

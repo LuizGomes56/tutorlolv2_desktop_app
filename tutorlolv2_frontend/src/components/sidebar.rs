@@ -2,7 +2,7 @@ use crate::{Route, svg};
 use yew::{Html, classes, function_component, html};
 use yew_router::components::Link;
 
-const ICON_SIZE: &'static str = "22";
+const ICON_SIZE: &str = "22";
 
 #[function_component(Sidebar)]
 pub fn sidebar() -> Html {
