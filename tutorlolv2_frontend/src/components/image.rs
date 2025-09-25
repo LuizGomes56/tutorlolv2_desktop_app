@@ -4,28 +4,28 @@ use yew::{AttrValue, Classes, Html, Properties, function_component, html};
 
 #[derive(PartialEq)]
 pub enum ImageType {
-    Abilities(ChampionId, AbilityLike),
-    Champions(ChampionId),
-    Items(ItemId),
-    Runes(RuneId),
+    Ability(ChampionId, AbilityLike),
+    Champion(ChampionId),
+    Item(ItemId),
+    Rune(RuneId),
     Other(AttrValue),
 }
 
 impl From<ChampionId> for ImageType {
     fn from(value: ChampionId) -> Self {
-        Self::Champions(value)
+        Self::Champion(value)
     }
 }
 
 impl From<RuneId> for ImageType {
     fn from(value: RuneId) -> Self {
-        Self::Runes(value)
+        Self::Rune(value)
     }
 }
 
 impl From<ItemId> for ImageType {
     fn from(value: ItemId) -> Self {
-        Self::Items(value)
+        Self::Item(value)
     }
 }
 
@@ -41,14 +41,14 @@ pub fn image(props: &ImageProps) -> Html {
     let class_attr = props.class.clone();
 
     let url = match &props.source {
-        ImageType::Abilities(champion_id, ability) => url!(
+        ImageType::Ability(champion_id, ability) => url!(
             "/img/abilities/{}.avif",
-            champion_id.as_str().concat_char(ability.as_char())
+            format!("{champion_id:?}").concat_char(ability.data().0)
         )
         .into(),
-        ImageType::Champions(v) => url!("/img/champions/{}.avif", v.as_str()).into(),
-        ImageType::Items(v) => url!("/img/items/{}.avif", v.to_u32()).into(),
-        ImageType::Runes(v) => url!("/img/runes/{}.avif", v.to_u32()).into(),
+        ImageType::Champion(v) => url!("/img/champions/{:?}.avif", v).into(),
+        ImageType::Item(v) => url!("/img/items/{}.avif", v.to_riot_id()).into(),
+        ImageType::Rune(v) => url!("/img/runes/{}.avif", v.to_riot_id()).into(),
         ImageType::Other(v) => v.clone(),
     };
 

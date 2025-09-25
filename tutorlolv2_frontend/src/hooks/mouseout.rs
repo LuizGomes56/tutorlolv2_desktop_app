@@ -6,7 +6,7 @@ use yew::{Callback, NodeRef, hook, use_effect_with, use_node_ref};
 pub fn use_mouseout<const N: usize>(callback: Callback<()>, exceptions: [NodeRef; N]) -> NodeRef {
     let node_ref = use_node_ref();
 
-    {
+    unsafe {
         let node_ref = node_ref.clone();
         let callback = callback.clone();
         let exceptions = exceptions.clone();
@@ -43,12 +43,12 @@ pub fn use_mouseout<const N: usize>(callback: Callback<()>, exceptions: [NodeRef
                 }
             }) as Box<dyn FnMut(Event)>);
 
-            let window = web_sys::window().unwrap();
-            let document = window.document().unwrap();
+            let window = web_sys::window().unwrap_unchecked();
+            let document = window.document().unwrap_unchecked();
 
             document
                 .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())
-                .unwrap();
+                .unwrap_unchecked();
 
             move || {
                 let _ = document.remove_event_listener_with_callback(

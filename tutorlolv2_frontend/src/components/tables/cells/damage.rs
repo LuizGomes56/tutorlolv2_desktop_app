@@ -9,7 +9,7 @@ pub struct DamageCell {
 
 impl DamageValue {
     #[inline]
-    fn into_damage_cell(&self, damage_type: DamageType) -> DamageCell {
+    fn into_damage_cell(self, damage_type: DamageType) -> DamageCell {
         DamageCell {
             damage_type,
             minimum_damage: self.minimum_damage,
@@ -18,18 +18,18 @@ impl DamageValue {
     }
 }
 
-impl Into<DamageCell> for &InstanceDamage {
+impl From<InstanceDamage> for DamageCell {
     #[inline]
-    fn into(self) -> DamageCell {
-        DamageCell {
-            damage_type: self.damage_type,
-            minimum_damage: self.minimum_damage,
-            maximum_damage: self.maximum_damage,
+    fn from(value: InstanceDamage) -> Self {
+        Self {
+            damage_type: value.damage_type,
+            minimum_damage: value.minimum_damage,
+            maximum_damage: value.maximum_damage,
         }
     }
 }
 
-pub fn damage_cell<'a, T: Into<DamageCell>>(value: T) -> Html {
+pub fn damage_cell<T: Into<DamageCell>>(value: T) -> Html {
     let value: DamageCell = value.into();
     let text = if value.maximum_damage != 0 {
         let mut s = value.minimum_damage.to_string();
@@ -57,7 +57,7 @@ impl<T> DisplayDamage for Box<[(T, InstanceDamage)]> {
     fn display_damage(&self) -> Html {
         html! {
             for self.iter().map(|(_, value)| {
-                damage_cell(value)
+                damage_cell(*value)
             })
         }
     }
@@ -67,7 +67,7 @@ impl DisplayDamage for Box<[InstanceDamage]> {
     fn display_damage(&self) -> Html {
         html! {
             for self.iter().map(|value| {
-                damage_cell(value)
+                damage_cell(*value)
             })
         }
     }

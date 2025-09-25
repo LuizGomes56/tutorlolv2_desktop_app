@@ -3,8 +3,9 @@ use crate::{
     url,
 };
 use tutorlolv2_imports::{
-    BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CHAMPION_FORMULAS, CRITICAL_STRIKE_OFFSET, ChampionId,
-    ITEM_FORMULAS, ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS, RuneId,
+    AbilityLike, BASIC_ATTACK_OFFSET, CHAMPION_ABILITIES, CHAMPION_FORMULAS,
+    CRITICAL_STRIKE_OFFSET, ChampionId, ITEM_FORMULAS, ItemId, ONHIT_EFFECT_OFFSET, RUNE_FORMULAS,
+    RuneId,
 };
 use yew::{AttrValue, Html, Properties, classes, function_component, html};
 
@@ -39,6 +40,18 @@ fn base_content(
     }
 }
 
+pub fn label_html(ability_like: &AbilityLike) -> Html {
+    let (first_char, ability_name) = ability_like.data();
+    let (display_label, title) = ability_name.data();
+
+    html! {
+        <span title={format!("{first_char} {title}")} class={classes!("text-sm", "img-letter")}>
+            {first_char}
+            <sub>{ display_label }</sub>
+        </span>
+    }
+}
+
 #[function_component(ImageCell)]
 pub fn image_cell(props: &ImageCellProps) -> Html {
     macro_rules! insert_attack {
@@ -68,54 +81,38 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
         Instances::Abilities(champion_id) => {
             html! {
                 CHAMPION_ABILITIES
-                    .get(*champion_id as usize)
-                    .and_then(|coords| {
-                        Some(coords
-                            .into_iter()
-                            .map(|(ability_like, coord)| {
-                                let first_char = ability_like.as_char();
-                                html! {
-                                    <th>
-                                        {base_content(
-                                            ImageType::Abilities(
-                                                *champion_id, *ability_like
-                                            ),
-                                            Some(coord),
-                                            Some(html! {
-                                                <span class={classes!("text-sm", "img-letter")}>
-                                                    {first_char}
-                                                    // <sub>{ ability_like..padding_chars() }</sub>
-                                                </span>
-                                            })
-                                        )}
-                                    </th>
-                                }
-                            })
-                            .collect::<Html>()
-                        )
-                    })
+                    .get(*champion_id as usize).map(|offsets| offsets
+                        .iter()
+                        .map(|(ability_like, coord)| {
+                            html! {
+                                <th>
+                                    {base_content(
+                                        ImageType::Ability(
+                                            *champion_id, *ability_like
+                                        ),
+                                        Some(coord),
+                                        Some(label_html(ability_like))
+                                    )}
+                                </th>
+                            }
+                        })
+                        .collect::<Html>())
                     .unwrap_or_default()
             }
         }
         Instances::Items(item_id) => base_content(
-            ImageType::Items(*item_id),
-            ITEM_FORMULAS
-                .get(*item_id as usize)
-                .and_then(|coord| Some(coord)),
+            ImageType::Item(*item_id),
+            ITEM_FORMULAS.get(*item_id as usize),
             None,
         ),
         Instances::Runes(rune_id) => base_content(
-            ImageType::Runes(*rune_id),
-            RUNE_FORMULAS
-                .get(*rune_id as usize)
-                .and_then(|coord| Some(coord)),
+            ImageType::Rune(*rune_id),
+            RUNE_FORMULAS.get(*rune_id as usize),
             None,
         ),
         Instances::Champions(champion_id) => base_content(
-            ImageType::Champions(*champion_id),
-            CHAMPION_FORMULAS
-                .get(*champion_id as usize)
-                .and_then(|coord| Some(coord)),
+            ImageType::Champion(*champion_id),
+            CHAMPION_FORMULAS.get(*champion_id as usize),
             None,
         ),
     }

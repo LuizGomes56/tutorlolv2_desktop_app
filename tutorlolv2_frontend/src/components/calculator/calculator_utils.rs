@@ -2,9 +2,9 @@ use crate::models::{
     base::{AbilityLevels, BasicStats, Stats},
     calculator::{InputCurrentPlayer, InputDragons, InputEnemyPlayer},
 };
-use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use paste::paste;
-use std::{rc::Rc, u32};
+use std::rc::Rc;
+use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::Reducible;
 
 macro_rules! stats_reducer {
@@ -88,7 +88,6 @@ pub enum CurrentPlayerAction {
     InferStats(bool),
     Stacks(u32),
     Stats(ChangeStatsAction),
-    AttackForm(bool),
     InsertItem(ItemId),
     RemoveItem(usize),
     ClearItems,
@@ -99,16 +98,15 @@ pub enum CurrentPlayerAction {
 }
 
 pub enum DragonAction {
-    AllyFireDragons(u8),
-    AllyEarthDragons(u8),
-    EnemyEarthDragons(u8),
+    AllyFire(u8),
+    AllyEarth(u8),
+    EnemyEarth(u8),
 }
 
 pub enum InputEnemyAction {
     ChampionId(ChampionId),
     Stats(ChangeBasicStatsAction),
     InferStats(bool),
-    AttackForm(bool),
     InsertItem(ItemId),
     RemoveItem(usize),
     ClearItems,
@@ -136,7 +134,6 @@ impl Reducible for InputCurrentPlayer {
             Self::Action::AbilityLevels(v) => {
                 change_ability_levels(&mut new_state.abilities, v);
             }
-            Self::Action::AttackForm(v) => {}
             Self::Action::InsertItem(v) => {
                 new_state.items.push(v);
             }
@@ -218,12 +215,11 @@ impl Reducible for InputEnemyPlayer {
             Self::Action::InferStats(v) => {
                 new_state.infer_stats = v;
             }
-            Self::Action::AttackForm(v) => {}
             Self::Action::InsertItem(v) => {
                 new_state.items.push(v);
             }
             Self::Action::RemoveItem(v) => {
-                new_state.items.swap_remove(v as usize);
+                new_state.items.swap_remove(v);
             }
             Self::Action::ClearItems => {
                 new_state.items.clear();
@@ -244,13 +240,13 @@ impl Reducible for InputDragons {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_state = (*self).clone();
         match action {
-            Self::Action::AllyFireDragons(v) => {
+            Self::Action::AllyFire(v) => {
                 new_state.ally_fire_dragons = v;
             }
-            Self::Action::AllyEarthDragons(v) => {
+            Self::Action::AllyEarth(v) => {
                 new_state.ally_earth_dragons = v;
             }
-            Self::Action::EnemyEarthDragons(v) => {
+            Self::Action::EnemyEarth(v) => {
                 new_state.enemy_earth_dragons = v;
             }
         }

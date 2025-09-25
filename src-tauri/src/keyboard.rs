@@ -38,14 +38,14 @@ pub unsafe fn install_hook() {
         if !HOOK_HANDLE.is_invalid() {
             return;
         }
-        let hinstance = GetModuleHandleW(None).unwrap();
+        let hinstance = GetModuleHandleW(None).unwrap_unchecked();
         HOOK_HANDLE = SetWindowsHookExW(
             WH_KEYBOARD_LL,
             Some(low_level_keyboard_proc),
             Some(hinstance.into()),
             0,
         )
-        .unwrap();
+        .unwrap_unchecked();
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     components::Selector,
-    utils::{ComptimeCache, RandomInput},
+    utils::{RandomInput, ToStaticStr},
 };
 use tutorlolv2_imports::{
     CHAMPION_FORMULAS, CHAMPION_GENERATOR, ChampionId, ITEM_FORMULAS, ItemId, RUNE_FORMULAS, RuneId,
@@ -23,7 +23,7 @@ pub fn source_code(props: &SourceCodeProps) -> Html {
                 "text-[#D4D4D4]", "text-left",
                 "text-wrap", "break-all"
             )}>
-                { Html::from_html_unchecked(AttrValue::Static(offset.as_str())) }
+                { Html::from_html_unchecked(AttrValue::Static(offset.as_static_str())) }
             </code>
         }
     } else {
@@ -58,9 +58,9 @@ impl FormulaDropdown {
 pub fn formulas() -> Html {
     let current_dropdown_id =
         use_state(|| FormulaDropdown::from_index(RandomInput::rand_u8(4) as usize));
-    let current_champion = use_state(|| RandomInput::champion_id());
-    let current_item = use_state(|| RandomInput::item_id());
-    let current_rune = use_state(|| RandomInput::rune_id());
+    let current_champion = use_state(RandomInput::champion_id);
+    let current_item = use_state(RandomInput::item_id);
+    let current_rune = use_state(RandomInput::rune_id);
     let champion_callback = {
         let current_champion = current_champion.clone();
         use_callback((), move |v, _| {

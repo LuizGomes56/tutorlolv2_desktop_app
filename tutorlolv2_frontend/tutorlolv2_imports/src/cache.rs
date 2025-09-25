@@ -1,85 +1,5 @@
 use bincode::Decode;
 
-pub enum StatName {
-    AbilityHaste(u16),
-    AbilityPower(u16),
-    Armor(u16),
-    ArmorPenetration(u16),
-    MagicPenetration(u16),
-    AttackDamage(u16),
-    AttackSpeed(u16),
-    GoldPer10Seconds(u16),
-    AdaptiveForce(u16),
-    CriticalStrikeChance(u16),
-    CriticalStrikeDamage(u16),
-    Health(u16),
-    LifeSteal(u16),
-    MagicResist(u16),
-    Mana(u16),
-    MoveSpeed(u16),
-    Omnivamp(u16),
-    BaseHealthRegen(u16),
-    BaseManaRegen(u16),
-    Tenacity(u16),
-    HealAndShieldPower(u16),
-}
-
-impl StatName {
-    pub fn info(self) -> (&'static str, &'static str, u16) {
-        match self {
-            Self::AbilityPower(value) => ("/img/stats/ability_power.svg", "Ability Power", value),
-            Self::Health(value) => ("/img/stats/health.svg", "Health", value),
-            Self::AbilityHaste(value) => ("/img/stats/ability_haste.svg", "Ability Haste", value),
-            Self::MoveSpeed(value) => ("/img/stats/move_speed.svg", "Move Speed", value),
-            Self::LifeSteal(value) => ("/img/stats/life_steal.svg", "Life Steal", value),
-            Self::Omnivamp(value) => ("/img/stats/omnivamp.svg", "Omnivamp", value),
-            Self::ArmorPenetration(value) => (
-                "/img/stats/armor_penetration.svg",
-                "Armor Penetration",
-                value,
-            ),
-            Self::MagicPenetration(value) => (
-                "/img/stats/magic_penetration.svg",
-                "Magic Penetration",
-                value,
-            ),
-            Self::GoldPer10Seconds(value) => ("/img/stats/gold.svg", "Gold Per 10 Seconds", value),
-            Self::Tenacity(value) => ("/img/stats/tenacity.svg", "Tenacity", value),
-            Self::AttackDamage(value) => ("/img/stats/attack_damage.svg", "Attack Damage", value),
-            Self::AttackSpeed(value) => ("/img/stats/attack_speed.svg", "Attack Speed", value),
-            Self::CriticalStrikeChance(value) => (
-                "/img/stats/crit_chance.svg",
-                "Critical Strike Chance",
-                value,
-            ),
-            Self::CriticalStrikeDamage(value) => (
-                "/img/stats/crit_damage.svg",
-                "Critical Strike Damage",
-                value,
-            ),
-            Self::HealAndShieldPower(value) => (
-                "/img/stats/heal_and_shield_power.svg",
-                "Heal And Shield Power",
-                value,
-            ),
-            Self::Mana(value) => ("/img/stats/mana.svg", "Mana", value),
-            Self::Armor(value) => ("/img/stats/armor.svg", "Armor", value),
-            Self::BaseManaRegen(value) => {
-                ("/img/stats/mana_regeneration.svg", "Base Mana Regen", value)
-            }
-            Self::BaseHealthRegen(value) => (
-                "/img/stats/health_regeneration.svg",
-                "Base Health Regen",
-                value,
-            ),
-            Self::MagicResist(value) => ("/img/stats/magic_resist.svg", "Magic Resist", value),
-            Self::AdaptiveForce(value) => {
-                ("/img/stats/adaptive_force.svg", "Adaptive Force", value)
-            }
-        }
-    }
-}
-
 #[derive(PartialEq, Debug, Copy, Clone, Decode)]
 pub enum AbilityLike {
     P(AbilityName),
@@ -90,13 +10,13 @@ pub enum AbilityLike {
 }
 
 impl AbilityLike {
-    pub fn as_char(&self) -> char {
+    pub fn data(&self) -> (char, AbilityName) {
         match self {
-            Self::P(_) => 'P',
-            Self::Q(_) => 'Q',
-            Self::W(_) => 'W',
-            Self::E(_) => 'E',
-            Self::R(_) => 'R',
+            Self::P(name) => ('P', *name),
+            Self::Q(name) => ('Q', *name),
+            Self::W(name) => ('W', *name),
+            Self::E(name) => ('E', *name),
+            Self::R(name) => ('R', *name),
         }
     }
 }
@@ -144,8 +64,48 @@ pub enum AbilityName {
     _8Min,
 }
 
-pub struct ItemDescription {
-    pub name: &'static str,
-    pub prettified_stats: &'static [StatName],
-    pub gold_cost: u16,
+impl AbilityName {
+    pub fn data(&self) -> (&'static str, &'static str) {
+        match self {
+            Self::_1 => ("1", "damage #1"),
+            Self::_2 => ("2", "damage #2"),
+            Self::_3 => ("3", "damage #3"),
+            Self::_4 => ("4", "damage #4"),
+            Self::_5 => ("5", "damage #5"),
+            Self::_6 => ("6", "damage #6"),
+            Self::_7 => ("7", "damage #7"),
+            Self::_8 => ("8", "damage #8"),
+            Self::Mega => ("MEGA", "damage as Mega Gnar"),
+            Self::Max => ("MAX", "maximum damage"),
+            Self::Min => ("MIN", "minimum damage"),
+            Self::Minion => ("MN", "minion damage"),
+            Self::Minion1 => ("MN", "minion damage #1"),
+            Self::Minion2 => ("MN", "minion damage #2"),
+            Self::Minion3 => ("MN", "minion damage #3"),
+            Self::MinionMax => ("MN+", "minion maximum damage"),
+            Self::Monster => ("MT", "monster damage"),
+            Self::Monster1 => ("MT1", "monster damage #1"),
+            Self::Monster2 => ("MT2", "monster damage #2"),
+            Self::Monster3 => ("MT3", "monster damage #3"),
+            Self::Monster4 => ("MT4", "monster damage #4"),
+            Self::MonsterMax => ("MT+", "monster maximum damage"),
+            Self::Void => ("", ""),
+            Self::_1Max => ("1+", "maximum damage #1"),
+            Self::_2Max => ("2+", "maximum damage #2"),
+            Self::_3Max => ("3+", "maximum damage #3"),
+            Self::_4Max => ("4+", "maximum damage #4"),
+            Self::_5Max => ("5+", "maximum damage #5"),
+            Self::_6Max => ("6+", "maximum damage #6"),
+            Self::_7Max => ("7+", "maximum damage #7"),
+            Self::_8Max => ("8+", "maximum damage #8"),
+            Self::_1Min => ("1-", "minimum damage #1"),
+            Self::_2Min => ("2-", "minimum damage #2"),
+            Self::_3Min => ("3-", "minimum damage #3"),
+            Self::_4Min => ("4-", "minimum damage #4"),
+            Self::_5Min => ("5-", "minimum damage #5"),
+            Self::_6Min => ("6-", "minimum damage #6"),
+            Self::_7Min => ("7-", "minimum damage #7"),
+            Self::_8Min => ("8-", "minimum damage #8"),
+        }
+    }
 }

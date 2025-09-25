@@ -28,7 +28,7 @@ pub fn process1() -> Html {
                 let mut failures = 0usize;
 
                 console::log_1(&"starting loop #1".into());
-                let _ = invoke_get_live_game();
+                invoke_get_live_game();
 
                 loop {
                     web_sys::console::log_1(&"loop #1".into());
@@ -40,7 +40,7 @@ pub fn process1() -> Html {
                         overlay_data.set(Some(data));
                         failures = 0;
                     } else {
-                        let _ = invoke_get_live_game();
+                        invoke_get_live_game();
                         web_sys::console::log_1(&"no data".into());
                         failures += 1;
                     };
@@ -68,25 +68,7 @@ pub fn process1() -> Html {
                             <BaseTable
                                 damaging_items={data.current_player.damaging_items.clone()}
                                 damaging_runes={data.current_player.damaging_runes.clone()}
-                                champion_id={data.current_player.champion_id.clone()}
-                                // damages={
-                                //     data.enemies
-                                //         .iter()
-                                //         .map(|(enemy_champion_id, enemy)| {
-                                //             html! {
-                                //                 <tr>
-                                //                     <td class={classes!("w-10", "h-10")}>
-                                //                         <ImageCell instance={Instances::Champions(*enemy_champion_id)} />
-                                //                     </td>
-                                //                     {enemy.damages.attacks.display_damage()}
-                                //                     {enemy.damages.abilities.display_damage()}
-                                //                     {enemy.damages.items.display_damage()}
-                                //                     {enemy.damages.runes.display_damage()}
-                                //                 </tr>
-                                //             }
-                                //         })
-                                //         .collect::<Html>()
-                                // }
+                                champion_id={data.current_player.champion_id}
                                 damages={
                                     [data.enemies.first().unwrap()]
                                         .iter()

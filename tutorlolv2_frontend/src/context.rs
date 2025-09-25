@@ -1,11 +1,11 @@
-use crate::{impl_unsafe_cast, utils::StringifyEnum};
+use crate::{impl_unsafe_cast, utils::ToStaticStr};
 use std::rc::Rc;
 use yew::{
     Children, ContextProvider, Html, Properties, Reducible, UseReducerHandle, function_component,
     html, use_reducer,
 };
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, PartialEq, Default)]
 #[repr(u8)]
 pub enum HoverDocs {
     None,
@@ -14,9 +14,9 @@ pub enum HoverDocs {
     Full,
 }
 
-impl StringifyEnum for HoverDocs {
+impl ToStaticStr for HoverDocs {
     #[inline]
-    fn as_str(self) -> &'static str {
+    fn as_static_str(&self) -> &'static str {
         match self {
             Self::None => "None",
             Self::Partial => "Partial",
@@ -29,14 +29,14 @@ impl HoverDocs {
     #[inline]
     pub fn to_array() -> [&'static str; 3] {
         [
-            Self::None.as_str(),
-            Self::Partial.as_str(),
-            Self::Full.as_str(),
+            Self::None.as_static_str(),
+            Self::Partial.as_static_str(),
+            Self::Full.as_static_str(),
         ]
     }
 }
 
-impl_unsafe_cast!(@HoverDocs, u8);
+impl_unsafe_cast!(HoverDocs, u8);
 
 #[derive(PartialEq, Default, Copy, Clone)]
 pub struct GlobalContext {

@@ -1,8 +1,8 @@
 use crate::{
-    components::{Image, ImageType},
+    components::Image,
     hooks::mouseout::use_mouseout,
     svg,
-    utils::{ImportedEnum, RandomInput, UnsafeCast},
+    utils::{ImportedEnum, IndexCast, RandomInput},
 };
 use yew::{
     Callback, Html, InputEvent, Properties, TargetCast, classes, function_component, html,
@@ -10,7 +10,7 @@ use yew::{
 };
 
 #[derive(Properties, PartialEq)]
-pub struct SelectorProps<T: PartialEq + UnsafeCast + 'static> {
+pub struct SelectorProps<T: PartialEq + IndexCast + 'static> {
     pub callback: Callback<T>,
     pub current_value: T,
 }
@@ -23,14 +23,9 @@ struct SelectorItem {
 }
 
 #[function_component(Selector)]
-pub fn selector<T>(props: &SelectorProps<T>) -> Html
-where
-    T: PartialEq + UnsafeCast + Copy + ImportedEnum + 'static,
-    T::Repr: TryInto<usize> + TryFrom<usize>,
-    ImageType: From<T>,
-{
+pub fn selector<T: ImportedEnum>(props: &SelectorProps<T>) -> Html {
     let is_open = use_state(|| false);
-    let search_query = use_state(|| String::new());
+    let search_query = use_state(String::new);
     let id_to_name = T::ID_TO_NAME;
     let callback = {
         let original_callback = props.callback.clone();
@@ -65,7 +60,7 @@ where
 
     let all_values = use_memo(callback, |callback| {
         id_to_name
-            .into_iter()
+            .iter()
             .enumerate()
             .map(|(index, &name)| {
                 let html = html! {
@@ -114,7 +109,7 @@ where
                         "text-white", "focus:outline-none", "w-full", "ml-1", "bg-transparent"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*id_to_name.get(T::into_usize_unchecked(props.current_value)).unwrap_or(&"Unknown")}
+                    placeholder={*id_to_name.get(props.current_value.into_usize()).unwrap_or(&"Unknown")}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -135,18 +130,13 @@ where
 }
 
 #[derive(Properties, PartialEq)]
-pub struct SelectorOptionsProps<T: PartialEq + UnsafeCast + 'static> {
+pub struct SelectorOptionsProps<T: PartialEq + IndexCast + 'static> {
     pub callback: Callback<T>,
     pub value_id: T,
 }
 
 #[function_component(SelectorOptions)]
-fn selector_options<T>(props: &SelectorOptionsProps<T>) -> Html
-where
-    T: Copy + PartialEq + ImportedEnum + UnsafeCast + 'static,
-    T::Repr: TryInto<usize>,
-    ImageType: From<T>,
-{
+fn selector_options<T: ImportedEnum>(props: &SelectorOptionsProps<T>) -> Html {
     let id_to_name = T::ID_TO_NAME;
     html! {
         <button
@@ -160,8 +150,8 @@ where
                 props.callback.reform(move |_| value_id)
             }}
         >
-            <Image class={classes!("w-5", "h-5")} source={ImageType::from(props.value_id)} />
-            <span>{id_to_name.get(T::into_usize_unchecked(props.value_id)).unwrap_or(&"Unknown")}</span>
+            <Image class={classes!("w-5", "h-5")} source={props.value_id.into_image_type()} />
+            <span>{id_to_name.get(props.value_id.into_usize()).unwrap_or(&"Unknown")}</span>
         </button>
     }
 }

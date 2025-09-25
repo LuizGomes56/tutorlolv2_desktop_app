@@ -15,7 +15,7 @@ pub fn home() -> Html {
                     {"Automated damage evaluation"}
                 </h1>
             </div>
-            <Image class={classes!("w-8", "h-8")} source={ImageType::Items(ItemId::TheGoldenSpatula)} />
+            <Image class={classes!("w-8", "h-8")} source={ImageType::Item(ItemId::TheGoldenSpatula)} />
         </div>
     }
 }

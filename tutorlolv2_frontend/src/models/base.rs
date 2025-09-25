@@ -20,14 +20,14 @@ pub enum AdaptativeType {
 impl AdaptativeType {
     pub const fn get_color(&self) -> &'static str {
         match self {
-            Self::Magic => DamageType::get_color(&DamageType::Magic),
-            Self::Physical => DamageType::get_color(&DamageType::Physical),
+            Self::Magic => DamageType::get_color(DamageType::Magic),
+            Self::Physical => DamageType::get_color(DamageType::Physical),
         }
     }
 }
 
 impl DamageType {
-    pub const fn get_color(&self) -> &'static str {
+    pub const fn get_color(self) -> &'static str {
         match self {
             Self::Physical => "text-orange-500",
             Self::Magic => "text-sky-500",
@@ -39,7 +39,7 @@ impl DamageType {
     }
 }
 
-#[derive(Debug, Decode)]
+#[derive(Copy, Clone, Debug, Decode)]
 pub struct InstanceDamage {
     pub minimum_damage: i32,
     pub maximum_damage: i32,
@@ -77,7 +77,7 @@ pub struct BasicStats {
     pub mana: i32,
 }
 
-#[derive(Debug, Decode)]
+#[derive(Copy, Clone, Debug, Decode)]
 pub struct DamageValue {
     pub minimum_damage: i32,
     pub maximum_damage: i32,
