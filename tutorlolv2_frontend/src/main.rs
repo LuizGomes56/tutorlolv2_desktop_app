@@ -6,6 +6,7 @@ mod components;
 mod context;
 mod hooks;
 mod macros;
+mod model_v2;
 mod models;
 mod pages;
 mod utils;
