@@ -52,7 +52,6 @@ pub fn sidebar() -> Html {
                 </div>
                 {make_tabs!(
                     svg!("../../public/sidebar/home", ICON_SIZE), "Home", Route::Home,
-                    svg!("../../public/sidebar/realtime", ICON_SIZE), "Realtime", Route::Realtime,
                     svg!("../../public/sidebar/calculator", ICON_SIZE), "Calculator", Route::Calculator,
                     svg!("../../public/sidebar/history", ICON_SIZE), "History", Route::History,
                     svg!("../../public/sidebar/formulas", ICON_SIZE), "Formulas", Route::Formulas

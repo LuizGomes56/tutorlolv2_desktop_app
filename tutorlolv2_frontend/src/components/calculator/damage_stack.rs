@@ -225,7 +225,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .map(|item_id| {
                     base_content(
                         ImageType::Item(*item_id),
-                        ITEM_FORMULAS.get(*item_id as usize),
+                        Some(unsafe { ITEM_FORMULAS.get_unchecked(*item_id as usize) }),
                         {
                             let push_callback = push_callback.clone();
                             let item_id = *item_id;
@@ -246,7 +246,7 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
                 .map(|rune_id| {
                     base_content(
                         ImageType::Rune(*rune_id),
-                        RUNE_FORMULAS.get(*rune_id as usize),
+                        Some(unsafe { RUNE_FORMULAS.get_unchecked(*rune_id as usize) }),
                         {
                             let push_callback = push_callback.clone();
                             let rune_id = *rune_id;
@@ -261,28 +261,24 @@ fn insert_damage_stack_selector(props: &InsertDamageStackSelectorProps) -> Html 
 
     let abilities_memo = use_memo(
         (props.champion_id, push_callback.clone()),
-        move |(champion_id, push_callback)| {
+        move |(champion_id, push_callback)| unsafe {
             CHAMPION_ABILITIES
-                .get(*champion_id as usize)
-                .map(|value| {
-                    value
-                        .iter()
-                        .map(|(ability_name, offset)| {
-                            base_content(
-                                ImageType::Ability(props.champion_id, *ability_name),
-                                Some(offset),
-                                {
-                                    let push_callback = push_callback.clone();
-                                    Callback::from(move |_| {
-                                        push_callback.emit(StackValue::Ability(*ability_name));
-                                    })
-                                },
-                                Some(label_html(ability_name)),
-                            )
-                        })
-                        .collect::<Html>()
+                .get_unchecked(*champion_id as usize)
+                .iter()
+                .map(|(ability_name, offset)| {
+                    base_content(
+                        ImageType::Ability(props.champion_id, *ability_name),
+                        Some(offset),
+                        {
+                            let push_callback = push_callback.clone();
+                            Callback::from(move |_| {
+                                push_callback.emit(StackValue::Ability(*ability_name));
+                            })
+                        },
+                        Some(label_html(ability_name)),
+                    )
                 })
-                .unwrap_or_default()
+                .collect::<Html>()
         },
     );
 

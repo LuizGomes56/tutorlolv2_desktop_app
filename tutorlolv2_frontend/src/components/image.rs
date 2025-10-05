@@ -1,4 +1,4 @@
-use crate::{url, utils::StringExt};
+use crate::url;
 use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, RuneId};
 use yew::{AttrValue, Classes, Html, Properties, function_component, html};
 
@@ -41,10 +41,13 @@ pub fn image(props: &ImageProps) -> Html {
     let class_attr = props.class.clone();
 
     let url = match &props.source {
-        ImageType::Ability(champion_id, ability) => url!(
-            "/img/abilities/{}.avif",
-            format!("{champion_id:?}").concat_char(ability.data().0)
-        )
+        ImageType::Ability(champion_id, ability) => url!("/img/abilities/{}.avif", {
+            let champion_name = format!("{champion_id:?}");
+            let mut s = String::with_capacity(champion_name.len() + 1);
+            s.push_str(&champion_name);
+            s.push(ability.data().0);
+            s
+        })
         .into(),
         ImageType::Champion(v) => url!("/img/champions/{:?}.avif", v).into(),
         ImageType::Item(v) => url!("/img/items/{}.avif", v.to_riot_id()).into(),

@@ -1,5 +1,6 @@
 use tutorlolv2_imports::{
-    CHAMPION_ID_TO_NAME, CHAMPION_POSITIONS, ITEM_ID_TO_NAME, RECOMMENDED_ITEMS, RUNE_ID_TO_NAME,
+    CHAMPION_ID_TO_NAME, CHAMPION_POSITIONS, ITEM_ID_TO_NAME, RECOMMENDED_ITEMS, RECOMMENDED_RUNES,
+    RUNE_ID_TO_NAME,
 };
 use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 use web_sys::js_sys::Math;
@@ -29,6 +30,17 @@ impl RandomInput {
             let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
             let position = positions.get_unchecked(random_index);
             RECOMMENDED_ITEMS
+                .get_unchecked(champion_id as usize)
+                .get_unchecked(*position as usize)
+                .to_vec()
+        }
+    }
+    pub fn recommended_runes(champion_id: ChampionId) -> Vec<RuneId> {
+        unsafe {
+            let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
+            let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
+            let position = positions.get_unchecked(random_index);
+            RECOMMENDED_RUNES
                 .get_unchecked(champion_id as usize)
                 .get_unchecked(*position as usize)
                 .to_vec()

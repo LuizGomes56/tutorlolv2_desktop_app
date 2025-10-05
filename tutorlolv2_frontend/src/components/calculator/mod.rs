@@ -3,7 +3,6 @@ pub mod calculator_utils;
 pub mod champion_banner;
 pub mod damage_stack;
 pub mod exception_selector;
-pub mod main_selector;
 pub mod static_selector;
 pub mod stats_selector;
 pub mod tray;

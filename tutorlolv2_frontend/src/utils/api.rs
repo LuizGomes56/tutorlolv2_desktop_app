@@ -1,7 +1,7 @@
 use bincode::{Decode, Encode};
 use web_sys::AbortSignal;
 
-pub async fn send_bytes<T: Encode>(
+pub async fn encode_bytes<T: Encode>(
     url: &str,
     data: &T,
     signal: Option<AbortSignal>,

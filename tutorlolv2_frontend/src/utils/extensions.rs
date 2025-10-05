@@ -4,19 +4,6 @@ use tutorlolv2_imports::{
     RUNE_FORMULAS, RUNE_ID_TO_NAME, RuneId,
 };
 
-pub trait StringExt {
-    fn concat_char(&self, c: char) -> String;
-}
-
-impl StringExt for str {
-    fn concat_char(&self, c: char) -> String {
-        let mut s = String::with_capacity(self.len() + 1);
-        s.push_str(self);
-        s.push(c);
-        s
-    }
-}
-
 pub trait ToStaticStr {
     fn as_static_str(&self) -> &'static str;
 }

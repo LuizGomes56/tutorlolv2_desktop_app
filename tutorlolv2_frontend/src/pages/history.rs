@@ -1,68 +1,25 @@
 use crate::{
-    MAX_FAILURES, REFRESH_RATE, RETRY_INTERVAL,
     components::tables::{
         BaseTable,
         cells::{DisplayDamage, ImageCell, Instances},
     },
-    external::api::{decode_bytes, send_bytes},
-    global_bool,
     models::realtime::Realtime,
-    url,
 };
 use std::rc::Rc;
 use web_sys::HtmlInputElement;
 use yew::{
-    Html, InputEvent, TargetCast, classes, function_component, html, platform::spawn_local,
-    use_effect_with, use_state,
+    Html, InputEvent, TargetCast, classes, function_component, html, use_effect_with, use_state,
 };
 
 #[function_component(History)]
 pub fn history() -> Html {
-    // let game_code = use_state(|| String::with_capacity(6));
     let game_code = use_state(|| String::from("113680"));
     let game_data = use_state(|| Rc::new(None::<Realtime>));
 
     {
         let game_data = game_data.clone();
         let game_code = game_code.clone();
-        use_effect_with(game_code.clone(), move |_| {
-            global_bool!(set HISTORY_LOOP_FLAG, true);
-            if (*game_code).len() != 6 {
-                return;
-            }
-
-            global_bool!(set HISTORY_LOOP_FLAG, false);
-
-            spawn_local(async move {
-                let mut failures = 0usize;
-
-                loop {
-                    if global_bool!(get HISTORY_LOOP_FLAG) {
-                        break;
-                    }
-
-                    let response =
-                        send_bytes(url!("/api/games/get_by_code"), &*game_code, None).await;
-
-                    if let Some(data) = response {
-                        if let Some(req_realtime) = decode_bytes::<Realtime>(data).await {
-                            game_data.set(Rc::new(Some(req_realtime)));
-                            failures = 0;
-                        } else {
-                            failures += 1;
-                        }
-                    };
-
-                    let delay = std::time::Duration::from_millis(if failures > MAX_FAILURES {
-                        RETRY_INTERVAL
-                    } else {
-                        REFRESH_RATE
-                    });
-
-                    gloo_timers::future::sleep(delay).await;
-                }
-            });
-        });
+        use_effect_with(game_code.clone(), move |_| {});
     }
 
     html! {

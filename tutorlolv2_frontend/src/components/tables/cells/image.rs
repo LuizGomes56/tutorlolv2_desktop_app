@@ -24,14 +24,10 @@ pub struct ImageCellProps {
 }
 
 #[inline]
-fn base_content(
-    img_path: ImageType,
-    offsets: Option<&'static (u32, u32)>,
-    content: Option<Html>,
-) -> Html {
+fn base_content(img_path: ImageType, offsets: &'static (u32, u32), content: Option<Html>) -> Html {
     html! {
         <div
-            data-offset={offsets.map(|(s, e)| format!("{s},{e}"))}
+            data-offset={format!("{},{}", offsets.0, offsets.1)}
             class={classes!("flex", "items-center", "justify-center", "relative", "cell")}
         >
             <Image class={classes!("w-8", "h-8")} source={img_path} />
@@ -60,7 +56,7 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                 <th>
                     {base_content(
                         ImageType::Other(AttrValue::Static(url!($url))),
-                        Some(&$offset),
+                        &$offset,
                         None,
                     )}
                 </th>
@@ -79,9 +75,9 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
             }
         }
         Instances::Abilities(champion_id) => {
-            html! {
-                CHAMPION_ABILITIES
-                    .get(*champion_id as usize).map(|offsets| offsets
+            html! {unsafe {
+                    CHAMPION_ABILITIES
+                        .get_unchecked(*champion_id as usize)
                         .iter()
                         .map(|(ability_like, coord)| {
                             html! {
@@ -90,29 +86,29 @@ pub fn image_cell(props: &ImageCellProps) -> Html {
                                         ImageType::Ability(
                                             *champion_id, *ability_like
                                         ),
-                                        Some(coord),
+                                        coord,
                                         Some(label_html(ability_like))
                                     )}
                                 </th>
                             }
                         })
-                        .collect::<Html>())
-                    .unwrap_or_default()
+                        .collect::<Html>()
+                }
             }
         }
         Instances::Items(item_id) => base_content(
             ImageType::Item(*item_id),
-            ITEM_FORMULAS.get(*item_id as usize),
+            unsafe { ITEM_FORMULAS.get_unchecked(*item_id as usize) },
             None,
         ),
         Instances::Runes(rune_id) => base_content(
             ImageType::Rune(*rune_id),
-            RUNE_FORMULAS.get(*rune_id as usize),
+            unsafe { RUNE_FORMULAS.get_unchecked(*rune_id as usize) },
             None,
         ),
         Instances::Champions(champion_id) => base_content(
             ImageType::Champion(*champion_id),
-            CHAMPION_FORMULAS.get(*champion_id as usize),
+            unsafe { CHAMPION_FORMULAS.get_unchecked(*champion_id as usize) },
             None,
         ),
     }

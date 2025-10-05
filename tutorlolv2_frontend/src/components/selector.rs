@@ -109,7 +109,7 @@ pub fn selector<T: ImportedEnum>(props: &SelectorProps<T>) -> Html {
                         "text-white", "focus:outline-none", "w-full", "ml-1", "bg-transparent"
                     )}
                     value={(*search_query).clone()}
-                    placeholder={*id_to_name.get(props.current_value.into_usize()).unwrap_or(&"Unknown")}
+                    placeholder={unsafe { *id_to_name.get_unchecked(props.current_value.into_usize()) }}
                     onfocus={onfocus}
                     oninput={oninput}
                 />
@@ -151,7 +151,7 @@ fn selector_options<T: ImportedEnum>(props: &SelectorOptionsProps<T>) -> Html {
             }}
         >
             <Image class={classes!("w-5", "h-5")} source={props.value_id.into_image_type()} />
-            <span>{id_to_name.get(props.value_id.into_usize()).unwrap_or(&"Unknown")}</span>
+            <span>{unsafe { id_to_name.get_unchecked(props.value_id.into_usize()) }}</span>
         </button>
     }
 }

@@ -52,10 +52,10 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                         "cursor-default",
                         props.translate_left.then_some("translate-x-[calc(-100%+240px)]")
                     )}
-                    data-offset={
-                        ChampionId::OFFSETS
-                            .get(*champion_id as usize).map(|(s, e)| format!("{s},{e}"))
-                    }
+                    data-offset={unsafe {
+                        let offsets = ChampionId::OFFSETS.get_unchecked(*champion_id as usize);
+                        format!("{},{}", offsets.0, offsets.1)
+                    }}
                     class={classes!("relative", "cursor-pointer")}
                     ref={button_ref}
                     {onclick}
@@ -65,7 +65,9 @@ pub fn champion_banner(props: &ChampionBannerProps) -> Html {
                         source={ImageType::Other(url!("/img/centered/{:?}_0.avif", champion_id).into())}
                     />
                     <span class={classes!("img-letter", "h-auto", "w-auto", "left-2", "bottom-1", "text-sm")}>
-                        {*ChampionId::ID_TO_NAME.get(*champion_id as usize).unwrap_or(&"Unknown")}
+                        {unsafe {
+                            *ChampionId::ID_TO_NAME.get_unchecked(*champion_id as usize)
+                        }}
                     </span>
                 </div>
             }

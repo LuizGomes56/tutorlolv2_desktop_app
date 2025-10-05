@@ -9,50 +9,6 @@ use yew::{
 };
 
 #[derive(PartialEq, Properties)]
-pub struct StaticEventProps<T: PartialEq + 'static> {
-    pub remove_callback: Callback<usize>,
-    pub iterator: Vec<T>,
-}
-
-#[function_component(StaticEvent)]
-pub fn static_event<T: ImportedEnum>(props: &StaticEventProps<T>) -> Html {
-    html! {
-        <div class={classes!(
-            "grid", "gap-4", "grid-cols-8",
-            "h-fit", "w-fit"
-        )}>
-            {
-                for props.iterator
-                    .iter()
-                    .enumerate()
-                    .map(|(index, id)| {
-                        html! {
-                            <button
-                                class={classes!(
-                                    "items-center", "gap-2", "text-sm",
-                                    "select-none", "border", "relative",
-                                    "_border-700", "cursor-pointer"
-                                )}
-                                onclick={{
-                                    let remove_callback = props.remove_callback.clone();
-                                    Callback::from(move |_| {
-                                        remove_callback.emit(index);
-                                    })
-                                }}
-                            >
-                                <Image
-                                    class={classes!("h-10", "w-10")}
-                                    source={id.into_image_type()}
-                                />
-                            </button>
-                        }
-                })
-            }
-        </div>
-    }
-}
-
-#[derive(PartialEq, Properties)]
 pub struct StaticSelectorProps<T: PartialEq> {
     pub callback: Callback<T>,
     pub node_ref: NodeRef,

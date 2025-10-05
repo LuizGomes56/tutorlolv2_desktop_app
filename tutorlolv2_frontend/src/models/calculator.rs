@@ -117,7 +117,7 @@ impl InputCurrentPlayer {
         Self {
             champion_id,
             items: RandomInput::recommended_items(champion_id),
-            runes: self.runes.clone(),
+            runes: RandomInput::recommended_runes(champion_id),
             ..*self
         }
     }
@@ -131,9 +131,7 @@ impl Default for InputCurrentPlayer {
     fn default() -> Self {
         Self {
             champion_id: RandomInput::champion_id(),
-            items: Default::default(),
             level: 18,
-            stats: Default::default(),
             infer_stats: true,
             stacks: 0,
             abilities: AbilityLevels {
@@ -142,6 +140,8 @@ impl Default for InputCurrentPlayer {
                 e: 5,
                 r: 3,
             },
+            items: Default::default(),
+            stats: Default::default(),
             runes: Default::default(),
         }
     }
@@ -152,8 +152,8 @@ impl Default for InputEnemyPlayer {
         Self {
             champion_id: RandomInput::champion_id(),
             items: Default::default(),
-            level: 18,
             stats: Default::default(),
+            level: 18,
             infer_stats: true,
             stacks: 0,
         }

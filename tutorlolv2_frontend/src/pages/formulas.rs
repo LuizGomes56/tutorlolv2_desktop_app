@@ -12,22 +12,18 @@ use yew::{
 
 #[derive(Properties, PartialEq)]
 pub struct SourceCodeProps {
-    pub offset: Option<&'static (u32, u32)>,
+    pub offset: &'static (u32, u32),
 }
 
 #[function_component(SourceCode)]
 pub fn source_code(props: &SourceCodeProps) -> Html {
-    if let Some(offset) = props.offset {
-        html! {
-            <code class={classes!(
-                "text-[#D4D4D4]", "text-left",
-                "text-wrap", "break-all"
-            )}>
-                { Html::from_html_unchecked(AttrValue::Static(offset.as_static_str())) }
-            </code>
-        }
-    } else {
-        html! {}
+    html! {
+        <code class={classes!(
+            "text-[#D4D4D4]", "text-left",
+            "text-wrap", "break-all"
+        )}>
+            { Html::from_html_unchecked(AttrValue::Static(props.offset.as_static_str())) }
+        </code>
     }
 }
 
@@ -40,6 +36,8 @@ enum FormulaDropdown {
 }
 
 impl FormulaDropdown {
+    const ARRAY: [&'static str; 4] = ["Champions", "Items", "Runes", "Generator"];
+
     fn from_index(value: usize) -> Self {
         match value {
             0 => Self::Champions,
@@ -47,10 +45,6 @@ impl FormulaDropdown {
             2 => Self::Runes,
             _ => Self::Generator,
         }
-    }
-
-    fn to_array() -> [&'static str; 4] {
-        ["Champions", "Items", "Runes", "Generator"]
     }
 }
 
@@ -89,7 +83,7 @@ pub fn formulas() -> Html {
             <div class={classes!("flex", "flex-wrap", "gap-2", "items-center")}>
                 <div class={classes!("grid", "grid-cols-4", "gap-x-2")}>
                     {
-                        FormulaDropdown::to_array()
+                        FormulaDropdown::ARRAY
                         .into_iter()
                         .enumerate()
                         .map(|(index, value)| {
@@ -153,16 +147,16 @@ pub fn formulas() -> Html {
             {
                 match *current_dropdown_id {
                     FormulaDropdown::Champions => html! {
-                        <SourceCode offset={CHAMPION_FORMULAS.get(*current_champion as usize)} />
+                        <SourceCode offset={unsafe {CHAMPION_FORMULAS.get_unchecked(*current_champion as usize)}} />
                     },
                     FormulaDropdown::Items => html! {
-                        <SourceCode offset={ITEM_FORMULAS.get(*current_item as usize)} />
+                        <SourceCode offset={unsafe {ITEM_FORMULAS.get_unchecked(*current_item as usize)}} />
                     },
                     FormulaDropdown::Runes => html! {
-                        <SourceCode offset={RUNE_FORMULAS.get(*current_rune as usize)} />
+                        <SourceCode offset={unsafe {RUNE_FORMULAS.get_unchecked(*current_rune as usize)}} />
                     },
                     FormulaDropdown::Generator => html! {
-                        <SourceCode offset={CHAMPION_GENERATOR.get(*current_champion as usize)} />
+                        <SourceCode offset={unsafe {CHAMPION_GENERATOR.get_unchecked(*current_champion as usize)}} />
                     },
                 }
             }

@@ -7,12 +7,12 @@ use crate::{
             cells::{DisplayDamage, ImageCell, Instances},
         },
     },
-    external::api::{decode_bytes, send_bytes},
     models::{
         base::DamageType,
         calculator::{InputCurrentPlayer, InputDragons, InputGame, OutputGame},
     },
     url,
+    utils::{decode_bytes, encode_bytes},
 };
 use tutorlolv2_imports::{ItemId, RuneId};
 use web_sys::AbortController;
@@ -284,7 +284,7 @@ pub fn calculator() -> Html {
                     // web_sys::console::log_1(&format!("{:#?}", input_game).into());
 
                     let response =
-                        send_bytes(url!("/api/games/calculator"), &input_game, signal).await;
+                        encode_bytes(url!("/api/games/calculator"), &input_game, signal).await;
 
                     if let Some(res) = response
                         && let Some(data) = decode_bytes::<OutputGame>(res).await
