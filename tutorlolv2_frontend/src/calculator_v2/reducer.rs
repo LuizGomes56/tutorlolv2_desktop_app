@@ -18,10 +18,7 @@ pub enum InputDataAction<T> {
 pub enum InputActivePlayerAction {
     InsertRune(RuneId),
     RemoveRune(usize),
-    Q(u8),
-    W(u8),
-    E(u8),
-    R(u8),
+    AbilityLevels(AbilityLevels),
     Data(InputDataAction<StatsF32>),
 }
 
@@ -61,10 +58,7 @@ impl Reducible for OwnedActivePlayer {
             Self::Action::RemoveRune(v) => {
                 new_state.runes.swap_remove(v);
             }
-            Self::Action::Q(v) => new_state.abilities.q = v,
-            Self::Action::W(v) => new_state.abilities.w = v,
-            Self::Action::E(v) => new_state.abilities.e = v,
-            Self::Action::R(v) => new_state.abilities.r = v,
+            Self::Action::AbilityLevels(v) => new_state.abilities = v,
             Self::Action::Data(v) => new_state.data.apply_reducer(v),
         };
 

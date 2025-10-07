@@ -116,8 +116,8 @@ impl InputCurrentPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: RandomInput::recommended_items(champion_id),
-            runes: RandomInput::recommended_runes(champion_id),
+            items: RandomInput::recommended_items(champion_id).to_vec(),
+            runes: RandomInput::recommended_runes(champion_id).to_vec(),
             ..*self
         }
     }
@@ -165,7 +165,7 @@ impl InputEnemyPlayer {
     pub fn create(&self, champion_id: ChampionId) -> Self {
         Self {
             champion_id,
-            items: RandomInput::recommended_items(champion_id),
+            items: RandomInput::recommended_items(champion_id).to_vec(),
             ..*self
         }
     }
