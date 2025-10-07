@@ -121,7 +121,7 @@ pub struct Scoreboard {
     pub team: Team,
 }
 
-#[derive(Decode)]
+#[derive(Decode, Clone, Copy)]
 pub struct StatsI32 {
     pub ability_power: i32,
     pub armor: i32,
@@ -155,7 +155,7 @@ pub struct CurrentPlayer {
     pub game_map: GameMap,
 }
 
-#[derive(Decode)]
+#[derive(Decode, Clone, Copy)]
 pub struct SimpleStatsI32 {
     pub armor: i32,
     pub health: i32,
@@ -447,6 +447,12 @@ impl OwnedActivePlayer {
 
 impl From<StatsI32> for StatsF32 {
     fn from(value: StatsI32) -> Self {
+        unsafe { std::mem::transmute(value) }
+    }
+}
+
+impl From<SimpleStatsI32> for SimpleStatsF32 {
+    fn from(value: SimpleStatsI32) -> Self {
         unsafe { std::mem::transmute(value) }
     }
 }
