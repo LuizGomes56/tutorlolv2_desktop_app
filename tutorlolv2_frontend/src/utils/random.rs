@@ -24,7 +24,7 @@ macro_rules! impl_random_input {
 }
 
 impl RandomInput {
-    pub fn recommended_items(champion_id: ChampionId) -> Vec<ItemId> {
+    pub fn recommended_items(champion_id: ChampionId) -> &'static [tutorlolv2_imports::ItemId] {
         unsafe {
             let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
             let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
@@ -32,10 +32,9 @@ impl RandomInput {
             RECOMMENDED_ITEMS
                 .get_unchecked(champion_id as usize)
                 .get_unchecked(*position as usize)
-                .to_vec()
         }
     }
-    pub fn recommended_runes(champion_id: ChampionId) -> Vec<RuneId> {
+    pub fn recommended_runes(champion_id: ChampionId) -> &'static [tutorlolv2_imports::RuneId] {
         unsafe {
             let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
             let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
@@ -43,7 +42,6 @@ impl RandomInput {
             RECOMMENDED_RUNES
                 .get_unchecked(champion_id as usize)
                 .get_unchecked(*position as usize)
-                .to_vec()
         }
     }
 }

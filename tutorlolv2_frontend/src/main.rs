@@ -2,6 +2,7 @@ use crate::{components::sidebar::Sidebar, context::SettingsProvider, pages::*, u
 use yew::{Html, classes, function_component, html};
 use yew_router::{BrowserRouter, Routable, Switch};
 
+mod calculator_v2;
 mod components;
 mod context;
 mod hooks;
