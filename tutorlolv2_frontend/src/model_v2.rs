@@ -1,7 +1,9 @@
 use crate::utils::{RandomInput, ToStaticStr};
 use bincode::{Decode, Encode};
 use std::{ops::Deref, rc::Rc};
-use tutorlolv2_imports::{AbilityLike, ChampionId, ItemId, Position, RuneId};
+use tutorlolv2_imports::{
+    AbilityLike, ChampionId, ITEM_ID_TO_NAME, ItemId, Position, RUNE_ID_TO_NAME, RuneId,
+};
 
 pub const L_MSTR: usize = 7;
 pub const L_TWRD: usize = 6;
@@ -50,13 +52,13 @@ pub enum Team {
 }
 
 #[derive(Decode)]
-pub struct RangeDamageI32 {
+pub struct RangeDamage {
     pub minimum_damage: i32,
     pub maximum_damage: i32,
 }
 
 #[derive(Decode)]
-pub struct BasicStatsI32 {
+pub struct BasicStats {
     pub armor: i32,
     pub health: i32,
     pub attack_damage: i32,
@@ -66,34 +68,16 @@ pub struct BasicStatsI32 {
 
 #[derive(Decode)]
 pub struct Attacks {
-    pub basic_attack: RangeDamageI32,
-    pub critical_strike: RangeDamageI32,
-    pub onhit_damage: RangeDamageI32,
+    pub basic_attack: RangeDamage,
+    pub critical_strike: RangeDamage,
+    pub onhit_damage: RangeDamage,
 }
 
 #[derive(Decode)]
 pub struct TypeMetadata<T> {
-    pub level: u8,
     pub kind: T,
-    pub meta: Meta,
-}
-
-#[derive(Decode)]
-pub struct Meta(pub u8);
-
-impl Meta {
-    pub const fn damage_type(&self) -> DamageType {
-        unsafe { std::mem::transmute((self.0 >> 5) & 0b0000_0111) }
-    }
-    pub const fn attributes(&self) -> Attrs {
-        unsafe { std::mem::transmute(self.0 & 0b0001_1111) }
-    }
-}
-
-#[derive(Decode)]
-pub struct ConstItemMetadata {
-    pub kind: ItemId,
-    pub meta: Meta,
+    pub damage_type: DamageType,
+    pub attributes: Attrs,
 }
 
 #[derive(Decode)]
@@ -104,9 +88,10 @@ pub struct Realtime {
     pub abilities_meta: Box<[TypeMetadata<AbilityLike>]>,
     pub items_meta: Box<[TypeMetadata<ItemId>]>,
     pub runes_meta: Box<[TypeMetadata<RuneId>]>,
-    pub siml_meta: [ConstItemMetadata; L_SIML],
+    pub siml_meta: [TypeMetadata<ItemId>; L_SIML],
     pub game_time: u32,
     pub ability_levels: AbilityLevels,
+    pub dragons: Dragons,
 }
 
 #[derive(Decode)]
@@ -121,8 +106,8 @@ pub struct Scoreboard {
     pub team: Team,
 }
 
-#[derive(Decode, Clone, Copy)]
-pub struct StatsI32 {
+#[derive(Encode, Decode, Clone, Copy, Default, PartialEq)]
+pub struct Stats {
     pub ability_power: i32,
     pub armor: i32,
     pub armor_penetration_flat: i32,
@@ -144,9 +129,9 @@ pub struct StatsI32 {
 #[derive(Decode)]
 pub struct CurrentPlayer {
     pub riot_id: String,
-    pub base_stats: BasicStatsI32,
-    pub bonus_stats: BasicStatsI32,
-    pub current_stats: StatsI32,
+    pub base_stats: BasicStats,
+    pub bonus_stats: BasicStats,
+    pub current_stats: Stats,
     pub level: u8,
     pub team: Team,
     pub adaptative_type: AdaptativeType,
@@ -155,8 +140,8 @@ pub struct CurrentPlayer {
     pub game_map: GameMap,
 }
 
-#[derive(Decode, Clone, Copy)]
-pub struct SimpleStatsI32 {
+#[derive(Encode, Decode, Clone, Copy, Default, PartialEq)]
+pub struct SimpleStats {
     pub armor: i32,
     pub health: i32,
     pub magic_resist: i32,
@@ -167,9 +152,9 @@ pub struct Enemy {
     pub riot_id: String,
     pub damages: Damages,
     pub siml_items: [Damages; L_SIML],
-    pub base_stats: SimpleStatsI32,
-    pub bonus_stats: SimpleStatsI32,
-    pub current_stats: SimpleStatsI32,
+    pub base_stats: SimpleStats,
+    pub bonus_stats: SimpleStats,
+    pub current_stats: SimpleStats,
     pub real_armor: i32,
     pub real_magic_resist: i32,
     pub level: u8,
@@ -181,17 +166,17 @@ pub struct Enemy {
 #[derive(Decode)]
 pub struct Damages {
     pub attacks: Attacks,
-    pub abilities: Box<[RangeDamageI32]>,
-    pub items: Box<[RangeDamageI32]>,
-    pub runes: Box<[RangeDamageI32]>,
+    pub abilities: Box<[RangeDamage]>,
+    pub items: Box<[RangeDamage]>,
+    pub runes: Box<[RangeDamage]>,
 }
 
 #[derive(Decode)]
 pub struct OutputEnemy {
     pub damages: Damages,
-    pub base_stats: SimpleStatsI32,
-    pub bonus_stats: SimpleStatsI32,
-    pub current_stats: SimpleStatsI32,
+    pub base_stats: SimpleStats,
+    pub bonus_stats: SimpleStats,
+    pub current_stats: SimpleStats,
     pub real_armor: i32,
     pub real_magic_resist: i32,
     pub level: u8,
@@ -200,9 +185,9 @@ pub struct OutputEnemy {
 
 #[derive(Decode)]
 pub struct OutputCurrentPlayer {
-    pub current_stats: StatsI32,
-    pub base_stats: BasicStatsI32,
-    pub bonus_stats: BasicStatsI32,
+    pub current_stats: Stats,
+    pub base_stats: BasicStats,
+    pub bonus_stats: BasicStats,
     pub level: u8,
     pub adaptative_type: AdaptativeType,
     pub champion_id: ChampionId,
@@ -211,8 +196,8 @@ pub struct OutputCurrentPlayer {
 #[derive(Decode)]
 pub struct MonsterDamage {
     pub attacks: Attacks,
-    pub abilities: Box<[RangeDamageI32]>,
-    pub items: Box<[RangeDamageI32]>,
+    pub abilities: Box<[RangeDamage]>,
+    pub items: Box<[RangeDamage]>,
 }
 
 #[derive(Decode)]
@@ -226,44 +211,115 @@ pub struct OutputGame {
     pub runes_meta: Box<[TypeMetadata<RuneId>]>,
 }
 
-#[derive(Encode)]
-pub struct StackExceptionKind<T> {
-    pub kind: T,
-    pub stacks: u16,
-    pub offset: u8,
-}
+#[derive(Encode, Decode, Copy, Clone, Default, PartialEq)]
+#[repr(transparent)]
+pub struct Dragons(u64);
 
-#[derive(Encode)]
-pub enum StackException {
-    Item(StackExceptionKind<ItemId>),
-    Rune(StackExceptionKind<RuneId>),
-    Champion(StackExceptionKind<ChampionId>),
+impl Dragons {
+    const BITS_PER_FIELD: u32 = 21;
+    const MASK21: u64 = (1u64 << 21) - 1;
+
+    const ENEMY_SHIFT: u32 = 0;
+    const ALLY_EARTH_SHIFT: u32 = Self::ENEMY_SHIFT + Self::BITS_PER_FIELD;
+    const ALLY_FIRE_SHIFT: u32 = Self::ALLY_EARTH_SHIFT + Self::BITS_PER_FIELD;
+
+    const ENEMY_MASK: u64 = Self::MASK21 << Self::ENEMY_SHIFT;
+    const ALLY_EARTH_MASK: u64 = Self::MASK21 << Self::ALLY_EARTH_SHIFT;
+    const ALLY_FIRE_MASK: u64 = Self::MASK21 << Self::ALLY_FIRE_SHIFT;
+
+    const MSB_MASK: u64 = 1u64 << 63;
+
+    pub const fn ally_fire_dragons(&self) -> u32 {
+        ((self.0 >> Self::ALLY_FIRE_SHIFT) & Self::MASK21) as u32
+    }
+
+    pub const fn ally_earth_dragons(&self) -> u32 {
+        ((self.0 >> Self::ALLY_EARTH_SHIFT) & Self::MASK21) as u32
+    }
+
+    pub const fn enemy_earth_dragons(&self) -> u32 {
+        ((self.0 >> Self::ENEMY_SHIFT) & Self::MASK21) as u32
+    }
+
+    pub const fn truncate(v: u32) -> u64 {
+        (v as u64) & Self::MASK21
+    }
+
+    pub const fn pack_ally_fire_dragons(&mut self, v: u32) {
+        self.0 = (self.0 & !Self::ALLY_FIRE_MASK) | (Self::truncate(v) << Self::ALLY_FIRE_SHIFT);
+    }
+
+    pub const fn pack_ally_earth_dragons(&mut self, v: u32) {
+        self.0 = (self.0 & !Self::ALLY_EARTH_MASK) | (Self::truncate(v) << Self::ALLY_EARTH_SHIFT);
+    }
+
+    pub const fn pack_enemy_earth_dragons(&mut self, v: u32) {
+        self.0 = (self.0 & !Self::ENEMY_MASK) | (Self::truncate(v) << Self::ENEMY_SHIFT);
+    }
 }
 
 #[derive(Encode)]
 pub struct InputGame<'a> {
     pub active_player: BorrowedActivePlayer<'a>,
-    pub enemy_players: &'a [Rc<OwnedMinData<SimpleStatsF32>>],
-    pub stack_exceptions: &'a [StackException],
-    pub ally_dragons: Dragons,
-    pub enemy_earth_dragons: u8,
+    pub enemy_players: &'a [Rc<OwnedMinData<SimpleStats>>],
+    pub dragons: Dragons,
 }
 
 #[derive(Encode, PartialEq, Clone)]
 pub struct ActivePlayer<
-    T: Clone,
-    R: PartialEq + Deref<Target = [RuneId]>,
-    I: PartialEq + Deref<Target = [ItemId]>,
+    Stats: Clone,
+    Runes: PartialEq + Deref<Target = [RuneId]>,
+    Items: PartialEq + Deref<Target = [ItemId]>,
+    Vexcp: PartialEq + Deref<Target = [ValueException]>,
 > {
-    pub runes: R,
+    pub runes: Runes,
+    pub rune_exceptions: Vexcp,
     pub abilities: AbilityLevels,
-    pub data: MinData<T, I>,
+    pub data: MinData<Stats, Items, Vexcp>,
+}
+
+#[derive(Encode, PartialEq, Copy, Clone)]
+#[repr(transparent)]
+pub struct ValueException(u32);
+
+impl ValueException {
+    pub const NUMBER_OF_ITEMS: u32 = ITEM_ID_TO_NAME.len() as u32;
+    pub const NUMBER_OF_RUNES: u32 = RUNE_ID_TO_NAME.len() as u32;
+    pub const DISC_BITS: u32 =
+        Self::find_disc_bits(Self::NUMBER_OF_ITEMS as u32, Self::NUMBER_OF_RUNES as u32);
+    pub const VAL_BITS: u32 = 32 - Self::DISC_BITS;
+    pub const VAL_MASK: u32 = (1u32 << Self::VAL_BITS) - 1;
+    pub const DISC_MASK: u32 = !Self::VAL_MASK;
+    pub const DISC_LOW_MASK: u32 = (1u32 << Self::DISC_BITS) - 1;
+
+    const fn find_disc_bits(a: u32, b: u32) -> u32 {
+        u32::BITS - if a > b { a } else { b }.leading_zeros()
+    }
+
+    const fn truncate_value(v: u32) -> u32 {
+        v & Self::VAL_MASK
+    }
+
+    pub const fn pack_rune_id(r: RuneId, v: u32) -> Self {
+        let disc = (r as u32) & Self::DISC_LOW_MASK;
+        Self((disc << Self::VAL_BITS) | Self::truncate_value(v))
+    }
+
+    pub const fn pack_item_id(i: ItemId, v: u32) -> Self {
+        let disc = (i as u32) & Self::DISC_LOW_MASK;
+        Self((disc << Self::VAL_BITS) | Self::truncate_value(v))
+    }
 }
 
 #[derive(Encode, Clone, PartialEq)]
-pub struct MinData<T, I: PartialEq + Deref<Target = [ItemId]>> {
-    pub stats: T,
-    pub items: I,
+pub struct MinData<
+    Stats,
+    Items: PartialEq + Deref<Target = [ItemId]>,
+    Vexcp: PartialEq + Deref<Target = [ValueException]>,
+> {
+    pub stats: Stats,
+    pub items: Items,
+    pub item_exceptions: Vexcp,
     pub stacks: u32,
     pub level: u8,
     pub infer_stats: bool,
@@ -271,12 +327,13 @@ pub struct MinData<T, I: PartialEq + Deref<Target = [ItemId]>> {
     pub champion_id: ChampionId,
 }
 
-pub type OwnedActivePlayer = ActivePlayer<StatsF32, Vec<RuneId>, Vec<ItemId>>;
-pub type BorrowedActivePlayer<'a> = ActivePlayer<StatsF32, &'a [RuneId], &'a [ItemId]>;
-pub type OwnedMinData<T> = MinData<T, Vec<ItemId>>;
-pub type BorrowedMinData<'a, T> = MinData<T, &'a [ItemId]>;
+pub type OwnedActivePlayer = ActivePlayer<Stats, Vec<RuneId>, Vec<ItemId>, Vec<ValueException>>;
+pub type BorrowedActivePlayer<'a> =
+    ActivePlayer<Stats, &'a [RuneId], &'a [ItemId], &'a [ValueException]>;
+pub type OwnedMinData<T> = MinData<T, Vec<ItemId>, Vec<ValueException>>;
+pub type BorrowedMinData<'a, T> = MinData<T, &'a [ItemId], &'a [ValueException]>;
 
-#[derive(Encode)]
+#[derive(Decode)]
 pub enum DamageType {
     Physical,
     Magic,
@@ -286,40 +343,7 @@ pub enum DamageType {
     Unknown,
 }
 
-#[derive(Encode, Default)]
-pub struct Dragons {
-    pub earth: u8,
-    pub fire: u8,
-}
-
-#[derive(Encode, Clone, Copy, PartialEq)]
-pub struct StatsF32 {
-    pub ability_power: f32,
-    pub armor: f32,
-    pub armor_penetration_flat: f32,
-    pub armor_penetration_percent: f32,
-    pub attack_damage: f32,
-    pub attack_range: f32,
-    pub attack_speed: f32,
-    pub crit_chance: f32,
-    pub crit_damage: f32,
-    pub current_health: f32,
-    pub magic_penetration_flat: f32,
-    pub magic_penetration_percent: f32,
-    pub magic_resist: f32,
-    pub health: f32,
-    pub mana: f32,
-    pub current_mana: f32,
-}
-
-#[derive(Encode, Clone, Copy, PartialEq)]
-pub struct SimpleStatsF32 {
-    pub armor: f32,
-    pub health: f32,
-    pub magic_resist: f32,
-}
-
-#[derive(Encode, Decode, Clone, Copy, PartialEq)]
+#[derive(Encode, Decode, Clone, Copy, Default, PartialEq)]
 pub struct AbilityLevels {
     pub q: u8,
     pub w: u8,
@@ -338,6 +362,7 @@ impl<'a, T: Copy> From<&'a OwnedMinData<T>> for BorrowedMinData<'a, T> {
         Self {
             stats: value.stats,
             items: &value.items,
+            item_exceptions: &value.item_exceptions,
             stacks: value.stacks,
             level: value.level,
             infer_stats: value.infer_stats,
@@ -351,6 +376,7 @@ impl<'a> From<&'a OwnedActivePlayer> for BorrowedActivePlayer<'a> {
     fn from(value: &'a OwnedActivePlayer) -> Self {
         Self {
             runes: &value.runes,
+            rune_exceptions: &value.rune_exceptions,
             abilities: value.abilities,
             data: (&value.data).into(),
         }
@@ -362,11 +388,12 @@ impl<T> OwnedMinData<T> {
         Self {
             stats,
             items: RandomInput::recommended_items(champion_id).to_vec(),
+            item_exceptions: Vec::new(),
+            champion_id,
             stacks: 0,
             level: 1,
             infer_stats: true,
             is_mega_gnar: false,
-            champion_id,
         }
     }
 }
@@ -377,83 +404,14 @@ impl Default for OwnedActivePlayer {
     }
 }
 
-impl Default for StatsF32 {
-    fn default() -> Self {
-        Self {
-            ability_power: 0.0,
-            armor: 50.0,
-            armor_penetration_flat: 0.0,
-            armor_penetration_percent: 0.0,
-            attack_damage: 90.0,
-            attack_range: 0.0,
-            attack_speed: 0.7,
-            crit_chance: 0.0,
-            crit_damage: 175.0,
-            current_health: 1000.0,
-            magic_penetration_flat: 0.0,
-            magic_penetration_percent: 0.0,
-            magic_resist: 50.0,
-            health: 1000.0,
-            mana: 500.0,
-            current_mana: 500.0,
-        }
-    }
-}
-
-impl Default for SimpleStatsF32 {
-    fn default() -> Self {
-        Self {
-            armor: 50.0,
-            health: 1000.0,
-            magic_resist: 50.0,
-        }
-    }
-}
-
 impl OwnedActivePlayer {
     pub fn new(champion_id: ChampionId) -> Self {
         Self {
             runes: RandomInput::recommended_runes(champion_id).to_vec(),
-            abilities: AbilityLevels {
-                q: 1,
-                w: 1,
-                e: 1,
-                r: 1,
-            },
-            data: OwnedMinData::new(
-                champion_id,
-                StatsF32 {
-                    ability_power: 0.0,
-                    armor: 50.0,
-                    armor_penetration_flat: 0.0,
-                    armor_penetration_percent: 0.0,
-                    attack_damage: 90.0,
-                    attack_range: 0.0,
-                    attack_speed: 0.7,
-                    crit_chance: 0.0,
-                    crit_damage: 175.0,
-                    current_health: 1000.0,
-                    magic_penetration_flat: 0.0,
-                    magic_penetration_percent: 0.0,
-                    magic_resist: 50.0,
-                    health: 1000.0,
-                    mana: 500.0,
-                    current_mana: 500.0,
-                },
-            ),
+            rune_exceptions: Vec::new(),
+            abilities: AbilityLevels::default(),
+            data: OwnedMinData::new(champion_id, Stats::default()),
         }
-    }
-}
-
-impl From<StatsI32> for StatsF32 {
-    fn from(value: StatsI32) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl From<SimpleStatsI32> for SimpleStatsF32 {
-    fn from(value: SimpleStatsI32) -> Self {
-        unsafe { std::mem::transmute(value) }
     }
 }
 

@@ -5,6 +5,8 @@ use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 use yew::Reducible;
 
 pub enum InputDataAction<T> {
+    InsertItemException(ItemId, u32),
+    RemoveItemException(usize),
     ChampionId(ChampionId),
     InsertItem(ItemId),
     RemoveItem(usize),
@@ -18,13 +20,21 @@ pub enum InputDataAction<T> {
 pub enum InputActivePlayerAction {
     InsertRune(RuneId),
     RemoveRune(usize),
+    InsertRuneException(RuneId, u32),
+    RemoveRuneException(usize),
     AbilityLevels(AbilityLevels),
-    Data(InputDataAction<StatsF32>),
+    Data(InputDataAction<Stats>),
 }
 
 impl<T: Copy + Default> OwnedMinData<T> {
     pub fn apply_reducer(&mut self, action: InputDataAction<T>) {
         match action {
+            InputDataAction::InsertItemException(i, v) => self
+                .item_exceptions
+                .push(ValueException::pack_item_id(i, v)),
+            InputDataAction::RemoveItemException(v) => {
+                self.item_exceptions.swap_remove(v);
+            }
             InputDataAction::ChampionId(v) => *self = Self::new(v, T::default()),
             InputDataAction::InsertItem(v) => self.items.push(v),
             InputDataAction::RemoveItem(v) => {
@@ -57,6 +67,12 @@ impl Reducible for OwnedActivePlayer {
             Self::Action::InsertRune(v) => new_state.runes.push(v),
             Self::Action::RemoveRune(v) => {
                 new_state.runes.swap_remove(v);
+            }
+            Self::Action::InsertRuneException(r, v) => new_state
+                .rune_exceptions
+                .push(ValueException::pack_rune_id(r, v)),
+            Self::Action::RemoveRuneException(v) => {
+                new_state.rune_exceptions.swap_remove(v);
             }
             Self::Action::AbilityLevels(v) => new_state.abilities = v,
             Self::Action::Data(v) => new_state.data.apply_reducer(v),

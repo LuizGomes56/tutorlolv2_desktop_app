@@ -35,12 +35,9 @@ enum ActionTracker {
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
     let input_current_player = use_reducer(OwnedActivePlayer::default);
-    let input_enemy_players = use_reducer(InputEnemies::<SimpleStatsF32>::new);
+    let input_enemy_players = use_reducer(InputEnemies::<SimpleStats>::new);
     let input_enemy_index = use_state(|| 0);
-    let ally_fire_dragons = use_state(|| 0);
-    let ally_earth_dragons = use_state(|| 0);
-    let input_enemy_earth_dragons = use_state(|| 0);
-    // let input_exceptions = use_reducer(InputExceptions::default);
+    let input_dragons = use_state(Dragons::default);
 
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
@@ -133,28 +130,34 @@ pub fn calculator() -> Html {
         })
     };
     let set_ally_fire_dragons = {
-        let ally_fire_dragons = ally_fire_dragons.clone();
+        let input_dragons = input_dragons.clone();
         let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            let mut dragons = *input_dragons;
             action_tracker.replace(ActionTracker::CurrentPlayer);
-            ally_fire_dragons.set(v);
+            dragons.pack_ally_fire_dragons(v);
+            input_dragons.set(dragons);
         })
     };
     let set_ally_earth_dragons = {
-        let ally_earth_dragons = ally_earth_dragons.clone();
+        let input_dragons = input_dragons.clone();
         let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            let mut dragons = *input_dragons;
             action_tracker.replace(ActionTracker::CurrentPlayer);
-            ally_earth_dragons.set(v);
+            dragons.pack_ally_earth_dragons(v);
+            input_dragons.set(dragons);
         })
     };
     let set_enemy_earth_dragons = {
-        let input_enemy_earth_dragons = input_enemy_earth_dragons.clone();
+        let input_dragons = input_dragons.clone();
         let input_enemy_index = *input_enemy_index;
         let action_tracker = action_tracker.clone();
         use_callback((), move |v, _| {
+            let mut dragons = *input_dragons;
             action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_earth_dragons.set(v);
+            dragons.pack_enemy_earth_dragons(v);
+            input_dragons.set(dragons);
         })
     };
     let push_stack_callback = {
@@ -263,18 +266,9 @@ pub fn calculator() -> Html {
         let abort_controller = abort_controller.clone();
         let input_current_player = input_current_player.clone();
         let input_enemy_players = input_enemy_players.clone();
-        let ally_fire_dragons = ally_fire_dragons.clone();
-        let ally_earth_dragons = ally_earth_dragons.clone();
-        let enemy_earth_dragons = input_enemy_earth_dragons.clone();
         let action_tracker = action_tracker.clone();
         use_effect_with(
-            (
-                input_current_player.clone(),
-                input_enemy_players.clone(),
-                ally_fire_dragons.clone(),
-                ally_earth_dragons.clone(),
-                enemy_earth_dragons.clone(),
-            ),
+            (input_current_player.clone(), input_enemy_players.clone()),
             move |_| {
                 let current_action = *action_tracker.borrow();
                 if current_action == ActionTracker::Replace {
@@ -293,12 +287,7 @@ pub fn calculator() -> Html {
                     let input_game = InputGame {
                         active_player: (&*input_current_player).into(),
                         enemy_players: (*input_enemy_players).as_ref(),
-                        ally_dragons: Dragons {
-                            fire: *ally_fire_dragons,
-                            earth: *ally_earth_dragons,
-                        },
-                        enemy_earth_dragons: *enemy_earth_dragons,
-                        stack_exceptions: &[],
+                        dragons: Dragons::default(),
                     };
 
                     // web_sys::console::log_1(&format!("{:#?}", input_game).into());
@@ -310,54 +299,46 @@ pub fn calculator() -> Html {
                         && let Some(data) = decode_bytes::<OutputGame>(res).await
                     {
                         let last_action = *action_tracker.borrow();
-                        let mut action_ref_mut = action_tracker.borrow_mut();
-                        macro_rules! infer_current_player_stats {
-                            () => {
-                                if input_current_player.data.infer_stats {
-                                    *action_ref_mut = ActionTracker::Replace;
-                                    input_current_player.dispatch(InputActivePlayerAction::Data(
-                                        InputDataAction::Stats(
-                                            &(data.current_player.current_stats.into()) as *const _,
-                                        ),
-                                    ));
-                                }
-                            };
-                        }
-                        macro_rules! infer_enemy_player_stats {
-                            ($index:expr) => {
-                                unsafe {
-                                    if input_enemy_players
-                                        .as_ref()
-                                        .get_unchecked($index)
-                                        .infer_stats
-                                    {
-                                        *action_ref_mut = ActionTracker::Replace;
-                                        input_enemy_players.dispatch(EnemyAction::Edit(
-                                            $index,
-                                            InputDataAction::Stats(
-                                                &(data
-                                                    .enemies
-                                                    .get_unchecked($index)
-                                                    .current_stats
-                                                    .into()) as *const _,
-                                            ),
-                                        ));
-                                    }
-                                }
-                            };
-                        }
+                        let infer_current_player_stats = || {
+                            let mut action_ref_mut = action_tracker.borrow_mut();
+                            if input_current_player.data.infer_stats {
+                                *action_ref_mut = ActionTracker::Replace;
+                                input_current_player.dispatch(InputActivePlayerAction::Data(
+                                    InputDataAction::Stats(
+                                        &data.current_player.current_stats as *const _,
+                                    ),
+                                ));
+                            }
+                        };
+                        let infer_enemy_player_stats = |index| unsafe {
+                            let mut action_ref_mut = action_tracker.borrow_mut();
+                            let input_enemies = input_enemy_players.as_ref();
+                            let current_enemy: &std::rc::Rc<
+                                MinData<SimpleStats, Vec<ItemId>, Vec<ValueException>>,
+                            > = input_enemies.get_unchecked(index);
+                            if current_enemy.infer_stats {
+                                *action_ref_mut = ActionTracker::Replace;
+                                input_enemy_players.dispatch(EnemyAction::Edit(
+                                    index,
+                                    InputDataAction::Stats(
+                                        &data.enemies.get_unchecked(index).current_stats
+                                            as *const _,
+                                    ),
+                                ));
+                            }
+                        };
                         match last_action {
                             ActionTracker::Init => {
-                                infer_current_player_stats!();
+                                infer_current_player_stats();
                                 for i in 0..data.enemies.len() {
-                                    infer_enemy_player_stats!(i);
+                                    infer_enemy_player_stats(i);
                                 }
                             }
                             ActionTracker::CurrentPlayer => {
-                                infer_current_player_stats!();
+                                infer_current_player_stats();
                             }
                             ActionTracker::EnemyPlayer(index) => {
-                                infer_enemy_player_stats!(index);
+                                infer_enemy_player_stats(index);
                             }
                             _ => {}
                         };
@@ -398,13 +379,13 @@ pub fn calculator() -> Html {
                         callback={change_ability_level}
                         current_player_champion_id={current_player_champion_id}
                     />
-                    <NumericField<u8>
+                    <NumericField<u32>
                         title={"Number of ally fire dragons"}
                         source={Exception::Image}
                         img_url={url!("/img/other/fire_soul.avif")}
                         callback={set_ally_fire_dragons}
                     />
-                    <NumericField<u8>
+                    <NumericField<u32>
                         title={"Number of ally earth dragons"}
                         source={Exception::Image}
                         img_url={url!("/img/other/earth_soul.avif")}
@@ -630,7 +611,7 @@ pub fn calculator() -> Html {
                             translate_left={true}
                         />
                         <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
-                            <NumericField<u8>
+                            <NumericField<u32>
                                 title={"Number of enemy earth dragons"}
                                 source={Exception::Image}
                                 img_url={url!("/img/other/earth_soul.avif")}
