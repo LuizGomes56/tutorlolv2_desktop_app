@@ -5,7 +5,7 @@ use tutorlolv2_imports::{ChampionId, ItemId, RuneId};
 use yew::Reducible;
 
 pub enum InputDataAction<T> {
-    InsertItemException(ItemId, u32),
+    InsertItemException((ItemId, u32)),
     RemoveItemException(usize),
     ChampionId(ChampionId),
     InsertItem(ItemId),
@@ -20,7 +20,7 @@ pub enum InputDataAction<T> {
 pub enum InputActivePlayerAction {
     InsertRune(RuneId),
     RemoveRune(usize),
-    InsertRuneException(RuneId, u32),
+    InsertRuneException((RuneId, u32)),
     RemoveRuneException(usize),
     AbilityLevels(AbilityLevels),
     Data(InputDataAction<Stats>),
@@ -29,9 +29,9 @@ pub enum InputActivePlayerAction {
 impl<T: Copy + Default> OwnedMinData<T> {
     pub fn apply_reducer(&mut self, action: InputDataAction<T>) {
         match action {
-            InputDataAction::InsertItemException(i, v) => self
+            InputDataAction::InsertItemException(i) => self
                 .item_exceptions
-                .push(ValueException::pack_item_id(i, v)),
+                .push(ValueException::pack_item_id(i.0, i.1)),
             InputDataAction::RemoveItemException(v) => {
                 self.item_exceptions.swap_remove(v);
             }
@@ -68,9 +68,9 @@ impl Reducible for OwnedActivePlayer {
             Self::Action::RemoveRune(v) => {
                 new_state.runes.swap_remove(v);
             }
-            Self::Action::InsertRuneException(r, v) => new_state
+            Self::Action::InsertRuneException(r) => new_state
                 .rune_exceptions
-                .push(ValueException::pack_rune_id(r, v)),
+                .push(ValueException::pack_rune_id(r.0, r.1)),
             Self::Action::RemoveRuneException(v) => {
                 new_state.rune_exceptions.swap_remove(v);
             }
@@ -78,6 +78,27 @@ impl Reducible for OwnedActivePlayer {
             Self::Action::Data(v) => new_state.data.apply_reducer(v),
         };
 
+        Rc::new(new_state)
+    }
+}
+
+pub enum DragonAction {
+    AllyEarth(u16),
+    AllyFire(u16),
+    AllyChemtech(u16),
+    EnemyEarth(u16),
+}
+
+impl Reducible for Dragons {
+    type Action = DragonAction;
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut new_state = (*self).clone();
+        match action {
+            DragonAction::AllyEarth(v) => new_state.ally_earth_dragons = v,
+            DragonAction::AllyFire(v) => new_state.ally_fire_dragons = v,
+            DragonAction::AllyChemtech(v) => new_state.ally_chemtech_dragons = v,
+            DragonAction::EnemyEarth(v) => new_state.enemy_earth_dragons = v,
+        };
         Rc::new(new_state)
     }
 }

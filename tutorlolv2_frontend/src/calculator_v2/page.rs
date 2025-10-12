@@ -1,5 +1,6 @@
 use super::*;
 use crate::{
+    calculator_v2::{active_player::ActivePlayerData, enemy_players::EnemyPlayersData},
     components::{
         Image, ImageType,
         calculator::{
@@ -16,15 +17,15 @@ use crate::{
     url,
     utils::{ToStaticStr, decode_bytes, encode_bytes},
 };
-use tutorlolv2_imports::{ItemId, RuneId};
+use tutorlolv2_imports::*;
 use web_sys::AbortController;
 use yew::{
-    AttrValue, Html, classes, function_component, html, platform::spawn_local, use_callback,
-    use_effect_with, use_mut_ref, use_reducer, use_state,
+    AttrValue, Html, UseStateHandle, classes, function_component, html, platform::spawn_local,
+    use_callback, use_effect_with, use_mut_ref, use_reducer, use_state,
 };
 
 #[derive(PartialEq, Clone, Copy)]
-enum ActionTracker {
+pub enum ActionTracker {
     Init,
     Any,
     CurrentPlayer,
@@ -32,134 +33,78 @@ enum ActionTracker {
     Replace,
 }
 
+// macro_rules! make_callback {
+//     ($(($name:ty, $action:ident)),*) => {
+//         paste::paste! {
+//             $(
+//                 #[yew::hook]
+//                 fn [<use_cp_ $action:snake>](
+//                     input_current_player: yew::UseReducerHandle<OwnedActivePlayer>,
+//                     action_tracker: std::rc::Rc<std::cell::RefCell<ActionTracker>>,
+//                 ) -> yew::Callback<$name> {
+//                     let action_tracker = action_tracker.clone();
+//                     use_callback((), move |v, _| {
+//                         action_tracker.replace(ActionTracker::CurrentPlayer);
+//                         input_current_player.dispatch(InputActivePlayerAction::Data(InputDataAction::$action(v)));
+//                     })
+//                 }
+//                 #[yew::hook]
+//                 fn [<use_enm_ $action:snake>](
+//                     input_enemy_players: yew::UseReducerHandle<InputEnemies<SimpleStats>>,
+//                     action_tracker: std::rc::Rc<std::cell::RefCell<ActionTracker>>,
+//                     index: usize
+//                 ) -> yew::Callback<$name> {
+//                     let action_tracker = action_tracker.clone();
+//                     use_callback((), move |v, _| {
+//                         action_tracker.replace(ActionTracker::EnemyPlayer(index));
+//                         input_enemy_players.dispatch(EnemyAction::Edit(
+//                             index,
+//                             InputDataAction::$action(v),
+//                         ));
+//                     })
+//                 }
+//             )*
+//         }
+//     };
+// }
+
+// make_callback!(
+//     ((ItemId, u32), InsertItemException),
+//     (usize, RemoveItemException),
+//     (ChampionId, ChampionId),
+//     (ItemId, InsertItem),
+//     (usize, RemoveItem),
+//     (bool, InferStats),
+//     (bool, IsMegaGnar),
+//     (u32, Stacks),
+//     (u8, Level)
+// );
+
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
     let input_current_player = use_reducer(OwnedActivePlayer::default);
     let input_enemy_players = use_reducer(InputEnemies::<SimpleStats>::new);
     let input_enemy_index = use_state(|| 0);
-    let input_dragons = use_state(Dragons::default);
+    let input_dragons = use_reducer(Dragons::default);
 
     let output_game = use_state(|| None::<OutputGame>);
     let abort_controller = use_state(|| None::<AbortController>);
     let damage_stack = use_reducer(Stack::default);
     let action_tracker = use_mut_ref(|| ActionTracker::Init);
 
-    let current_player_champion_id = input_current_player.data.champion_id;
+    // let cp_InsertItemException =
+    //     use_cp_insert_item_exception(input_current_player.clone(), action_tracker.clone());
+    // let cp_RemoveItemException =
+    //     use_cp_remove_item_exception(input_current_player.clone(), action_tracker.clone());
+    // let cp_ChampionId = use_cp_champion_id(input_current_player.clone(), action_tracker.clone());
+    // let cp_InsertItem = use_cp_insert_item(input_current_player.clone(), action_tracker.clone());
+    // let cp_RemoveItem = use_cp_remove_item(input_current_player.clone(), action_tracker.clone());
+    // let cp_InferStats = use_cp_infer_stats(input_current_player.clone(), action_tracker.clone());
+    // let cp_IsMegaGnar = use_cp_is_mega_gnar(input_current_player.clone(), action_tracker.clone());
+    // let cp_Stats = use_cp_stats(input_current_player.clone(), action_tracker.clone());
+    // let cp_Stacks = use_cp_stacks(input_current_player.clone(), action_tracker.clone());
+    // let cp_Level = use_cp_level(input_current_player.clone(), action_tracker.clone());
 
-    let set_current_player_champion_id = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::ChampionId(v),
-            ));
-        })
-    };
-    let insert_current_player_items = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::InsertItem(v),
-            ));
-        })
-    };
-    let remove_current_player_items = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::RemoveItem(v),
-            ));
-        })
-    };
-    let insert_current_player_runes = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::InsertRune(v));
-        })
-    };
-    let remove_current_player_runes = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::RemoveRune(v));
-        })
-    };
-    let change_ability_level = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::AbilityLevels(v));
-        })
-    };
-    let set_current_player_stats = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(InputDataAction::Stats(v)));
-        })
-    };
-    let set_current_player_level = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(InputDataAction::Level(v)));
-        })
-    };
-    let set_current_player_infer_stats = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::InferStats(v),
-            ));
-        })
-    };
-    let set_current_player_stacks = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player
-                .dispatch(InputActivePlayerAction::Data(InputDataAction::Stacks(v)));
-        })
-    };
-    let set_ally_fire_dragons = {
-        let input_dragons = input_dragons.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            let mut dragons = *input_dragons;
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            dragons.pack_ally_fire_dragons(v);
-            input_dragons.set(dragons);
-        })
-    };
-    let set_ally_earth_dragons = {
-        let input_dragons = input_dragons.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            let mut dragons = *input_dragons;
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            dragons.pack_ally_earth_dragons(v);
-            input_dragons.set(dragons);
-        })
-    };
-    let set_enemy_earth_dragons = {
-        let input_dragons = input_dragons.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            let mut dragons = *input_dragons;
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            dragons.pack_enemy_earth_dragons(v);
-            input_dragons.set(dragons);
-        })
-    };
     let push_stack_callback = {
         let damage_stack = damage_stack.clone();
         use_callback((), move |v, _| {
@@ -170,90 +115,6 @@ pub fn calculator() -> Html {
         let damage_stack = damage_stack.clone();
         use_callback((), move |v, _| {
             damage_stack.dispatch(StackAction::Remove(v));
-        })
-    };
-    let set_enemy_champion_id = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::ChampionId(v),
-            ));
-        })
-    };
-    let set_enemy_stacks = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::Stacks(v),
-            ));
-        })
-    };
-    let set_enemy_infer_stats = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::InferStats(v),
-            ));
-        })
-    };
-    let set_enemy_stats = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::Stats(v),
-            ));
-        })
-    };
-    let set_enemy_level = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::Level(v),
-            ));
-        })
-    };
-    let insert_enemy_player_items = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::InsertItem(v),
-            ));
-        })
-    };
-    let remove_enemy_player_items = {
-        let input_enemy_players = input_enemy_players.clone();
-        let input_enemy_index = *input_enemy_index;
-        let action_tracker = action_tracker.clone();
-        use_callback(input_enemy_index, move |v, _| {
-            action_tracker.replace(ActionTracker::EnemyPlayer(input_enemy_index));
-            input_enemy_players.dispatch(EnemyAction::Edit(
-                input_enemy_index,
-                InputDataAction::RemoveItem(v),
-            ));
         })
     };
 
@@ -365,63 +226,11 @@ pub fn calculator() -> Html {
         <div class={classes!(
             "oxanium", "gap-4", "grid", "grid-cols-[auto_1fr_auto]", "w-full"
         )}>
-            <div class={classes!(
-                "flex", "flex-col", "gap-2", "w-60", "bg-[#141417]",
-                "h-screen"
-            )}>
-                <ChampionBanner
-                    callback={set_current_player_champion_id}
-                    champion_id={current_player_champion_id}
-                />
-                <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
-                    <AbilitySelector
-                        ability_levels={input_current_player.abilities}
-                        callback={change_ability_level}
-                        current_player_champion_id={current_player_champion_id}
-                    />
-                    <NumericField<u32>
-                        title={"Number of ally fire dragons"}
-                        source={Exception::Image}
-                        img_url={url!("/img/other/fire_soul.avif")}
-                        callback={set_ally_fire_dragons}
-                    />
-                    <NumericField<u32>
-                        title={"Number of ally earth dragons"}
-                        source={Exception::Image}
-                        img_url={url!("/img/other/earth_soul.avif")}
-                        callback={set_ally_earth_dragons}
-                    />
-                    <ExceptionSelector
-                        champion_id={current_player_champion_id}
-                        infer_stats={input_current_player.data.infer_stats}
-                        stack_callback={set_current_player_stacks}
-                        infer_stats_callback={set_current_player_infer_stats}
-                    />
-                </div>
-                <OpenTray<ItemId>
-                    insert_callback={insert_current_player_items}
-                    title={"Search items"}
-                />
-                <Tray<ItemId>
-                    array={input_current_player.data.items.clone()}
-                    remove_callback={remove_current_player_items}
-                />
-                <OpenTray<RuneId>
-                    insert_callback={insert_current_player_runes}
-                    title={"Search runes"}
-                />
-                <Tray<RuneId>
-                    array={input_current_player.runes.clone()}
-                    remove_callback={remove_current_player_runes}
-                />
-                // <StatsSelector
-                //     champion_stats={input_current_player.data.stats}
-                //     infer_stats={input_current_player.data.infer_stats}
-                //     set_stats_callback={set_current_player_stats}
-                //     set_level_callback={set_current_player_level}
-                //     level={input_current_player.data.level}
-                // />
-            </div>
+            <ActivePlayerData
+                input_current_player={input_current_player}
+                input_dragons={input_dragons.clone()}
+                action_tracker={action_tracker.clone()}
+            />
             <div>
                 // {
                 //     if let Some(output_game) = &*output_game {
@@ -599,50 +408,11 @@ pub fn calculator() -> Html {
                 //     }
                 // }
             </div>
-            <div class={classes!(
-                "flex", "flex-col", "gap-2", "w-60", "bg-[#141417]",
-                "h-screen",
-            )}>
-                {input_enemy_players.as_ref().get(*input_enemy_index).map(|input_enemy| html! {
-                    <>
-                        <ChampionBanner
-                            callback={set_enemy_champion_id}
-                            champion_id={input_enemy.champion_id}
-                            translate_left={true}
-                        />
-                        <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
-                            <NumericField<u32>
-                                title={"Number of enemy earth dragons"}
-                                source={Exception::Image}
-                                img_url={url!("/img/other/earth_soul.avif")}
-                                callback={set_enemy_earth_dragons}
-                            />
-                            <ExceptionSelector
-                                champion_id={input_enemy.champion_id}
-                                infer_stats={input_enemy.infer_stats}
-                                stack_callback={set_enemy_stacks}
-                                infer_stats_callback={set_enemy_infer_stats}
-                            />
-                        </div>
-                        // <BasicStatsSelector
-                        //     champion_stats={input_enemy.stats}
-                        //     infer_stats={input_enemy.infer_stats}
-                        //     set_stats_callback={set_enemy_stats}
-                        //     set_level_callback={set_enemy_level}
-                        //     level={input_enemy.level}
-                        // />
-                        <OpenTray<ItemId>
-                            insert_callback={insert_enemy_player_items}
-                            title={"Search items"}
-                        />
-                        <Tray<ItemId>
-                            array={input_enemy.items.clone()}
-                            remove_callback={remove_enemy_player_items}
-                            translate_left={true}
-                        />
-                    </>
-                })}
-            </div>
+            <EnemyPlayersData
+                input_enemy_players={input_enemy_players}
+                input_dragons={input_dragons}
+                action_tracker={action_tracker}
+            />
         </div>
     }
 }

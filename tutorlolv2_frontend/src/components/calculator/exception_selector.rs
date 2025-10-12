@@ -25,14 +25,14 @@ macro_rules! impl_numeric {
         $(
             impl Numeric for $typename {
                 fn parse(s: &str) -> Self {
-                    s.parse::<$typename>().unwrap_or_default().max(0)
+                    s.parse::<$typename>().unwrap_or_default()
                 }
             }
         )*
     };
 }
 
-impl_numeric!(u8, u32);
+impl_numeric!(u8, u16, u32);
 
 #[derive(Properties, PartialEq)]
 pub struct ExceptionField<T: Numeric> {

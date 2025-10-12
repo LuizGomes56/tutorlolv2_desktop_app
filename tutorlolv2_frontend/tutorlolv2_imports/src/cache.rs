@@ -22,6 +22,7 @@ impl AbilityLike {
 }
 
 #[derive(PartialEq, Debug, Clone, Copy, Decode)]
+#[repr(u8)]
 pub enum AbilityName {
     _1,
     _2,
@@ -34,17 +35,6 @@ pub enum AbilityName {
     Mega,
     Max,
     Min,
-    Minion,
-    Minion1,
-    Minion2,
-    Minion3,
-    MinionMax,
-    Monster,
-    Monster1,
-    Monster2,
-    Monster3,
-    Monster4,
-    MonsterMax,
     Void,
     _1Max,
     _2Max,
@@ -62,6 +52,17 @@ pub enum AbilityName {
     _6Min,
     _7Min,
     _8Min,
+    Minion,
+    Minion1,
+    Minion2,
+    Minion3,
+    MinionMax,
+    Monster,
+    Monster1,
+    Monster2,
+    Monster3,
+    Monster4,
+    MonsterMax,
 }
 
 impl AbilityName {
@@ -78,17 +79,6 @@ impl AbilityName {
             Self::Mega => ("MEGA", "damage as Mega Gnar"),
             Self::Max => ("MAX", "maximum damage"),
             Self::Min => ("MIN", "minimum damage"),
-            Self::Minion => ("MN", "minion damage"),
-            Self::Minion1 => ("MN", "minion damage #1"),
-            Self::Minion2 => ("MN", "minion damage #2"),
-            Self::Minion3 => ("MN", "minion damage #3"),
-            Self::MinionMax => ("MN+", "minion maximum damage"),
-            Self::Monster => ("MT", "monster damage"),
-            Self::Monster1 => ("MT1", "monster damage #1"),
-            Self::Monster2 => ("MT2", "monster damage #2"),
-            Self::Monster3 => ("MT3", "monster damage #3"),
-            Self::Monster4 => ("MT4", "monster damage #4"),
-            Self::MonsterMax => ("MT+", "monster maximum damage"),
             Self::Void => ("", ""),
             Self::_1Max => ("1+", "maximum damage #1"),
             Self::_2Max => ("2+", "maximum damage #2"),
@@ -106,6 +96,17 @@ impl AbilityName {
             Self::_6Min => ("6-", "minimum damage #6"),
             Self::_7Min => ("7-", "minimum damage #7"),
             Self::_8Min => ("8-", "minimum damage #8"),
+            Self::Minion => ("MN", "minion damage"),
+            Self::Minion1 => ("MN", "minion damage #1"),
+            Self::Minion2 => ("MN", "minion damage #2"),
+            Self::Minion3 => ("MN", "minion damage #3"),
+            Self::MinionMax => ("MN+", "minion maximum damage"),
+            Self::Monster => ("MT", "monster damage"),
+            Self::Monster1 => ("MT1", "monster damage #1"),
+            Self::Monster2 => ("MT2", "monster damage #2"),
+            Self::Monster3 => ("MT3", "monster damage #3"),
+            Self::Monster4 => ("MT4", "monster damage #4"),
+            Self::MonsterMax => ("MT+", "monster maximum damage"),
         }
     }
 }
