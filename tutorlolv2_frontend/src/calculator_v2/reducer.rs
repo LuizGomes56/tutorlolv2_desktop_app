@@ -92,7 +92,7 @@ pub enum DragonAction {
 impl Reducible for Dragons {
     type Action = DragonAction;
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_state = (*self).clone();
+        let mut new_state = *self;
         match action {
             DragonAction::AllyEarth(v) => new_state.ally_earth_dragons = v,
             DragonAction::AllyFire(v) => new_state.ally_fire_dragons = v,

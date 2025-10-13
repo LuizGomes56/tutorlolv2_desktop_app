@@ -1,7 +1,7 @@
 use crate::{
     calculator_v2::{
         AbilitySelector, DragonAction, InputActivePlayerAction, InputDataAction,
-        page::ActionTracker,
+        page::{ActionTracker, use_dragon_editor},
     },
     components::calculator::{
         ChampionBanner, Exception, ExceptionSelector, NumericField, OpenTray, Tray,
@@ -11,7 +11,10 @@ use crate::{
 };
 use std::{cell::RefCell, rc::Rc};
 use tutorlolv2_imports::{ItemId, RuneId};
-use yew::{Html, Properties, UseReducerHandle, classes, function_component, html, use_callback};
+use yew::{
+    Callback, Html, Properties, UseReducerHandle, classes, function_component, hook, html,
+    use_callback,
+};
 
 #[derive(Properties)]
 pub struct ActivePlayerDataProps {
@@ -26,6 +29,27 @@ impl PartialEq for ActivePlayerDataProps {
     }
 }
 
+#[derive(Clone)]
+struct EditorProps {
+    input_current_player: UseReducerHandle<OwnedActivePlayer>,
+    action_tracker: Rc<RefCell<ActionTracker>>,
+}
+
+#[hook]
+fn use_editor<T: 'static>(
+    props: EditorProps,
+    closure: fn(T) -> InputActivePlayerAction,
+) -> Callback<T> {
+    let EditorProps {
+        input_current_player,
+        action_tracker,
+    } = props;
+    use_callback((), move |v, _| {
+        action_tracker.replace(ActionTracker::CurrentPlayer);
+        input_current_player.dispatch(closure(v));
+    })
+}
+
 #[function_component(ActivePlayerData)]
 pub fn active_player_data(props: &ActivePlayerDataProps) -> Html {
     let input_current_player = props.input_current_player.clone();
@@ -33,89 +57,50 @@ pub fn active_player_data(props: &ActivePlayerDataProps) -> Html {
     let input_dragons = props.input_dragons.clone();
     let current_player_champion_id = input_current_player.data.champion_id;
 
-    let set_current_player_champion_id = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::ChampionId(v),
-            ));
-        })
+    let editor_props = EditorProps {
+        input_current_player: input_current_player.clone(),
+        action_tracker: action_tracker.clone(),
     };
-    let insert_current_player_items = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::InsertItem(v),
-            ));
-        })
-    };
-    let remove_current_player_items = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::RemoveItem(v),
-            ));
-        })
-    };
-    let insert_current_player_runes = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::InsertRune(v));
-        })
-    };
-    let remove_current_player_runes = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::RemoveRune(v));
-        })
-    };
-    let change_ability_level = {
-        let input_current_player = input_current_player.clone();
-        use_callback((), move |v, _| {
-            input_current_player.dispatch(InputActivePlayerAction::AbilityLevels(v));
-        })
-    };
-    let set_current_player_infer_stats = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player.dispatch(InputActivePlayerAction::Data(
-                InputDataAction::InferStats(v),
-            ));
-        })
-    };
-    let set_current_player_stacks = {
-        let input_current_player = input_current_player.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_current_player
-                .dispatch(InputActivePlayerAction::Data(InputDataAction::Stacks(v)));
-        })
-    };
-    let set_ally_fire_dragons = {
-        let input_dragons = input_dragons.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_dragons.dispatch(DragonAction::AllyFire(v));
-        })
-    };
-    let set_ally_earth_dragons = {
-        let input_dragons = input_dragons.clone();
-        let action_tracker = action_tracker.clone();
-        use_callback((), move |v, _| {
-            action_tracker.replace(ActionTracker::CurrentPlayer);
-            input_dragons.dispatch(DragonAction::AllyEarth(v));
-        })
-    };
+
+    let cb_champion_id = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::ChampionId(v))
+    });
+    let cb_insert_item = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::InsertItem(v))
+    });
+    let cb_remove_item = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::RemoveItem(v))
+    });
+    let cb_insert_rune = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::InsertRune(v)
+    });
+    let cb_remove_rune = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::RemoveRune(v)
+    });
+    let cb_level = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::Level(v))
+    });
+    let cb_ability_levels = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::AbilityLevels(v)
+    });
+    let cb_infer_stats = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::InferStats(v))
+    });
+    let cb_stacks = use_editor(editor_props.clone(), |v| {
+        InputActivePlayerAction::Data(InputDataAction::Stacks(v))
+    });
+    let cb_fire_dragons = use_dragon_editor(
+        action_tracker.clone(),
+        ActionTracker::CurrentPlayer,
+        input_dragons.clone(),
+        DragonAction::AllyFire,
+    );
+    let cb_earth_dragons = use_dragon_editor(
+        action_tracker.clone(),
+        ActionTracker::CurrentPlayer,
+        input_dragons.clone(),
+        DragonAction::AllyEarth,
+    );
 
     html! {
         <div class={classes!(
@@ -123,49 +108,49 @@ pub fn active_player_data(props: &ActivePlayerDataProps) -> Html {
             "h-screen"
         )}>
             <ChampionBanner
-                callback={set_current_player_champion_id}
+                callback={cb_champion_id}
                 champion_id={current_player_champion_id}
             />
             <div class={classes!("grid", "grid-cols-4", "gap-2", "px-4")}>
                 <AbilitySelector
                     ability_levels={input_current_player.abilities}
-                    callback={change_ability_level}
+                    callback={cb_ability_levels}
                     current_player_champion_id={current_player_champion_id}
                 />
                 <NumericField<u16>
                     title={"Number of ally fire dragons"}
                     source={Exception::Image}
                     img_url={url!("/img/other/fire_soul.avif")}
-                    callback={set_ally_fire_dragons}
+                    callback={cb_fire_dragons}
                 />
                 <NumericField<u16>
                     title={"Number of ally earth dragons"}
                     source={Exception::Image}
                     img_url={url!("/img/other/earth_soul.avif")}
-                    callback={set_ally_earth_dragons}
+                    callback={cb_earth_dragons}
                 />
                 <ExceptionSelector
                     champion_id={current_player_champion_id}
                     infer_stats={input_current_player.data.infer_stats}
-                    stack_callback={set_current_player_stacks}
-                    infer_stats_callback={set_current_player_infer_stats}
+                    stack_callback={cb_stacks}
+                    infer_stats_callback={cb_infer_stats}
                 />
             </div>
             <OpenTray<ItemId>
-                insert_callback={insert_current_player_items}
+                insert_callback={cb_insert_item}
                 title={"Search items"}
             />
             <Tray<ItemId>
                 array={input_current_player.data.items.clone()}
-                remove_callback={remove_current_player_items}
+                remove_callback={cb_remove_item}
             />
             <OpenTray<RuneId>
-                insert_callback={insert_current_player_runes}
+                insert_callback={cb_insert_rune}
                 title={"Search runes"}
             />
             <Tray<RuneId>
                 array={input_current_player.runes.clone()}
-                remove_callback={remove_current_player_runes}
+                remove_callback={cb_remove_rune}
             />
             // <StatsSelector
             //     champion_stats={input_current_player.data.stats}

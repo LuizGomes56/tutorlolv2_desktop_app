@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use super::*;
 use crate::{
     calculator_v2::{active_player::ActivePlayerData, enemy_players::EnemyPlayersData},
@@ -20,8 +22,9 @@ use crate::{
 use tutorlolv2_imports::*;
 use web_sys::AbortController;
 use yew::{
-    AttrValue, Html, UseStateHandle, classes, function_component, html, platform::spawn_local,
-    use_callback, use_effect_with, use_mut_ref, use_reducer, use_state,
+    AttrValue, Callback, Html, UseReducerHandle, UseStateHandle, classes, function_component, hook,
+    html, platform::spawn_local, use_callback, use_effect_with, use_mut_ref, use_reducer,
+    use_state,
 };
 
 #[derive(PartialEq, Clone, Copy)]
@@ -33,52 +36,18 @@ pub enum ActionTracker {
     Replace,
 }
 
-// macro_rules! make_callback {
-//     ($(($name:ty, $action:ident)),*) => {
-//         paste::paste! {
-//             $(
-//                 #[yew::hook]
-//                 fn [<use_cp_ $action:snake>](
-//                     input_current_player: yew::UseReducerHandle<OwnedActivePlayer>,
-//                     action_tracker: std::rc::Rc<std::cell::RefCell<ActionTracker>>,
-//                 ) -> yew::Callback<$name> {
-//                     let action_tracker = action_tracker.clone();
-//                     use_callback((), move |v, _| {
-//                         action_tracker.replace(ActionTracker::CurrentPlayer);
-//                         input_current_player.dispatch(InputActivePlayerAction::Data(InputDataAction::$action(v)));
-//                     })
-//                 }
-//                 #[yew::hook]
-//                 fn [<use_enm_ $action:snake>](
-//                     input_enemy_players: yew::UseReducerHandle<InputEnemies<SimpleStats>>,
-//                     action_tracker: std::rc::Rc<std::cell::RefCell<ActionTracker>>,
-//                     index: usize
-//                 ) -> yew::Callback<$name> {
-//                     let action_tracker = action_tracker.clone();
-//                     use_callback((), move |v, _| {
-//                         action_tracker.replace(ActionTracker::EnemyPlayer(index));
-//                         input_enemy_players.dispatch(EnemyAction::Edit(
-//                             index,
-//                             InputDataAction::$action(v),
-//                         ));
-//                     })
-//                 }
-//             )*
-//         }
-//     };
-// }
-
-// make_callback!(
-//     ((ItemId, u32), InsertItemException),
-//     (usize, RemoveItemException),
-//     (ChampionId, ChampionId),
-//     (ItemId, InsertItem),
-//     (usize, RemoveItem),
-//     (bool, InferStats),
-//     (bool, IsMegaGnar),
-//     (u32, Stacks),
-//     (u8, Level)
-// );
+#[hook]
+pub fn use_dragon_editor(
+    action_tracker: Rc<RefCell<ActionTracker>>,
+    new_action_tracker: ActionTracker,
+    input_dragons: UseReducerHandle<Dragons>,
+    dispatch_fn: fn(u16) -> DragonAction,
+) -> Callback<u16> {
+    use_callback((), move |v, _| {
+        action_tracker.replace(new_action_tracker);
+        input_dragons.dispatch(dispatch_fn(v));
+    })
+}
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
