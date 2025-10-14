@@ -1,12 +1,14 @@
-use bincode::{Decode, Encode};
+use bincode::{Decode, Encode, config::Configuration};
 use web_sys::AbortSignal;
+
+const BINCODE_CFG: Configuration = bincode::config::standard();
 
 pub async fn encode_bytes<T: Encode>(
     url: &str,
     data: &T,
     signal: Option<AbortSignal>,
 ) -> Option<gloo_net::http::Response> {
-    match bincode::encode_to_vec(data, bincode::config::standard()) {
+    match bincode::encode_to_vec(data, BINCODE_CFG) {
         Ok(body) => {
             let mut request = gloo_net::http::Request::post(url)
                 .header("Content-Type", "application/octet-stream");
@@ -27,7 +29,7 @@ pub async fn encode_bytes<T: Encode>(
 pub async fn decode_bytes<T: Decode<()>>(response: gloo_net::http::Response) -> Option<T> {
     let bytes = response.binary().await.ok()?;
 
-    match bincode::decode_from_slice::<T, _>(&bytes, bincode::config::standard()) {
+    match bincode::decode_from_slice::<T, _>(&bytes, BINCODE_CFG) {
         Ok((decoded, _)) => Some(decoded),
         Err(e) => {
             web_sys::console::log_1(&format!("{:#?}", e).into());

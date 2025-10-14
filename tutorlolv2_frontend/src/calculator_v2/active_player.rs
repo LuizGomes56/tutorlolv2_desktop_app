@@ -1,7 +1,10 @@
 use crate::{
     calculator_v2::{
         AbilitySelector, DragonAction, InputActivePlayerAction, InputDataAction,
-        page::{ActionTracker, use_dragon_editor},
+        page::{
+            ActionTracker, DragonCallbackProps, EnemyCallbackProps, PlayerCallbackProps,
+            use_dragon_callback, use_player_callback,
+        },
     },
     components::calculator::{
         ChampionBanner, Exception, ExceptionSelector, NumericField, OpenTray, Tray,
@@ -29,27 +32,6 @@ impl PartialEq for ActivePlayerDataProps {
     }
 }
 
-#[derive(Clone)]
-struct EditorProps {
-    input_current_player: UseReducerHandle<OwnedActivePlayer>,
-    action_tracker: Rc<RefCell<ActionTracker>>,
-}
-
-#[hook]
-fn use_editor<T: 'static>(
-    props: EditorProps,
-    closure: fn(T) -> InputActivePlayerAction,
-) -> Callback<T> {
-    let EditorProps {
-        input_current_player,
-        action_tracker,
-    } = props;
-    use_callback((), move |v, _| {
-        action_tracker.replace(ActionTracker::CurrentPlayer);
-        input_current_player.dispatch(closure(v));
-    })
-}
-
 #[function_component(ActivePlayerData)]
 pub fn active_player_data(props: &ActivePlayerDataProps) -> Html {
     let input_current_player = props.input_current_player.clone();
@@ -57,50 +39,47 @@ pub fn active_player_data(props: &ActivePlayerDataProps) -> Html {
     let input_dragons = props.input_dragons.clone();
     let current_player_champion_id = input_current_player.data.champion_id;
 
-    let editor_props = EditorProps {
+    let editor_props = PlayerCallbackProps {
         input_current_player: input_current_player.clone(),
         action_tracker: action_tracker.clone(),
     };
 
-    let cb_champion_id = use_editor(editor_props.clone(), |v| {
+    let cb_champion_id = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::Data(InputDataAction::ChampionId(v))
     });
-    let cb_insert_item = use_editor(editor_props.clone(), |v| {
+    let cb_insert_item = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::Data(InputDataAction::InsertItem(v))
     });
-    let cb_remove_item = use_editor(editor_props.clone(), |v| {
+    let cb_remove_item = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::Data(InputDataAction::RemoveItem(v))
     });
-    let cb_insert_rune = use_editor(editor_props.clone(), |v| {
+    let cb_insert_rune = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::InsertRune(v)
     });
-    let cb_remove_rune = use_editor(editor_props.clone(), |v| {
+    let cb_remove_rune = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::RemoveRune(v)
     });
-    let cb_level = use_editor(editor_props.clone(), |v| {
+    let cb_level = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::Data(InputDataAction::Level(v))
     });
-    let cb_ability_levels = use_editor(editor_props.clone(), |v| {
+    let cb_ability_levels = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::AbilityLevels(v)
     });
-    let cb_infer_stats = use_editor(editor_props.clone(), |v| {
+    let cb_infer_stats = use_player_callback(editor_props.clone(), |v| {
         InputActivePlayerAction::Data(InputDataAction::InferStats(v))
     });
-    let cb_stacks = use_editor(editor_props.clone(), |v| {
+    let cb_stacks = use_player_callback(editor_props, |v| {
         InputActivePlayerAction::Data(InputDataAction::Stacks(v))
     });
-    let cb_fire_dragons = use_dragon_editor(
-        action_tracker.clone(),
-        ActionTracker::CurrentPlayer,
-        input_dragons.clone(),
-        DragonAction::AllyFire,
-    );
-    let cb_earth_dragons = use_dragon_editor(
-        action_tracker.clone(),
-        ActionTracker::CurrentPlayer,
-        input_dragons.clone(),
-        DragonAction::AllyEarth,
-    );
+
+    let dragon_editor_props = DragonCallbackProps {
+        new_action_tracker: ActionTracker::CurrentPlayer,
+        action_tracker: action_tracker.clone(),
+        input_dragons: input_dragons.clone(),
+    };
+
+    let cb_fire_dragons = use_dragon_callback(dragon_editor_props.clone(), DragonAction::AllyFire);
+    let cb_earth_dragons = use_dragon_callback(dragon_editor_props, DragonAction::AllyEarth);
 
     html! {
         <div class={classes!(

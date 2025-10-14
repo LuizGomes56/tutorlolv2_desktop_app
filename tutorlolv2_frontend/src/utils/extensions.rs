@@ -17,11 +17,9 @@ pub trait IndexCast {
 macro_rules! impl_unsafe_cast {
     ($ty:ty, $repr:ty) => {
         impl $crate::utils::IndexCast for $ty {
-            #[inline]
             fn from_usize_unchecked(index: usize) -> Self {
                 unsafe { core::mem::transmute(index as $repr) }
             }
-            #[inline]
             fn into_usize(self) -> usize {
                 self as usize
             }

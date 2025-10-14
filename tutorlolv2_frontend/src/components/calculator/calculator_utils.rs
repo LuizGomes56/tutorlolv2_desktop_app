@@ -266,7 +266,7 @@ pub enum StackValue {
 }
 
 pub enum StackAction {
-    Push(StackValue),
+    Insert(StackValue),
     Remove(u16),
 }
 
@@ -295,7 +295,7 @@ impl Reducible for Stack {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_state = (*self).clone();
         match action {
-            StackAction::Push(value) => {
+            StackAction::Insert(value) => {
                 new_state.push(value);
             }
             StackAction::Remove(index) => {

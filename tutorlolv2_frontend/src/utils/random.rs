@@ -24,25 +24,24 @@ macro_rules! impl_random_input {
 }
 
 impl RandomInput {
-    pub fn recommended_items(champion_id: ChampionId) -> &'static [ItemId] {
+    fn recommended<const N: usize, const L: usize, T>(
+        champion_id: ChampionId,
+        constant: [[&'static [T]; N]; L],
+    ) -> &'static [T] {
         unsafe {
             let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
             let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
             let position = positions.get_unchecked(random_index);
-            RECOMMENDED_ITEMS
+            constant
                 .get_unchecked(champion_id as usize)
                 .get_unchecked(*position as usize)
         }
     }
+    pub fn recommended_items(champion_id: ChampionId) -> &'static [ItemId] {
+        Self::recommended(champion_id, RECOMMENDED_ITEMS)
+    }
     pub fn recommended_runes(champion_id: ChampionId) -> &'static [RuneId] {
-        unsafe {
-            let positions = CHAMPION_POSITIONS.get_unchecked(champion_id as usize);
-            let random_index = RandomInput::rand_num_limited(positions.len() as f64) as usize;
-            let position = positions.get_unchecked(random_index);
-            RECOMMENDED_RUNES
-                .get_unchecked(champion_id as usize)
-                .get_unchecked(*position as usize)
-        }
+        Self::recommended(champion_id, RECOMMENDED_RUNES)
     }
 }
 
@@ -51,18 +50,15 @@ impl_random_input!(ItemId, u16, ITEM_ID_TO_NAME);
 impl_random_input!(RuneId, u8, RUNE_ID_TO_NAME);
 
 impl RandomInput {
-    #[inline]
     fn rand_num_limited(limit: f64) -> f64 {
         Math::floor(Math::random() * limit)
     }
 
-    #[inline]
     pub fn rand_u8(n: u8) -> u8 {
         Self::rand_num_limited(n as f64) as u8
     }
 
-    #[inline]
     pub fn rand_id() -> AttrValue {
-        AttrValue::from((Self::rand_num_limited((u32::MAX) as f64) as usize).to_string())
+        AttrValue::from((Self::rand_num_limited(f64::MAX) as usize).to_string())
     }
 }

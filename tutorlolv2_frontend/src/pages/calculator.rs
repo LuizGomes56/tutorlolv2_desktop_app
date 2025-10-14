@@ -146,7 +146,7 @@ pub fn calculator() -> Html {
     let push_stack_callback = {
         let damage_stack = damage_stack.clone();
         use_callback((), move |v, _| {
-            damage_stack.dispatch(StackAction::Push(v));
+            damage_stack.dispatch(StackAction::Insert(v));
         })
     };
     let remove_stack_callback = {

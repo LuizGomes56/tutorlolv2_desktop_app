@@ -13,7 +13,6 @@ pub struct FixedBuffer<const N: usize> {
 }
 
 impl<const N: usize> Write for FixedBuffer<N> {
-    #[inline(always)]
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         unsafe {
             let destination_ptr = self.buffer.as_mut_ptr().add(self.position);
@@ -30,7 +29,6 @@ impl<const N: usize> Write for FixedBuffer<N> {
 }
 
 impl ToStaticStr for (u32, u32) {
-    #[inline]
     fn as_static_str(&self) -> &'static str {
         unsafe {
             core::str::from_utf8_unchecked(CACHE.get_unchecked(self.0 as usize..self.1 as usize))

@@ -1,5 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
-
 use super::*;
 use crate::{
     calculator_v2::{active_player::ActivePlayerData, enemy_players::EnemyPlayersData},
@@ -19,6 +17,7 @@ use crate::{
     url,
     utils::{ToStaticStr, decode_bytes, encode_bytes},
 };
+use std::{cell::RefCell, rc::Rc};
 use tutorlolv2_imports::*;
 use web_sys::AbortController;
 use yew::{
@@ -36,24 +35,85 @@ pub enum ActionTracker {
     Replace,
 }
 
+#[derive(Clone)]
+pub struct PlayerCallbackProps {
+    pub input_current_player: UseReducerHandle<OwnedActivePlayer>,
+    pub action_tracker: Rc<RefCell<ActionTracker>>,
+}
+
 #[hook]
-pub fn use_dragon_editor(
-    action_tracker: Rc<RefCell<ActionTracker>>,
-    new_action_tracker: ActionTracker,
-    input_dragons: UseReducerHandle<Dragons>,
-    dispatch_fn: fn(u16) -> DragonAction,
+pub fn use_player_callback<T: 'static>(
+    props: PlayerCallbackProps,
+    closure: fn(T) -> InputActivePlayerAction,
+) -> Callback<T> {
+    let PlayerCallbackProps {
+        input_current_player,
+        action_tracker,
+    } = props;
+    use_callback((), move |v, _| {
+        action_tracker.replace(ActionTracker::CurrentPlayer);
+        input_current_player.dispatch(closure(v));
+    })
+}
+
+#[derive(Clone)]
+pub struct EnemyCallbackProps {
+    pub input_enemy_players: UseReducerHandle<InputEnemies<SimpleStats>>,
+    pub input_enemy_index: UseStateHandle<usize>,
+    pub action_tracker: Rc<RefCell<ActionTracker>>,
+}
+
+#[hook]
+pub fn use_enemy_callback<T: 'static>(
+    props: EnemyCallbackProps,
+    enum_const_fn: fn(T) -> InputDataAction<SimpleStats>,
+) -> Callback<T> {
+    let EnemyCallbackProps {
+        input_enemy_players,
+        input_enemy_index,
+        action_tracker,
+    } = props;
+    use_callback((), move |v, _| {
+        action_tracker.replace(ActionTracker::EnemyPlayer(*input_enemy_index));
+        input_enemy_players.dispatch(EnemyAction::Edit(*input_enemy_index, enum_const_fn(v)));
+    })
+}
+
+#[derive(Clone)]
+pub struct DragonCallbackProps {
+    pub input_dragons: UseReducerHandle<Dragons>,
+    pub action_tracker: Rc<RefCell<ActionTracker>>,
+    pub new_action_tracker: ActionTracker,
+}
+
+#[hook]
+pub fn use_dragon_callback(
+    props: DragonCallbackProps,
+    enum_const_fn: fn(u16) -> DragonAction,
 ) -> Callback<u16> {
+    let DragonCallbackProps {
+        input_dragons,
+        action_tracker,
+        new_action_tracker,
+    } = props;
     use_callback((), move |v, _| {
         action_tracker.replace(new_action_tracker);
-        input_dragons.dispatch(dispatch_fn(v));
+        input_dragons.dispatch(enum_const_fn(v));
     })
+}
+
+#[hook]
+pub fn use_damage_stack_callback<T: 'static>(
+    damage_stack: UseReducerHandle<Stack>,
+    enum_const_fn: fn(T) -> StackAction,
+) -> Callback<T> {
+    use_callback((), move |v, _| damage_stack.dispatch(enum_const_fn(v)))
 }
 
 #[function_component(Calculator)]
 pub fn calculator() -> Html {
     let input_current_player = use_reducer(OwnedActivePlayer::default);
     let input_enemy_players = use_reducer(InputEnemies::<SimpleStats>::new);
-    let input_enemy_index = use_state(|| 0);
     let input_dragons = use_reducer(Dragons::default);
 
     let output_game = use_state(|| None::<OutputGame>);
@@ -61,31 +121,8 @@ pub fn calculator() -> Html {
     let damage_stack = use_reducer(Stack::default);
     let action_tracker = use_mut_ref(|| ActionTracker::Init);
 
-    // let cp_InsertItemException =
-    //     use_cp_insert_item_exception(input_current_player.clone(), action_tracker.clone());
-    // let cp_RemoveItemException =
-    //     use_cp_remove_item_exception(input_current_player.clone(), action_tracker.clone());
-    // let cp_ChampionId = use_cp_champion_id(input_current_player.clone(), action_tracker.clone());
-    // let cp_InsertItem = use_cp_insert_item(input_current_player.clone(), action_tracker.clone());
-    // let cp_RemoveItem = use_cp_remove_item(input_current_player.clone(), action_tracker.clone());
-    // let cp_InferStats = use_cp_infer_stats(input_current_player.clone(), action_tracker.clone());
-    // let cp_IsMegaGnar = use_cp_is_mega_gnar(input_current_player.clone(), action_tracker.clone());
-    // let cp_Stats = use_cp_stats(input_current_player.clone(), action_tracker.clone());
-    // let cp_Stacks = use_cp_stacks(input_current_player.clone(), action_tracker.clone());
-    // let cp_Level = use_cp_level(input_current_player.clone(), action_tracker.clone());
-
-    let push_stack_callback = {
-        let damage_stack = damage_stack.clone();
-        use_callback((), move |v, _| {
-            damage_stack.dispatch(StackAction::Push(v));
-        })
-    };
-    let remove_stack_callback = {
-        let damage_stack = damage_stack.clone();
-        use_callback((), move |v, _| {
-            damage_stack.dispatch(StackAction::Remove(v));
-        })
-    };
+    let cb_insert_stack = use_damage_stack_callback(damage_stack.clone(), StackAction::Insert);
+    let cb_remove_stack = use_damage_stack_callback(damage_stack, StackAction::Remove);
 
     // use_effect_with(damage_stack.clone(), move |damage_stack| {
     //     web_sys::console::log_1(&format!("{:#?}", damage_stack.clone_inner()).into());

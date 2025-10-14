@@ -9,9 +9,6 @@ macro_rules! svg {
 #[macro_export]
 macro_rules! url {
     (@inner) => { "http://localhost:8082" };
-    (static $path:expr) => {
-        url!(@inner).to_owned() + $path
-    };
     ($path:literal) => {
         concat!(url!(@inner), $path)
     };

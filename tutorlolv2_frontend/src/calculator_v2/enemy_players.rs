@@ -1,7 +1,10 @@
 use crate::{
     calculator_v2::{
         DragonAction, EnemyAction, InputDataAction, InputEnemies,
-        page::{ActionTracker, use_dragon_editor},
+        page::{
+            ActionTracker, DragonCallbackProps, EnemyCallbackProps, use_dragon_callback,
+            use_enemy_callback,
+        },
     },
     components::calculator::{
         ChampionBanner, Exception, ExceptionSelector, NumericField, OpenTray, Tray,
@@ -29,29 +32,6 @@ impl PartialEq for EnemyPlayersDataProps {
     }
 }
 
-#[derive(Clone)]
-struct EditorProps {
-    input_enemy_players: UseReducerHandle<InputEnemies<SimpleStats>>,
-    input_enemy_index: UseStateHandle<usize>,
-    action_tracker: Rc<RefCell<ActionTracker>>,
-}
-
-#[hook]
-fn use_editor<T: 'static>(
-    props: EditorProps,
-    enum_const_fn: fn(T) -> InputDataAction<SimpleStats>,
-) -> Callback<T> {
-    let EditorProps {
-        input_enemy_players,
-        input_enemy_index,
-        action_tracker,
-    } = props;
-    use_callback((), move |v, _| {
-        action_tracker.replace(ActionTracker::EnemyPlayer(*input_enemy_index));
-        input_enemy_players.dispatch(EnemyAction::Edit(*input_enemy_index, enum_const_fn(v)));
-    })
-}
-
 #[function_component(EnemyPlayersData)]
 pub fn enemy_players_data(props: &EnemyPlayersDataProps) -> Html {
     let input_enemy_players = props.input_enemy_players.clone();
@@ -59,25 +39,27 @@ pub fn enemy_players_data(props: &EnemyPlayersDataProps) -> Html {
     let action_tracker = props.action_tracker.clone();
     let input_enemy_index = use_state(|| 0);
 
-    let cb_earth_dragons = use_dragon_editor(
-        action_tracker.clone(),
-        ActionTracker::EnemyPlayer(*input_enemy_index),
-        input_dragons.clone(),
-        DragonAction::EnemyEarth,
-    );
-    let editor_props = EditorProps {
+    let editor_props = EnemyCallbackProps {
         input_enemy_players: input_enemy_players.clone(),
         input_enemy_index: input_enemy_index.clone(),
         action_tracker: action_tracker.clone(),
     };
 
-    let cb_champion_id = use_editor(editor_props.clone(), InputDataAction::ChampionId);
-    let cb_stacks = use_editor(editor_props.clone(), InputDataAction::Stacks);
-    let cb_infer_stats = use_editor(editor_props.clone(), InputDataAction::InferStats);
-    let cb_stats = use_editor(editor_props.clone(), InputDataAction::Stats);
-    let cb_level = use_editor(editor_props.clone(), InputDataAction::Level);
-    let cb_insert_item = use_editor(editor_props.clone(), InputDataAction::InsertItem);
-    let cb_remove_item = use_editor(editor_props, InputDataAction::RemoveItem);
+    let cb_champion_id = use_enemy_callback(editor_props.clone(), InputDataAction::ChampionId);
+    let cb_stacks = use_enemy_callback(editor_props.clone(), InputDataAction::Stacks);
+    let cb_infer_stats = use_enemy_callback(editor_props.clone(), InputDataAction::InferStats);
+    let cb_stats = use_enemy_callback(editor_props.clone(), InputDataAction::Stats);
+    let cb_level = use_enemy_callback(editor_props.clone(), InputDataAction::Level);
+    let cb_insert_item = use_enemy_callback(editor_props.clone(), InputDataAction::InsertItem);
+    let cb_remove_item = use_enemy_callback(editor_props, InputDataAction::RemoveItem);
+    let cb_earth_dragons = use_dragon_callback(
+        DragonCallbackProps {
+            new_action_tracker: ActionTracker::EnemyPlayer(*input_enemy_index),
+            action_tracker,
+            input_dragons,
+        },
+        DragonAction::EnemyEarth,
+    );
 
     html! {
         <div class={classes!(
