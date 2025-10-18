@@ -295,12 +295,8 @@ impl Reducible for Stack {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_state = (*self).clone();
         match action {
-            StackAction::Insert(value) => {
-                new_state.push(value);
-            }
-            StackAction::Remove(index) => {
-                new_state.remove(index as usize);
-            }
+            StackAction::Insert(value) => new_state.push(value),
+            StackAction::Remove(index) => new_state.remove(index as usize),
         }
         Rc::new(new_state)
     }

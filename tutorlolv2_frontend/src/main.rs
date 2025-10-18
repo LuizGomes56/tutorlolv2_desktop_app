@@ -4,6 +4,7 @@ use yew::{Html, classes, function_component, html};
 
 mod calculator_v2;
 mod components;
+mod components_v2;
 mod context;
 mod hooks;
 mod macros;

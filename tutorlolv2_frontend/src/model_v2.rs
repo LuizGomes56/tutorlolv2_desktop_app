@@ -9,7 +9,7 @@ pub const L_MSTR: usize = 7;
 pub const L_TWRD: usize = 6;
 pub const L_SIML: usize = 118;
 
-#[derive(Decode)]
+#[derive(Decode, Clone, Copy)]
 pub enum Attrs {
     None,
     Onhit,
@@ -73,7 +73,7 @@ pub struct Attacks {
     pub onhit_damage: RangeDamage,
 }
 
-#[derive(Decode)]
+#[derive(Decode, Clone, Copy)]
 pub struct TypeMetadata<T> {
     pub kind: T,
     pub damage_type: DamageType,
@@ -294,7 +294,7 @@ pub type BorrowedActivePlayer<'a> =
 pub type OwnedMinData<T> = MinData<T, Vec<ItemId>, Vec<ValueException>>;
 pub type BorrowedMinData<'a, T> = MinData<T, &'a [ItemId], &'a [ValueException]>;
 
-#[derive(Decode)]
+#[derive(Decode, Clone, Copy)]
 pub enum DamageType {
     Physical,
     Magic,

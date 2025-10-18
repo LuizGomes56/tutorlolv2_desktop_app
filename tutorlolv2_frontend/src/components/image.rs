@@ -29,11 +29,17 @@ impl From<ItemId> for ImageType {
     }
 }
 
-#[derive(PartialEq, Properties)]
+#[derive(Properties)]
 pub struct ImageProps {
     pub source: ImageType,
     #[prop_or_default]
     pub class: Classes,
+}
+
+impl PartialEq for ImageProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.source == other.source
+    }
 }
 
 #[function_component(Image)]
