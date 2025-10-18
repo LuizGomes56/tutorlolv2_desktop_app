@@ -55,41 +55,33 @@ pub struct AbilitySelectorProps {
 #[function_component(AbilitySelector)]
 pub fn ability_selector(props: &AbilitySelectorProps) -> Html {
     let ability_levels = props.ability_levels;
-    macro_rules! ability_cell {
-        ($field:ident, $ability:expr) => {
-            paste! {
-                html! {
-                    <AbilitySelectorContainer
-                        value={ability_levels.$field}
-                        text={$ability}
-                        current_player_champion_id={props.current_player_champion_id}
-                        oninput={{
-                            let callback = props.callback.clone();
-                            let max = match props.current_player_champion_id {
-                                ChampionId::Jayce | ChampionId::Elise | ChampionId::Udyr => 6,
-                                _ => 5
-                            };
-                            Callback::from(move |e: InputEvent| {
-                                let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                let value = target.value().parse::<u8>().unwrap_or(0).clamp(0, max);
-                                callback.emit(AbilityLevels {
-                                    $field: value,
-                                    ..ability_levels
-                                });
-                            })
-                        }}
-                    />
-                }
-            }
-        };
-    }
+
+    let make_container = |value: u8,
+                          enum_fn: fn(AbilityName) -> AbilityLike,
+                          cb_fn: fn(u8, AbilityLevels) -> AbilityLevels| {
+        html! {
+            <AbilitySelectorContainer
+                value={value}
+                text={enum_fn(AbilityName::Void)}
+                current_player_champion_id={props.current_player_champion_id}
+                oninput={{
+                    let callback = props.callback.clone();
+                    Callback::from(move |e: InputEvent| {
+                        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                        let value = target.value().parse::<u8>().unwrap_or(0);
+                        callback.emit(cb_fn(value, ability_levels));
+                    })
+                }}
+            />
+        }
+    };
 
     html! {
         <>
-            {ability_cell!(q, AbilityLike::Q(AbilityName::Void))}
-            {ability_cell!(w, AbilityLike::W(AbilityName::Void))}
-            {ability_cell!(e, AbilityLike::E(AbilityName::Void))}
-            {ability_cell!(r, AbilityLike::R(AbilityName::Void))}
+            {make_container(ability_levels.q, AbilityLike::Q, |v, args| AbilityLevels {q: v, ..args})}
+            {make_container(ability_levels.w, AbilityLike::W, |v, args| AbilityLevels {w: v, ..args})}
+            {make_container(ability_levels.e, AbilityLike::E, |v, args| AbilityLevels {e: v, ..args})}
+            {make_container(ability_levels.r, AbilityLike::R, |v, args| AbilityLevels {r: v, ..args})}
         </>
     }
 }

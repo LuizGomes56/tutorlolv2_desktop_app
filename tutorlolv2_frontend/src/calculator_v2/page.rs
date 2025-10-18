@@ -180,7 +180,7 @@ pub fn calculator() -> Html {
                         let infer_enemy_player_stats = |index| unsafe {
                             let mut action_ref_mut = action_tracker.borrow_mut();
                             let input_enemies = input_enemy_players.as_ref();
-                            let current_enemy: &std::rc::Rc<
+                            let current_enemy: &Rc<
                                 MinData<SimpleStats, Vec<ItemId>, Vec<ValueException>>,
                             > = input_enemies.get_unchecked(index);
                             if current_enemy.infer_stats {

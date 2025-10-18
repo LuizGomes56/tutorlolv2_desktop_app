@@ -1,6 +1,6 @@
-use crate::{components::sidebar::Sidebar, context::SettingsProvider, pages::*, utils::init_cache};
+use crate::utils::init_cache;
+use overlay::realtime::RealtimeOverlay;
 use yew::{Html, classes, function_component, html};
-use yew_router::{BrowserRouter, Routable, Switch};
 
 mod calculator_v2;
 mod components;
@@ -9,62 +9,20 @@ mod hooks;
 mod macros;
 mod model_v2;
 mod models;
+mod overlay;
 mod pages;
 mod utils;
-
-#[derive(Clone, Routable, PartialEq)]
-pub enum Route {
-    #[not_found]
-    #[at("/")]
-    Home,
-
-    #[at("/formulas")]
-    Formulas,
-
-    #[at("/history")]
-    History,
-
-    #[at("/calculator")]
-    Calculator,
-
-    #[at("/help")]
-    Help,
-
-    #[at("/settings")]
-    Settings,
-}
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
-        <SettingsProvider>
-            <BrowserRouter>
-                <Switch<Route> render={switch} />
-            </BrowserRouter>
-        </SettingsProvider>
-    }
-}
-
-fn switch(routes: Route) -> Html {
-    html! {
-        <div class={classes!("flex", "w-full")}>
-            <Sidebar />
-            <div class={classes!(
-                "flex", "flex-1", "bg-[#121214]",
-                "h-screen", "overflow-y-auto",
-            )}>
-                {
-                    match routes {
-                        Route::Home => html! { <Home /> },
-                        Route::Help => html! { <Help /> },
-                        Route::History => html! { <History /> },
-                        Route::Formulas => html! { <Formulas /> },
-                        Route::Calculator => html! { <Calculator /> },
-                        Route::Settings => html! { <Settings /> },
-                    }
-                }
-            </div>
-        </div>
+        // <div class={classes!("flex", "w-full")}>
+        //     <div class={classes!(
+        //         "flex", "flex-1", "bg-[#121214]",
+        //         "h-screen", "overflow-y-auto",
+        //     )}></div>
+        // </div>
+        <RealtimeOverlay />
     }
 }
 
