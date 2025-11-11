@@ -68,8 +68,8 @@ pub struct BasicStats {
 
 #[derive(Decode)]
 pub struct Attacks {
-    pub basic_attack: RangeDamage,
-    pub critical_strike: RangeDamage,
+    pub basic_attack: i32,
+    pub critical_strike: i32,
     pub onhit_damage: RangeDamage,
 }
 
@@ -89,6 +89,8 @@ pub struct Realtime {
     pub items_meta: Box<[TypeMetadata<ItemId>]>,
     pub runes_meta: Box<[TypeMetadata<RuneId>]>,
     pub siml_meta: [TypeMetadata<ItemId>; L_SIML],
+    pub abilities_to_merge: Box<[(usize, usize)]>,
+    pub items_to_merge: Box<[(usize, usize)]>,
     pub game_time: u32,
     pub ability_levels: AbilityLevels,
     pub dragons: Dragons,
@@ -166,9 +168,9 @@ pub struct Enemy {
 #[derive(Decode)]
 pub struct Damages {
     pub attacks: Attacks,
-    pub abilities: Box<[RangeDamage]>,
-    pub items: Box<[RangeDamage]>,
-    pub runes: Box<[RangeDamage]>,
+    pub abilities: Box<[i32]>,
+    pub items: Box<[i32]>,
+    pub runes: Box<[i32]>,
 }
 
 #[derive(Decode)]
@@ -196,8 +198,8 @@ pub struct OutputCurrentPlayer {
 #[derive(Decode)]
 pub struct MonsterDamage {
     pub attacks: Attacks,
-    pub abilities: Box<[RangeDamage]>,
-    pub items: Box<[RangeDamage]>,
+    pub abilities: Box<[i32]>,
+    pub items: Box<[i32]>,
 }
 
 #[derive(Decode)]

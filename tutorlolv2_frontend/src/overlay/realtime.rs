@@ -1,38 +1,54 @@
-use std::{collections::HashSet, mem::MaybeUninit};
-
 use crate::{
     components::{Image, ImageType},
     components_v2::base_table::MakeThead,
-    model_v2::{Enemy, L_SIML, RangeDamage, Realtime, TypeMetadata},
+    model_v2::{Enemy, L_SIML, Realtime, TypeMetadata},
     url,
     utils::{ToStaticStr, api},
 };
+use std::{mem::MaybeUninit, time::Duration};
 use tutorlolv2_imports::ItemId;
-use yew::{platform::spawn_local, prelude::*};
+use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
+use web_sys::js_sys::Uint8Array;
+use yew::{
+    platform::{spawn_local, time::sleep},
+    prelude::*,
+};
 
 const BYTES: &[u8] = include_bytes!("../../../src-tauri/example.json");
 
-async fn get_data() -> Realtime {
-    api::decode_bytes(
-        gloo_net::http::Request::post(url!("/api/games/realtime"))
-            .body(BYTES.to_vec())
-            .unwrap()
-            .send()
-            .await
-            .unwrap(),
-    )
-    .await
-    .unwrap()
+#[wasm_bindgen(module = "/public/invoke.js")]
+unsafe extern "C" {
+    #[wasm_bindgen(js_name = "invoke_get_live_game", catch)]
+    pub async fn get_live_game() -> Result<Uint8Array, JsValue>;
 }
 
-fn find_best_5(arr: &[RangeDamage]) -> [usize; 5] {
-    let mut top: [(i64, usize); 5] = [(i64::MIN, usize::MAX); 5];
+async fn get_data() -> Realtime {
+    let bytes = get_live_game().await;
 
-    for (idx, rd) in arr.iter().enumerate() {
-        let sum = rd.minimum_damage as i64 + rd.maximum_damage as i64;
-        if sum <= 0 {
-            continue;
-        }
+    if let Ok(response) = bytes {
+        let bytes = response.to_vec();
+        web_sys::console::log_1(&JsValue::from(bytes.len()));
+        api::decode_bytes(
+            gloo_net::http::Request::post(url!("/api/games/realtime"))
+                .body(bytes)
+                // .body(BYTES.to_vec())
+                .unwrap()
+                .send()
+                .await
+                .unwrap(),
+        )
+        .await
+        .unwrap()
+    } else {
+        web_sys::console::log_1(&JsValue::from("No response"));
+        panic!();
+    }
+}
+
+fn find_best_5(arr: &[i32]) -> [usize; 5] {
+    let mut top = [(i32::MIN, usize::MAX); 5];
+
+    for (idx, &sum) in arr.iter().enumerate() {
         let mut pos = None;
         for i in 0..5 {
             if sum > top[i].0 || (sum == top[i].0 && idx < top[i].1) {
@@ -55,15 +71,14 @@ fn find_best_5(arr: &[RangeDamage]) -> [usize; 5] {
 }
 
 fn display_siml(enemies: &[Enemy], metadata: &[TypeMetadata<ItemId>]) -> Html {
-    let mut uninit_slice = MaybeUninit::<[RangeDamage; L_SIML]>::zeroed();
-    let base_ptr = uninit_slice.as_mut_ptr().cast::<RangeDamage>();
-    let add = |index: usize, items: &[RangeDamage]| {
+    let mut uninit_slice = MaybeUninit::<[i32; L_SIML]>::zeroed();
+    let base_ptr = uninit_slice.as_mut_ptr().cast::<i32>();
+    let add = |index: usize, items: &[i32]| {
         assert!(index < L_SIML);
         for rd in items {
             unsafe {
                 let p = base_ptr.add(index);
-                (*p).minimum_damage = (*p).minimum_damage.saturating_add(rd.minimum_damage);
-                (*p).maximum_damage = (*p).maximum_damage.saturating_add(rd.maximum_damage);
+                (*p) += *rd;
             }
         }
     };
@@ -82,10 +97,7 @@ fn display_siml(enemies: &[Enemy], metadata: &[TypeMetadata<ItemId>]) -> Html {
             html! {
                 <div class={classes!("flex", "h-6", "gap-1")}>
                     <div class={classes!("content-center", "text-sm", metadata[i].damage_type.as_static_str())}>
-                        {siml_damages[i].minimum_damage}
-                        {(siml_damages[i].maximum_damage != 0).then_some(
-                            format!(" - {}", siml_damages[i].maximum_damage)
-                        )}
+                        {siml_damages[i]}
                     </div>
                     <Image class={classes!("w-6", "h-6")} source={ImageType::Item(metadata[i].kind)}/>
                 </div>
@@ -94,15 +106,12 @@ fn display_siml(enemies: &[Enemy], metadata: &[TypeMetadata<ItemId>]) -> Html {
         .collect()
 }
 
-fn make_cell<T: Copy>(metadata: &[TypeMetadata<T>], range_damage: &[RangeDamage]) -> Html {
+fn make_cell<T: Copy>(metadata: &[TypeMetadata<T>], damages: &[i32]) -> Html {
     html! {
-        for range_damage.iter().enumerate().map(|(i, range_damage)| {
+        for damages.iter().enumerate().map(|(i, damage)| {
             html! {
                 <td class={classes!("text-center", "text-sm", metadata[i].damage_type.as_static_str())}>
-                    {range_damage.minimum_damage}
-                    {(range_damage.maximum_damage != 0).then_some(
-                        format!(" - {}", range_damage.maximum_damage)
-                    )}
+                    {damage}
                 </td>
             }
         })
@@ -131,7 +140,10 @@ pub fn realtime_overlay() -> Html {
         let data = data.clone();
         use_effect_with((), |_| {
             spawn_local(async move {
-                data.set(Some(get_data().await));
+                loop {
+                    data.set(Some(get_data().await));
+                    sleep(Duration::from_millis(1000)).await;
+                }
             });
         });
     }
@@ -147,7 +159,7 @@ pub fn realtime_overlay() -> Html {
                         .map(|(_, enemy)| enemy)
                         .collect::<Vec<_>>();
                     html! {
-                        <div>
+                        <div class={classes!("ml-[400px]")}>
                             <table>
                                 <MakeThead
                                     champion_id={game_data.current_player.champion_id}
@@ -173,7 +185,7 @@ pub fn realtime_overlay() -> Html {
                                     })}
                                 </tbody>
                             </table>
-                            <div class={classes!("absolute", "right-0", "top-0", "space-y-1")}>
+                            <div class={classes!("absolute", "right-0", "top-16", "space-y-1")}>
                                 {display_siml(&game_data.enemies, &game_data.siml_meta)}
                             </div>
                             <div class={classes!("absolute", "left-0", "bottom-0")}>
