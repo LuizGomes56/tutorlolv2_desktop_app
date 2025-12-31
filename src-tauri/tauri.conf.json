@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.tutorlolv2",
   "build": {
-    "frontendDist": "../tutorlolv2_frontend/dist",
+    "frontendDist": "../../tutorlolv2_web/dist",
     "devUrl": "http://localhost:8000",
-    "beforeDevCommand": "cd tutorlolv2_frontend && trunk serve",
-    "beforeBuildCommand": "cd tutorlolv2_frontend && trunk build --release"
+    "beforeDevCommand": "cd .. && cd tutorlolv2_web && trunk serve",
+    "beforeBuildCommand": "cd .. && cd tutorlolv2_web && trunk build --release"
   },
   "app": {
     "windows": [

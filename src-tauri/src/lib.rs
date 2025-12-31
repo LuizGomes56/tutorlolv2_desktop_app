@@ -35,38 +35,16 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             let _ = window.set_shadow(false);
             let _ = window.set_decorations(false);
-            let _ = window.set_ignore_cursor_events(true).unwrap();
-            window.open_devtools();
-            // let monitor = app.primary_monitor()?.ok_or("no primary monitor")?;
-            // let mpos = monitor.position();
-            // let msize = monitor.size();
-
-            // for i in 1..3 {
-            //     let window = WebviewWindowBuilder::new(
-            //         app,
-            //         format!("overlay_{}", i),
-            //         tauri::WebviewUrl::App(format!("/overlay/{}", i).into()),
-            //     )
-            //     .decorations(false)
-            //     .transparent(true)
-            //     .always_on_top(true)
-            //     .resizable(false)
-            //     .closable(false)
-            //     .shadow(false)
-            //     .focused(false)
-            //     .skip_taskbar(true)
-            //     .position(mpos.x as f64, mpos.y as f64)
-            //     .inner_size(msize.width as f64, msize.height as f64)
-            //     .build()?;
-
-            //     let _ = window.set_ignore_cursor_events(true);
-
-            //     window.set_ignore_cursor_events(true).ok();
-            //     #[cfg(debug_assertions)]
-            //     window.open_devtools();
-            // }
-
-            if cfg!(debug_assertions) {
+            let _ = window.set_ignore_cursor_events(true);
+            let _ = window.set_decorations(false);
+            let _ = window.set_always_on_top(true);
+            let _ = window.set_resizable(false);
+            let _ = window.set_closable(false);
+            let _ = window.set_shadow(false);
+            let _ = window.set_skip_taskbar(true);
+            #[cfg(debug_assertions)]
+            {
+                window.open_devtools();
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
