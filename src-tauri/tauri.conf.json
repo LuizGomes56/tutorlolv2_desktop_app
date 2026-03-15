@@ -1,41 +1,45 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tutorlolv2_desktop",
-  "version": "0.1.0",
-  "identifier": "com.tutorlolv2",
-  "build": {
-    "frontendDist": "../tutorlolv2_frontend/dist",
-    "devUrl": "http://localhost:8000",
-    "beforeDevCommand": "cd tutorlolv2_frontend && trunk serve",
-    "beforeBuildCommand": "cd tutorlolv2_frontend && trunk build --release"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "tutorlolv2",
-        "width": 800,
-        "height": 600,
-        "alwaysOnTop": false,
-        "x": 0,
-        "y": 0,
-        "resizable": true,
-        "fullscreen": false,
-        "center": true
-      }
-    ],
-    "security": {
-      "csp": null
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "tutorlolv2_desktop",
+    "version": "0.1.0",
+    "identifier": "com.tutorlolv2",
+    "build": {
+        "frontendDist": "../../tutorlolv2_web/dist",
+        "devUrl": "http://localhost:8000",
+        "beforeDevCommand": "cd .. && cd tutorlolv2_web && trunk serve",
+        "beforeBuildCommand": "cd .. && cd tutorlolv2_web && trunk build --release"
+    },
+    "app": {
+        "windows": [
+            {
+                "title": "tutorlolv2",
+                "width": 1280,
+                "height": 720,
+                "alwaysOnTop": false,
+                "x": 32,
+                "y": 32,
+                "focus": false,
+                "resizable": true,
+                "fullscreen": false,
+                "transparent": false,
+                "decorations": true,
+                "center": false
+            }
+        ],
+        "security": {
+            "csp": null
+        },
+        "withGlobalTauri": true
+    },
+    "bundle": {
+        "active": true,
+        "targets": "all",
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ]
     }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  }
 }

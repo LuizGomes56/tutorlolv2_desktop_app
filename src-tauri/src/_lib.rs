@@ -1,4 +1,4 @@
-use std::{sync::atomic::AtomicBool, time::Duration};
+use std::time::Duration;
 use tauri::{
     AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, State, WebviewUrl,
     WebviewWindow, WebviewWindowBuilder, ipc::InvokeResponseBody,
@@ -9,7 +9,9 @@ pub struct AppState {
     client: Client,
 }
 
-mod kb3;
+mod kb;
+mod kb2;
+mod keyboard;
 
 #[tauri::command]
 fn blur_overlay(app: AppHandle) -> Result<(), String> {
@@ -51,6 +53,7 @@ async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody,
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![get_live_game, blur_overlay])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
@@ -85,7 +88,7 @@ pub fn run() {
 
             overlay
                 .set_size(Size::Physical(PhysicalSize::new(
-                    area.size.width / 2,
+                    area.size.width,
                     area.size.height,
                 )))
                 .unwrap();
@@ -93,7 +96,49 @@ pub fn run() {
             overlay.set_ignore_cursor_events(true).unwrap();
             overlay.open_devtools();
 
-            kb3::install_low_level_shortcuts(app.handle()).unwrap();
+            let app_handle = app.handle().clone();
+
+            // let (tx, rx) = std::sync::mpsc::channel::<()>();
+            // crate::kb::set_hotkey_sender(tx);
+            // unsafe { crate::kb::install_hook() };
+
+            let (tx, rx) = std::sync::mpsc::channel::<kb2::KbEvent>();
+            crate::kb2::set_hotkey_sender(tx);
+            unsafe { crate::kb2::install_hook() };
+
+            std::thread::spawn(move || {
+                let mut ignore_cursor_events = true;
+
+                while let Ok(event) = rx.recv() {
+                    let app_handle = app_handle.clone();
+                    let overlay = overlay.clone();
+
+                    match event {
+                        kb2::KbEvent::ToggleOverlay => {
+                            ignore_cursor_events = !ignore_cursor_events;
+                            let next_value = ignore_cursor_events;
+
+                            let _ = app_handle.run_on_main_thread(move || {
+                                println!("Toggle overlay was called: {next_value}");
+                                let _ = overlay.emit("focus", !next_value);
+                                let _ = overlay.set_ignore_cursor_events(next_value);
+                                let _ = overlay.set_focusable(!next_value);
+
+                                if !next_value {
+                                    let _ = overlay.set_focus();
+                                }
+                            });
+                        }
+
+                        kb2::KbEvent::Change => {
+                            println!("Change event was called");
+                            let _ = app_handle.run_on_main_thread(move || {
+                                let _ = overlay.emit("change", ());
+                            });
+                        }
+                    }
+                }
+            });
 
             #[cfg(debug_assertions)]
             {
