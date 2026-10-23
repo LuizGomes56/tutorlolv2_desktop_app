@@ -93,6 +93,7 @@ pub fn run() {
             overlay.set_ignore_cursor_events(true).unwrap();
             overlay.open_devtools();
 
+            #[cfg(target_os = "windows")]
             kb3::install_low_level_shortcuts(app.handle()).unwrap();
 
             #[cfg(debug_assertions)]
