@@ -4,10 +4,10 @@
     "version": "0.1.0",
     "identifier": "com.tutorlolv2",
     "build": {
-        "frontendDist": "../../tutorlolv2_web/dist",
+        "frontendDist": "\\\\wsl.localhost\\Ubuntu\\home\\luizg\\Projects\\tutorlolv2_web\\dist",
         "devUrl": "http://localhost:8000",
-        "beforeDevCommand": "cd .. && cd tutorlolv2_web && trunk serve",
-        "beforeBuildCommand": "cd .. && cd tutorlolv2_web && trunk build --release"
+        "beforeDevCommand": "wsl.exe --cd /home/luizg/Projects/tutorlolv2_web --exec /usr/bin/env PATH=/home/luizg/.cargo/bin:/usr/local/bin:/usr/bin:/bin /home/luizg/.cargo/bin/trunk serve --port 8000 --features tauri --minify false",
+        "beforeBuildCommand": "wsl.exe --cd /home/luizg/Projects/tutorlolv2_web --exec /usr/bin/env PATH=/home/luizg/.cargo/bin:/usr/local/bin:/usr/bin:/bin /home/luizg/.cargo/bin/trunk build --release --features tauri --minify false"
     },
     "app": {
         "windows": [

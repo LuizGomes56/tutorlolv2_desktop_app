@@ -3,3 +3,4 @@
 **/gen/schemas
 *.lock
 example.json
+docs/
