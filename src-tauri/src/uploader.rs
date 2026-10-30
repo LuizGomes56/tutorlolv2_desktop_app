@@ -1,5 +1,6 @@
 //! HTTP calls to the TutorLoL server (spec §10.2) and chunk encoding.
 
+use crate::BINCODE_CONFIG;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use bincode::{Decode, Encode};
 use sha2::{Digest, Sha256};
@@ -27,8 +28,8 @@ fn sha_hex(bytes: &[u8]) -> String {
 
 /// Upload body (`brotli(bincode(chunk))`) and its `X-Content-Sha256`.
 pub fn encode_chunk(chunk: &RawChunk) -> (Vec<u8>, String) {
-    let raw = bincode::encode_to_vec(chunk, bincode::config::standard())
-        .expect("encoding into a Vec cannot fail");
+    let raw =
+        bincode::encode_to_vec(chunk, BINCODE_CONFIG).expect("encoding into a Vec cannot fail");
 
     let mut body = Vec::with_capacity(raw.len() / 8);
 
@@ -63,7 +64,7 @@ pub fn body_sha(body: &[u8]) -> io::Result<String> {
 pub fn renumber(body: &[u8], new_seq: u32) -> io::Result<(Vec<u8>, String)> {
     let raw = decompress(body)?;
     let (mut chunk, _): (RawChunk, _) =
-        bincode::decode_from_slice(&raw, bincode::config::standard()).map_err(io::Error::other)?;
+        bincode::decode_from_slice(&raw, BINCODE_CONFIG).map_err(io::Error::other)?;
 
     chunk.seq = new_seq;
 
@@ -213,8 +214,7 @@ impl ApiClient {
         path: &str,
         body: impl Encode,
     ) -> Result<Option<T>, String> {
-        let body =
-            bincode::encode_to_vec(body, bincode::config::standard()).map_err(|e| e.to_string())?;
+        let body = bincode::encode_to_vec(body, BINCODE_CONFIG).map_err(|e| e.to_string())?;
 
         let (status, _, bytes) = self.send(method, path, body, None).await?;
 
@@ -226,7 +226,7 @@ impl ApiClient {
             return Ok(None);
         }
 
-        bincode::decode_from_slice(&bytes, bincode::config::standard())
+        bincode::decode_from_slice(&bytes, BINCODE_CONFIG)
             .map(|(value, _)| Some(value))
             .map_err(|e| e.to_string())
     }
@@ -285,8 +285,7 @@ impl ApiClient {
     }
 
     pub async fn upload_live(&self, id: &Id16, snapshot: &RawSnapshot) -> Result<(), String> {
-        let raw = bincode::encode_to_vec(snapshot, bincode::config::standard())
-            .map_err(|e| e.to_string())?;
+        let raw = bincode::encode_to_vec(snapshot, BINCODE_CONFIG).map_err(|e| e.to_string())?;
 
         if raw.len() > 512 * 1024 {
             return Err("live snapshot exceeds size limit".into());

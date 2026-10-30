@@ -6,6 +6,9 @@ use tauri::{
     WebviewUrl, WebviewWindowBuilder, ipc::InvokeResponseBody,
 };
 
+/// Shared encoding for persisted records and server requests.
+pub const BINCODE_CONFIG: bincode::config::Configuration = bincode::config::standard();
+
 /// How long closing the app may take to save the recording in progress.
 const EXIT_FLUSH: Duration = Duration::from_secs(2);
 

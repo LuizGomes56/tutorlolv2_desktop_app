@@ -1,3 +1,4 @@
+use tutorlolv2_desktop_app::BINCODE_CONFIG;
 use tutorlolv2_desktop_app::{recorder::Recorder, sharing::authorize_share_window};
 use tutorlolv2_protocol::{RecordingStatus, ShareMode};
 
@@ -99,7 +100,7 @@ async fn native_transport_refreshes_changes_and_uploads_brotli_raw_snapshot() {
         code: Some("abcdefgh".into()),
         url: Some("https://example.test/watch/abcdefgh".into()),
     };
-    let response = bincode::encode_to_vec(&expected, bincode::config::standard()).unwrap();
+    let response = bincode::encode_to_vec(&expected, BINCODE_CONFIG).unwrap();
     let snapshot = RawSnapshot {
         captured_at_ms: 1234,
         game_time: 4.5,
@@ -149,12 +150,12 @@ async fn native_transport_refreshes_changes_and_uploads_brotli_raw_snapshot() {
                     .read_to_end(&mut raw)
                     .unwrap();
                 let (actual, used): (RawSnapshot, usize) =
-                    bincode::decode_from_slice(&raw, bincode::config::standard()).unwrap();
+                    bincode::decode_from_slice(&raw, BINCODE_CONFIG).unwrap();
                 assert_eq!(used, raw.len());
                 assert_eq!(actual, expected_snapshot);
             } else if method == "PUT" {
                 let (actual, _): (SetShareMode, usize) =
-                    bincode::decode_from_slice(body, bincode::config::standard()).unwrap();
+                    bincode::decode_from_slice(body, BINCODE_CONFIG).unwrap();
                 assert_eq!(actual.mode, ShareMode::Live);
             }
             let body = if live { &[][..] } else { response.as_slice() };
@@ -373,7 +374,7 @@ async fn rejected_live_upload_refreshes_expired_code_to_private_without_republis
             200,
             &bincode::encode_to_vec(
                 tutorlolv2_desktop_app::sharing::private_share(),
-                bincode::config::standard(),
+                BINCODE_CONFIG,
             )
             .unwrap(),
         );
@@ -423,7 +424,7 @@ async fn user_private_transition_cancels_live_request_without_waiting_for_respon
             200,
             &bincode::encode_to_vec(
                 tutorlolv2_desktop_app::sharing::private_share(),
-                bincode::config::standard(),
+                BINCODE_CONFIG,
             )
             .unwrap(),
         );

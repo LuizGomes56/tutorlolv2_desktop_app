@@ -6,6 +6,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use tutorlolv2_desktop_app::BINCODE_CONFIG;
 use tutorlolv2_desktop_app::{
     delivery::Delivery,
     recorder::Recorder,
@@ -202,7 +203,7 @@ async fn recovery_does_not_reuse_an_older_pending_chunk_sequence() {
             url: None,
         },
     };
-    let response = bincode::encode_to_vec(started, bincode::config::standard()).unwrap();
+    let response = bincode::encode_to_vec(started, BINCODE_CONFIG).unwrap();
     let (base, worker) = server(vec![(200, response), (201, vec![]), (201, vec![])]);
     assert!(driver(&root, base).flush().await);
     assert!(spool.pending().is_empty());
@@ -385,7 +386,7 @@ async fn failed_old_result_does_not_block_a_new_session() {
         (503, vec![]),
         (
             200,
-            bincode::encode_to_vec(started, bincode::config::standard()).unwrap(),
+            bincode::encode_to_vec(started, BINCODE_CONFIG).unwrap(),
         ),
     ]);
     assert!(!driver(&root, base).flush().await);
