@@ -4,9 +4,9 @@ use crate::{lcu::LcuPhase, live_client::LivePoll, spool::new_local_id};
 use bincode::{Decode, Encode};
 use std::sync::Arc;
 use tutorlolv2_protocol::{
-    CHUNK_SEAL_MS, EndReason, EndRecording, GameResult, Id16, LcuGame, MAX_SNAPSHOTS_PER_CHUNK,
-    MatchDecision, Probe, RAW_CHUNK_FORMAT, RawChunk, RawSnapshot, Region, RiotGameRef,
-    SessionStarted, Snapshot, StartSession,
+    CHUNK_SEAL_MS, DifferentReason, EndReason, EndRecording, GameResult, Id16, LcuGame,
+    MAX_SNAPSHOTS_PER_CHUNK, MatchDecision, Probe, RAW_CHUNK_FORMAT, RawChunk, RawSnapshot, Region,
+    RiotGameRef, SessionStarted, Snapshot, StartSession,
 };
 
 /// What survives an app restart about the current recording (`session.bin`).
@@ -91,6 +91,8 @@ pub struct Recorder {
     /// The restored session still has to replay its pending calls.
     startup_due: bool,
     lcu_game: Option<LcuGame>,
+    /// Never attach a completed or contradicted game id to a later match.
+    retired_lcu_game_id: Option<u64>,
     region: Option<Region>,
     app_version: String,
 }
@@ -105,6 +107,10 @@ impl Recorder {
     pub fn new(restored: Option<SessionFile>, region: Option<Region>, app_version: String) -> Self {
         Self {
             startup_due: restored.is_some(),
+            retired_lcu_game_id: restored
+                .as_ref()
+                .filter(|s| s.ended)
+                .and_then(|s| s.lcu_game_id),
             session: restored,
             buffer: Vec::new(),
             buffer_started_ms: None,
@@ -156,6 +162,12 @@ impl Recorder {
         }
 
         self.last_bytes = Some(bytes.clone());
+
+        // A cached LCU id is optional metadata, not fresh proof that a new
+        // live-client snapshot belongs to the previous match.
+        if self.cached_game_contradicts(&snapshot.probe, now_ms) {
+            self.retire_lcu_game(self.lcu_game.as_ref().map(|game| game.game_id));
+        }
 
         let mut probe = snapshot.probe.clone();
 
@@ -217,6 +229,39 @@ impl Recorder {
 
         self.suspended_since_ms = Some(now_ms);
         self.seal()
+    }
+
+    fn cached_game_contradicts(&self, probe: &Probe, now_ms: i64) -> bool {
+        let Some(session) = self.session.as_ref() else {
+            return false;
+        };
+
+        let Some(cached) = self.riot_game() else {
+            return false;
+        };
+
+        if session.probe.riot_game.as_ref() != Some(&cached) {
+            return false;
+        }
+
+        let mut previous = session.probe.clone();
+        previous.riot_game = None;
+
+        matches!(previous.same_match(session.last_seen_ms, probe, now_ms),
+            MatchDecision::Different(reason) if reason != DifferentReason::TimeTooFast)
+    }
+
+    fn retire_lcu_game(&mut self, game_id: Option<u64>) {
+        if let Some(game_id) = game_id {
+            self.retired_lcu_game_id = Some(game_id);
+            if self
+                .lcu_game
+                .as_ref()
+                .is_some_and(|game| game.game_id == game_id)
+            {
+                self.lcu_game = None;
+            }
+        }
     }
 
     fn riot_game(&self) -> Option<RiotGameRef> {
@@ -349,6 +394,7 @@ impl Recorder {
         session.pending_end = Some(req.clone());
 
         let (local_id, game_id) = (session.local_id, session.lcu_game_id);
+        self.retire_lcu_game(game_id);
 
         effects.push(Effect::EndRecording { local_id, req });
 
@@ -371,7 +417,7 @@ impl Recorder {
             self.region = region;
         }
 
-        if let Some(game) = game {
+        if let Some(game) = game.filter(|game| Some(game.game_id) != self.retired_lcu_game_id) {
             if let Some(session) = self.active()
                 && session.lcu_game_id.is_none()
             {

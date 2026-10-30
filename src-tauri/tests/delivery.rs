@@ -45,6 +45,9 @@ fn server(replies: Vec<(u16, Vec<u8>)>) -> (String, thread::JoinHandle<Vec<Strin
                     Err(e) => panic!("Expected request: {e}"),
                 }
             };
+            // Windows may inherit the listener's nonblocking mode. Reading
+            // a partially received HTTP request must wait for the next bytes.
+            stream.set_nonblocking(false).unwrap();
             stream
                 .set_read_timeout(Some(Duration::from_secs(3)))
                 .unwrap();

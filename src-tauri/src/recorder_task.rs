@@ -108,18 +108,14 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
 
 struct LcuPoller {
     client: Lcu,
-    last_phase: Option<LcuPhase>,
     region_known: bool,
-    game_known: bool,
 }
 
 impl LcuPoller {
     fn new() -> Self {
         Self {
             client: Lcu::new(),
-            last_phase: None,
             region_known: false,
-            game_known: false,
         }
     }
 
@@ -130,20 +126,13 @@ impl LcuPoller {
 
         let in_game = matches!(phase, LcuPhase::InProgress | LcuPhase::Reconnect);
 
-        if (in_game && self.last_phase.as_ref() != Some(&phase))
-            || phase.is_end()
-            || phase.is_out_of_game()
-        {
-            self.game_known = false;
-        }
-
-        let game = if in_game && !self.game_known {
+        // Refresh even if every observed phase is InProgress: the end and
+        // loading phases can be missed while the LCU is unavailable.
+        let game = if in_game {
             self.client.game().await
         } else {
             None
         };
-
-        self.game_known |= game.is_some();
 
         let region = if self.region_known {
             None
@@ -152,7 +141,6 @@ impl LcuPoller {
         };
 
         self.region_known |= region.is_some();
-        self.last_phase = Some(phase.clone());
 
         let effects = shared
             .recorder

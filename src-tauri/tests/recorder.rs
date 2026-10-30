@@ -460,3 +460,157 @@ fn lcu_before_first_snapshot_starts_an_enriched_midgame_session() {
     assert_eq!(request.lcu.as_ref().unwrap().game_id, 123);
     assert_eq!(request.probe.riot_game.as_ref().unwrap().game_id, 123);
 }
+
+fn with_lcu_game(id: u64) -> Recorder {
+    let mut recorder = recorder();
+    recorder.on_lcu(
+        at(0),
+        LcuPhase::InProgress,
+        Some(LcuGame {
+            game_id: id,
+            queue_id: Some(420),
+            is_custom: Some(false),
+        }),
+        Some(Region::Na),
+    );
+    recorder
+}
+
+#[test]
+fn second_game_starts_when_lcu_misses_the_end_and_loading_phases() {
+    let mut r = with_lcu_game(123);
+    r.on_live(at(0), plain(100.0));
+    r.on_live(
+        at(900),
+        snap(
+            1000.0,
+            0.0276,
+            "Ahri",
+            json!([{"EventID": 1, "EventName": "GameEnd", "EventTime": 1000.0, "Result": "Win"}]),
+        ),
+    );
+    // The next observed phase is still InProgress and its old game metadata
+    // must not override the new match's live-client evidence.
+    r.on_lcu(
+        at(950),
+        LcuPhase::InProgress,
+        Some(LcuGame {
+            game_id: 123,
+            queue_id: Some(420),
+            is_custom: Some(false),
+        }),
+        None,
+    );
+    let effects = r.on_live(at(951), snap(10.0, 0.0312, "Zed", json!([])));
+    assert_eq!(starts(&effects).len(), 1);
+    let request = effects
+        .iter()
+        .find_map(|e| match e {
+            Effect::StartSession { req, .. } => Some(req),
+            _ => None,
+        })
+        .unwrap();
+    assert!(request.lcu.is_none());
+    assert!(request.probe.riot_game.is_none());
+}
+
+#[test]
+fn stale_game_id_cannot_merge_games_when_no_end_signal_was_observed() {
+    let mut r = with_lcu_game(123);
+    r.on_live(at(0), plain(900.0));
+    let effects = r.on_live(at(60), snap(10.0, 0.0312, "Zed", json!([])));
+    assert_eq!(starts(&effects).len(), 1);
+    assert_eq!(ends(&effects)[0].reason, EndReason::Superseded);
+    assert_eq!(
+        seals(&effects)[0].snapshots.len(),
+        1,
+        "new match data must not enter the old chunk"
+    );
+    let request = effects
+        .iter()
+        .find_map(|e| match e {
+            Effect::StartSession { req, .. } => Some(req),
+            _ => None,
+        })
+        .unwrap();
+    assert!(request.lcu.is_none());
+    // A delayed repeat of the retired id stays ignored.
+    r.on_lcu(
+        at(61),
+        LcuPhase::InProgress,
+        Some(LcuGame {
+            game_id: 123,
+            queue_id: None,
+            is_custom: None,
+        }),
+        None,
+    );
+    let effects = r.on_live(at(62), snap(12.0, 0.0312, "Zed", json!([])));
+    assert!(starts(&effects).is_empty());
+    r.on_lcu(
+        at(63),
+        LcuPhase::InProgress,
+        Some(LcuGame {
+            game_id: 456,
+            queue_id: None,
+            is_custom: None,
+        }),
+        None,
+    );
+    let effects = r.on_live(at(64), snap(14.0, 0.0312, "Zed", json!([])));
+    assert!(
+        starts(&effects).is_empty(),
+        "fresh identity attaches to the same new session"
+    );
+    assert_eq!(
+        persisted(&r.on_exit(at(65)))
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .lcu_game_id,
+        Some(456)
+    );
+}
+
+#[test]
+fn same_champion_new_game_is_detected_despite_a_cached_id() {
+    let mut r = with_lcu_game(123);
+    r.on_live(at(0), plain(900.0));
+    let effects = r.on_live(at(60), plain(10.0));
+    assert_eq!(starts(&effects).len(), 1);
+    assert_eq!(ends(&effects)[0].reason, EndReason::Superseded);
+}
+
+#[test]
+fn fresh_lcu_identity_is_kept_when_a_new_game_supersedes_the_previous_one() {
+    let mut r = with_lcu_game(123);
+    r.on_live(at(0), plain(900.0));
+    r.on_lcu(
+        at(60),
+        LcuPhase::InProgress,
+        Some(LcuGame {
+            game_id: 456,
+            queue_id: Some(450),
+            is_custom: Some(false),
+        }),
+        None,
+    );
+    let effects = r.on_live(at(61), snap(10.0, 0.0312, "Zed", json!([])));
+    let request = effects
+        .iter()
+        .find_map(|e| match e {
+            Effect::StartSession { req, .. } => Some(req),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(request.lcu.as_ref().unwrap().game_id, 456);
+}
+
+#[test]
+fn authoritative_lcu_identity_still_tolerates_wall_clock_adjustments() {
+    let mut r = with_lcu_game(123);
+    r.on_live(at(0), plain(100.0));
+    let effects = r.on_live(at(-30), plain(101.0));
+    assert!(starts(&effects).is_empty());
+    assert!(ends(&effects).is_empty());
+}
