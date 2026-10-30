@@ -1,18 +1,30 @@
+use recorder_task::{LatestSnapshot, RecorderHandle};
 use shortcut_commands::{get_overlay_shortcut, set_overlay_shortcut, set_shortcut_recording};
 use std::time::Duration;
 use tauri::{
-    AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size, State, WebviewUrl,
-    WebviewWindowBuilder, ipc::InvokeResponseBody,
+    AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, RunEvent, Size, State,
+    WebviewUrl, WebviewWindowBuilder, ipc::InvokeResponseBody,
 };
-use tauri_plugin_http::reqwest::Client;
+
+/// How long closing the app may take to save the recording in progress.
+const EXIT_FLUSH: Duration = Duration::from_secs(2);
 
 pub struct AppState {
-    client: Client,
+    latest: LatestSnapshot,
+    recorder: RecorderHandle,
 }
 
+pub mod delivery;
+pub mod lcu;
+pub mod live_client;
 mod overlay;
+pub mod recorder;
+mod recorder_task;
 mod shortcut;
 mod shortcut_commands;
+pub mod spool;
+pub mod store;
+pub mod uploader;
 
 #[cfg(windows)]
 mod wkb;
@@ -32,23 +44,14 @@ fn toggle_overlay(app: AppHandle) -> Result<bool, String> {
     overlay::toggle(&app)
 }
 
+/// The latest snapshot from port 2999, polled once per second by the recorder.
 #[tauri::command]
 async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody, String> {
-    let response = state
-        .client
-        .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
-        .send()
-        .await
-        .map_err(|e| format!("Error when fetching local: {e:#?}"))?;
-
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Error transforming response to bytes: {e:#?}"))?
-        .to_vec();
-
-    // let bytes = std::fs::read("example.json").unwrap();
-    Ok(InvokeResponseBody::Raw(bytes))
+    state
+        .latest
+        .get()
+        .map(|bytes| InvokeResponseBody::Raw(bytes.to_vec()))
+        .ok_or_else(|| "No live game".to_owned())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -140,18 +143,18 @@ pub fn run() {
                 )?;
             }
 
-            let client = unsafe {
-                Client::builder()
-                    .danger_accept_invalid_certs(true)
-                    .timeout(Duration::from_secs(1 << 4))
-                    .build()
-                    .unwrap_unchecked()
-            };
+            let latest = LatestSnapshot::default();
+            let recorder = recorder_task::spawn(app.handle(), latest.clone());
 
-            app.manage(AppState { client });
+            app.manage(AppState { latest, recorder });
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let RunEvent::ExitRequested { .. } = event {
+                app.state::<AppState>().recorder.exit(EXIT_FLUSH);
+            }
+        });
 }

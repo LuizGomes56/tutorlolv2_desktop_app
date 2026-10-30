@@ -157,6 +157,7 @@ fn replace_file(source: &Path, target: &Path) -> std::io::Result<()> {
         .encode_wide()
         .chain(Some(0))
         .collect::<Vec<u16>>();
+
     let target = target
         .as_os_str()
         .encode_wide()
@@ -285,7 +286,6 @@ impl KeyboardState {
         }
 
         let any = |keys: &[usize]| keys.iter().any(|&key| self.pressed[key]);
-
         let modifiers = (u32::from(any(&[0x11, 0xa2, 0xa3])) << 9)
             | (u32::from(any(&[0x12, 0xa4, 0xa5])) << 10)
             | (u32::from(any(&[0x10, 0xa0, 0xa1])) << 11)

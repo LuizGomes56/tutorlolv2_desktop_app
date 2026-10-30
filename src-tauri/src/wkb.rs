@@ -45,6 +45,7 @@ pub fn set_recording(owner: &str, recording: bool) {
     if let Ok(mut current) = RECORDING_OWNER.lock() {
         if recording {
             *current = Some(owner.to_owned());
+
             RECORDING_UNTIL.store(
                 CLOCK.get_or_init(Instant::now).elapsed().as_millis() as u64 + 30_000,
                 Ordering::Release,
