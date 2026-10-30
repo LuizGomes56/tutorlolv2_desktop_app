@@ -77,6 +77,7 @@ pub enum Effect {
 
 pub struct Recorder {
     session: Option<SessionFile>,
+    share: tutorlolv2_protocol::ShareState,
     buffer: Vec<RawSnapshot>,
     /// Wall clock of the first buffered snapshot.
     buffer_started_ms: Option<i64>,
@@ -112,6 +113,7 @@ impl Recorder {
                 .filter(|s| s.ended)
                 .and_then(|s| s.lcu_game_id),
             session: restored,
+            share: crate::sharing::private_share(),
             buffer: Vec::new(),
             buffer_started_ms: None,
             last_captured_ms: i64::MIN,
@@ -138,6 +140,51 @@ impl Recorder {
     /// The latest snapshot while port 2999 answers (served to `get_live_game`).
     pub fn latest(&self) -> Option<Arc<[u8]>> {
         self.alive.then(|| self.last_bytes.clone()).flatten()
+    }
+
+    pub fn recording_state(&self) -> tutorlolv2_protocol::RecordingState {
+        use tutorlolv2_protocol::{GameMode, RecordingState, RecordingStatus, UploadState};
+
+        let session = self.session.as_ref().filter(|s| !s.ended);
+
+        RecordingState {
+            status: match self.status() {
+                Status::Idle => RecordingStatus::Idle,
+                Status::Starting => RecordingStatus::Starting,
+                Status::Recording => RecordingStatus::Recording,
+                Status::Suspended => RecordingStatus::Suspended,
+            },
+            recording_id: session.and_then(|s| s.server.map(|v| v.0)),
+            game_time: session.map(|s| s.probe.game_time),
+            share: session
+                .map(|_| self.share.clone())
+                .unwrap_or_else(crate::sharing::private_share),
+            upload: UploadState {
+                pending_chunks: 0,
+                last_error: None,
+            },
+            is_custom: self.lcu_game.as_ref().and_then(|g| g.is_custom),
+            is_practice: session.is_some_and(|s| s.probe.game_mode == GameMode::PracticeTool),
+        }
+    }
+
+    pub fn set_share(&mut self, id: Id16, share: tutorlolv2_protocol::ShareState) -> bool {
+        if self.recording_state().recording_id != Some(id) {
+            return false;
+        }
+
+        self.share = share;
+        true
+    }
+
+    pub fn live_snapshot(&self) -> Option<tutorlolv2_protocol::RawSnapshot> {
+        let session = self.session.as_ref().filter(|s| !s.ended)?;
+
+        Some(tutorlolv2_protocol::RawSnapshot {
+            captured_at_ms: self.last_captured_ms,
+            game_time: session.probe.game_time,
+            json: self.latest()?.to_vec(),
+        })
     }
 
     fn active(&mut self) -> Option<&mut SessionFile> {
@@ -291,6 +338,7 @@ impl Recorder {
         };
 
         self.session = Some(session);
+        self.share = crate::sharing::private_share();
         self.buffer.clear();
         self.buffer_started_ms = None;
         self.last_contact_ms = now_ms;
@@ -395,6 +443,7 @@ impl Recorder {
 
         let (local_id, game_id) = (session.local_id, session.lcu_game_id);
         self.retire_lcu_game(game_id);
+        self.share = crate::sharing::private_share();
 
         effects.push(Effect::EndRecording { local_id, req });
 
@@ -453,6 +502,11 @@ impl Recorder {
         match self.session.as_mut().filter(|s| s.local_id == local_id) {
             Some(session) => {
                 session.server = Some((started.recording_id, started.next_chunk_seq));
+
+                if !session.ended {
+                    self.share = started.share.clone();
+                }
+
                 vec![self.persist()]
             }
             None => Vec::new(),

@@ -10,7 +10,8 @@ use std::{
 use tauri_plugin_http::reqwest::{Client, Method, StatusCode};
 use tutorlolv2_protocol::{
     BROTLI_LGWIN, BROTLI_QUALITY, DeviceCredentials, EndRecording, Id16, MAX_CHUNK_DECOMPRESSED,
-    RawChunk, RecordingResult, RegisterDevice, SessionStarted, StartSession,
+    RawChunk, RawSnapshot, RecordingResult, RegisterDevice, SessionStarted, SetShareMode,
+    ShareMode, ShareState, StartSession,
 };
 
 const OCTET_STREAM: &str = "application/octet-stream";
@@ -260,6 +261,63 @@ impl ApiClient {
         match self.send(Method::POST, &path, body, Some(sha_hex)).await {
             Ok((status, retry_after, _)) => chunk_outcome(status.as_u16(), retry_after.as_deref()),
             Err(_) => ChunkOutcome::Retry { after_ms: None },
+        }
+    }
+
+    pub async fn share(&self, id: &Id16) -> Result<ShareState, String> {
+        self.call(
+            Method::GET,
+            &format!("/recordings/{}/share", uuid_text(id)),
+            (),
+        )
+        .await?
+        .ok_or_else(|| "empty share response".into())
+    }
+
+    pub async fn set_share_mode(&self, id: &Id16, mode: ShareMode) -> Result<ShareState, String> {
+        self.call(
+            Method::PUT,
+            &format!("/recordings/{}/share", uuid_text(id)),
+            SetShareMode { mode },
+        )
+        .await?
+        .ok_or_else(|| "empty share response".into())
+    }
+
+    pub async fn upload_live(&self, id: &Id16, snapshot: &RawSnapshot) -> Result<(), String> {
+        let raw = bincode::encode_to_vec(snapshot, bincode::config::standard())
+            .map_err(|e| e.to_string())?;
+
+        if raw.len() > 512 * 1024 {
+            return Err("live snapshot exceeds size limit".into());
+        }
+
+        let mut body = Vec::new();
+
+        {
+            let mut writer =
+                brotli::CompressorWriter::new(&mut body, 4096, BROTLI_QUALITY, BROTLI_LGWIN);
+
+            writer.write_all(&raw).map_err(|e| e.to_string())?;
+        }
+
+        if body.len() > 64 * 1024 {
+            return Err("compressed live snapshot exceeds size limit".into());
+        }
+
+        let (status, _, bytes) = self
+            .send(
+                Method::PUT,
+                &format!("/recordings/{}/live", uuid_text(id)),
+                body,
+                None,
+            )
+            .await?;
+
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(format!("{status}: {}", String::from_utf8_lossy(&bytes)))
         }
     }
 

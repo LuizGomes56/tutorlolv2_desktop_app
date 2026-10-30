@@ -23,6 +23,10 @@ pub struct Delivery {
     pub(crate) upload_now: Notify,
     pub(crate) outbox_now: Notify,
     pub(crate) register_now: Notify,
+    pub(crate) sharing_now: Notify,
+    pub(crate) sharing_error: Mutex<Option<String>>,
+    pub(crate) delivery_error: Mutex<Option<String>>,
+    pub(crate) sharing_lock: tokio::sync::Mutex<()>,
     upload_lock: tokio::sync::Mutex<Option<Instant>>,
     outbox_lock: tokio::sync::Mutex<()>,
 }
@@ -37,6 +41,10 @@ impl Delivery {
             upload_now: Notify::new(),
             outbox_now: Notify::new(),
             register_now: Notify::new(),
+            sharing_now: Notify::new(),
+            sharing_error: Mutex::new(None),
+            delivery_error: Mutex::new(None),
+            sharing_lock: tokio::sync::Mutex::new(()),
             upload_lock: tokio::sync::Mutex::new(None),
             outbox_lock: tokio::sync::Mutex::new(()),
         }
@@ -194,6 +202,7 @@ impl Delivery {
                         target = Some(assigned);
                     }
                     Err(e) => {
+                        *self.delivery_error.lock().unwrap() = Some(e.clone());
                         log::warn!("Start session failed: {e}");
                         if unauthorized(&e) {
                             self.credentials_rejected().await;
@@ -215,6 +224,7 @@ impl Delivery {
                         self.persist_effects(effects);
                     }
                     Err(e) => {
+                        *self.delivery_error.lock().unwrap() = Some(e.clone());
                         log::warn!("Ending the recording failed: {e}");
 
                         if unauthorized(&e) {
@@ -324,21 +334,32 @@ impl Delivery {
                 ChunkOutcome::Stored => {
                     let _ = self.spool.done(&chunk);
                     self.recorder.lock().unwrap().on_chunk_uploaded(now_ms());
+                    *self.delivery_error.lock().unwrap() = None;
                 }
                 ChunkOutcome::Retry { after_ms } => {
+                    *self.delivery_error.lock().unwrap() =
+                        Some("Recording upload failed; retrying".into());
                     retry = Some(after_ms);
                 }
                 ChunkOutcome::RateLimited { after_ms } => {
+                    *self.delivery_error.lock().unwrap() =
+                        Some("Recording upload rate limited; retrying".into());
+
                     let delay = after_ms.unwrap_or(1000).max(1);
                     *cooldown = Some(Instant::now() + Duration::from_millis(delay));
 
                     return Some(Some(delay));
                 }
                 ChunkOutcome::Unauthorized => {
+                    *self.delivery_error.lock().unwrap() =
+                        Some("Device authentication expired; registering again".into());
                     self.credentials_rejected().await;
                     return Some(None);
                 }
                 ChunkOutcome::Rejected(status) => {
+                    *self.delivery_error.lock().unwrap() =
+                        Some(format!("Recording chunk rejected ({status})"));
+
                     log::warn!("The server rejected chunk {seq} ({status})");
                     let _ = self.spool.reject(&chunk);
                 }

@@ -47,7 +47,10 @@ enum Control {
     Exit(oneshot::Sender<()>),
 }
 
-pub struct RecorderHandle(mpsc::Sender<Control>);
+pub struct RecorderHandle {
+    control: mpsc::Sender<Control>,
+    pub(crate) shared: Arc<Shared>,
+}
 
 impl RecorderHandle {
     /// Seals the partial chunk, saves the session and tries one upload pass,
@@ -55,7 +58,7 @@ impl RecorderHandle {
     pub fn exit(&self, limit: Duration) {
         let (done, wait) = oneshot::channel();
 
-        if self.0.try_send(Control::Exit(done)).is_ok() {
+        if self.control.try_send(Control::Exit(done)).is_ok() {
             async_runtime::block_on(async {
                 let _ = tokio::time::timeout(limit, wait).await;
             });
@@ -101,9 +104,10 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
     async_runtime::spawn(shared.clone().registration());
     async_runtime::spawn(shared.clone().outbox_loop());
     async_runtime::spawn(shared.clone().run_uploads());
-    async_runtime::spawn(main_loop(shared, latest, inbox));
+    async_runtime::spawn(shared.clone().sharing_loop(app.clone()));
+    async_runtime::spawn(main_loop(shared.clone(), latest, inbox));
 
-    RecorderHandle(control)
+    RecorderHandle { control, shared }
 }
 
 struct LcuPoller {
@@ -208,6 +212,7 @@ async fn main_loop(
                 lcu.poll(&shared).await;
             }
 
+            shared.recording_changed();
             ticks += 1;
         };
         tokio::select! {
