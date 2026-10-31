@@ -349,3 +349,83 @@ fn prune_expires_rejected_chunks_and_cleans_interrupted_writes() {
     assert!(!path.exists());
     assert!(!tmp.exists());
 }
+
+fn directory_bytes(root: &std::path::Path) -> u64 {
+    std::fs::read_dir(root)
+        .unwrap()
+        .map(|entry| {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                directory_bytes(&path)
+            } else {
+                path.metadata().unwrap().len()
+            }
+        })
+        .sum()
+}
+
+#[test]
+fn overflow_accounts_for_loss_journal_before_deleting_data() {
+    let root = dir("overflow_journal_impossible");
+    let spool = Spool::new(root.clone(), 1025);
+    let id = new_local_id(1, [0; 10]);
+    spool.put(id, 0, &[7; 1024]).unwrap();
+    assert!(spool.put(id, 1, &[8; 1024]).is_err());
+    assert_eq!(directory_bytes(&root), 1025);
+    assert_eq!(std::fs::read(&spool.pending()[0].path).unwrap(), [7; 1024]);
+    let reopened = Spool::new(root.clone(), 1025);
+    assert_eq!(reopened.loss_count(id), 0);
+    assert_eq!(reopened.put(id, 1, &[8; 1000]).unwrap(), 1);
+    assert!(directory_bytes(&root) <= 1025);
+    assert_eq!(reopened.loss_count(id), 1);
+}
+
+#[test]
+fn overflow_budget_includes_retained_journal_growth_across_restarts() {
+    let root = dir("overflow_journal_growth");
+    let id = new_local_id(1, [0; 10]);
+    let spool = Spool::new(root.clone(), 1050);
+    for seq in 0..30 {
+        if spool.put(id, seq, &[seq as u8; 1024]).is_err() {
+            assert!(directory_bytes(&root) <= 1050);
+            let pending = spool.pending();
+            assert_eq!(pending.len(), 1);
+            let reopened = Spool::new(root.clone(), 1050);
+            assert_eq!(reopened.loss_count(id), seq - 1);
+            assert_eq!(reopened.pending(), pending);
+            return;
+        }
+        assert!(directory_bytes(&root) <= 1050, "over budget at seq {seq}");
+    }
+    panic!("Permanent loss metadata must eventually reject writes");
+}
+
+#[test]
+fn overflow_keeps_chunk_when_loss_intent_cannot_be_synced() {
+    let root = dir("overflow_intent_failure");
+    let spool = Spool::new(root.clone(), 1100);
+    let id = new_local_id(1, [0; 10]);
+    let target = Target {
+        recording_id: [9; 16],
+        seq_offset: 4,
+    };
+    spool.bind_device(id, Some([3; 16])).unwrap();
+    spool.set_target(id, &target).unwrap();
+    spool.put(id, 0, &[7; 1024]).unwrap();
+    let chunk = spool.pending()[0].clone();
+    let blocked_temp = chunk.path.parent().unwrap().join("loss.bin.tmp");
+    std::fs::create_dir(&blocked_temp).unwrap();
+    assert!(spool.put(id, 1, &[8; 1024]).is_err());
+    assert_eq!(std::fs::read(&chunk.path).unwrap(), [7; 1024]);
+    assert_eq!(spool.loss_count(id), 0);
+    std::fs::remove_dir(blocked_temp).unwrap();
+    let reopened = Spool::new(root.clone(), 1100);
+    assert_eq!(reopened.put(id, 1, &[8; 1024]).unwrap(), 1);
+    assert_eq!(reopened.target_of(id), Some(target));
+    assert!(reopened.bind_device(id, Some([3; 16])).unwrap());
+    assert!(!reopened.bind_device(id, Some([4; 16])).unwrap());
+    assert_eq!(reopened.loss_count(id), 1);
+    assert!(directory_bytes(&root) <= 1100);
+    let next = new_local_id(2, [0; 10]);
+    assert_eq!(reopened.assign_target(next, target).unwrap().seq_offset, 6);
+}

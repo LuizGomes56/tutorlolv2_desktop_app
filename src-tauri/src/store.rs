@@ -23,6 +23,7 @@ const SESSION_FILE: &str = "session.bin";
 enum Kind {
     Device = 1,
     Session = 2,
+    History = 3,
 }
 
 /// `device.bin` payload: the secret is encrypted for the current Windows user.
@@ -32,6 +33,7 @@ struct DeviceRecord {
     protected_secret: Vec<u8>,
 }
 
+#[derive(Clone)]
 pub struct Store {
     dir: PathBuf,
 }
@@ -39,6 +41,22 @@ pub struct Store {
 impl Store {
     pub fn new(dir: PathBuf) -> Self {
         Self { dir }
+    }
+
+    pub fn load_history_with<T>(&self, parse: impl FnOnce(&[u8]) -> Option<T>) -> Option<T> {
+        self.load("history.bin", Kind::History, parse)
+    }
+
+    pub fn load_history<T: Decode<()>>(&self) -> Option<T> {
+        self.load("history.bin", Kind::History, decode)
+    }
+
+    pub fn save_history(&self, value: &impl Encode) -> io::Result<()> {
+        self.save("history.bin", Kind::History, value)
+    }
+
+    pub fn archive_history(&self) {
+        let _ = move_aside::<()>(&self.dir.join("history.bin"));
     }
 
     pub fn load_device(&self) -> Option<DeviceCredentials> {
@@ -133,6 +151,16 @@ fn move_aside<T>(path: &Path) -> Option<T> {
     let mut corrupt = path.as_os_str().to_owned();
 
     corrupt.push(".corrupt");
+
+    if Path::new(&corrupt).exists() {
+        corrupt.push(format!(
+            ".{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        ));
+    }
 
     let _ = fs::rename(path, corrupt);
     None

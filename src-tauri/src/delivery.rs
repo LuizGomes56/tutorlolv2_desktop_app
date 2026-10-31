@@ -15,7 +15,29 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 const OUTBOX_EVERY: Duration = Duration::from_secs(30);
 const UPLOAD_EVERY: Duration = Duration::from_secs(60);
 
+enum HistoryOperationError {
+    Retry(String),
+    Permanent(String),
+}
+
+impl From<&str> for HistoryOperationError {
+    fn from(value: &str) -> Self {
+        Self::Retry(value.into())
+    }
+}
+
+impl HistoryOperationError {
+    fn message(&self) -> &str {
+        match self {
+            Self::Retry(message) | Self::Permanent(message) => message,
+        }
+    }
+}
+
 pub struct Delivery {
+    pub history: crate::history::History,
+    history_errors:
+        Mutex<std::collections::BTreeMap<(tutorlolv2_protocol::Id16, u64), HistoryOperationError>>,
     pub(crate) recorder: Mutex<Recorder>,
     pub(crate) api: RwLock<ApiClient>,
     pub(crate) spool: Spool,
@@ -36,7 +58,16 @@ pub struct Delivery {
 
 impl Delivery {
     pub fn new(recorder: Recorder, api: ApiClient, spool: Spool, store: Store) -> Self {
+        let history = crate::history::History::new(store.clone(), api.device_id);
+
+        // Adopt legacy spool ownership only while the original loaded credential exists.
+        for local in spool.local_sessions() {
+            let _ = spool.bind_device(local, api.device_id);
+        }
+
         Self {
+            history,
+            history_errors: Mutex::new(std::collections::BTreeMap::new()),
             recorder: Mutex::new(recorder),
             api: RwLock::new(api),
             spool,
@@ -54,6 +85,35 @@ impl Delivery {
             upload_lock: tokio::sync::Mutex::new(None),
             outbox_lock: tokio::sync::Mutex::new(()),
         }
+    }
+
+    pub fn sync_history_errors(
+        &self,
+        device: Option<tutorlolv2_protocol::Id16>,
+    ) -> Result<(), tutorlolv2_protocol::HistoryError> {
+        let pending = self
+            .spool
+            .pending()
+            .into_iter()
+            .map(|chunk| (chunk.local_id, u64::from(chunk.local_seq)))
+            .collect::<std::collections::BTreeSet<_>>();
+        let mut errors = self.history_errors.lock().unwrap();
+        errors.retain(|key, error| {
+            key.1 > u64::from(u32::MAX)
+                || matches!(error, HistoryOperationError::Permanent(_))
+                || pending.contains(key)
+        });
+        let errors = errors
+            .iter()
+            .map(|((local, _), error)| {
+                (
+                    *local,
+                    self.spool.target_of(*local).map(|t| t.recording_id),
+                    error.message().to_owned(),
+                )
+            })
+            .collect();
+        self.history.errors(device, errors)
     }
 
     /// Run the uploader, flushing existing data immediately on startup.
@@ -85,36 +145,54 @@ impl Delivery {
     pub(crate) async fn registration(self: Arc<Self>) {
         loop {
             if !self.api.read().await.authenticated() {
-                let mut attempt = 0;
-
-                loop {
-                    match ApiClient::new(None).register(APP_VERSION).await {
-                        Ok(credentials) => {
-                            if let Err(e) = self.store.save_device(&credentials) {
-                                log::error!("Could not save device.bin: {e}");
-                            }
-
-                            *self.api.write().await = ApiClient::new(Some(&credentials));
-                            self.outbox_now.notify_one();
-                            self.upload_now.notify_one();
-
-                            break;
-                        }
-                        Err(e) => {
-                            log::warn!("Device registration failed: {e}");
-                            tokio::time::sleep(Duration::from_millis(backoff_ms(
-                                attempt,
-                                jitter(),
-                            )))
-                            .await;
-
-                            attempt += 1;
-                        }
-                    }
-                }
+                self.register_device(ApiClient::new(None)).await;
             }
 
             self.register_now.notified().await;
+        }
+    }
+
+    /// Register once, then retry local persistence of the same credentials before
+    /// publishing them to delivery workers. No recorder lock is held while waiting.
+    pub async fn register_device(&self, registration_api: ApiClient) {
+        let mut attempt = 0;
+        let credentials = loop {
+            match registration_api.register(APP_VERSION).await {
+                Ok(credentials) => break credentials,
+                Err(e) => log::warn!("Device registration failed: {e}"),
+            }
+
+            tokio::time::sleep(Duration::from_millis(backoff_ms(attempt, jitter()))).await;
+            attempt += 1;
+        };
+
+        attempt = 0;
+        loop {
+            // Persist the secret first: an interruption after this write can recover
+            // on startup, where History::new discards a cache for another device.
+            let persisted = match self.store.save_device(&credentials) {
+                Err(e) => {
+                    log::error!("Could not save device.bin: {e}");
+                    false
+                }
+                Ok(()) => match self.history.bind(Some(credentials.device_id)) {
+                    Ok(()) => true,
+                    Err(e) => {
+                        log::error!("Could not bind history to registered device: {e:?}");
+                        false
+                    }
+                },
+            };
+
+            if persisted {
+                *self.api.write().await = ApiClient::new(Some(&credentials));
+                self.outbox_now.notify_one();
+                self.upload_now.notify_one();
+                return;
+            }
+
+            tokio::time::sleep(Duration::from_millis(backoff_ms(attempt, jitter()))).await;
+            attempt += 1;
         }
     }
 
@@ -158,6 +236,14 @@ impl Delivery {
         let mut complete = true;
 
         for entry in self.spool.outbox() {
+            if !self
+                .spool
+                .bind_device(entry.local_id, api.device_id)
+                .unwrap_or(false)
+            {
+                continue;
+            }
+
             let mut target = entry.target;
 
             if let Some(request) = &entry.start {
@@ -177,6 +263,11 @@ impl Delivery {
 
                 match started {
                     Ok(started) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 1u64 << 32));
+
                         let proposed = Target {
                             recording_id: started.recording_id,
                             seq_offset: started.next_chunk_seq,
@@ -209,10 +300,17 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 1u64 << 32),
+                            "Session assignment failed; retrying".into(),
+                        );
+
                         log::warn!("Start session failed: {e}");
+
                         if unauthorized(&e) {
                             self.credentials_rejected().await;
                         }
+
                         return false;
                     }
                 }
@@ -224,6 +322,11 @@ impl Delivery {
 
                 match api.end(&target.recording_id, request).await {
                     Ok(()) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 2u64 << 32));
+
                         let _ = self.spool.clear_end(entry.local_id);
                         let effects = self.recorder.lock().unwrap().on_end_sent(entry.local_id);
 
@@ -231,6 +334,11 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 2u64 << 32),
+                            "Recording end failed; retrying".into(),
+                        );
+
                         log::warn!("Ending the recording failed: {e}");
 
                         if unauthorized(&e) {
@@ -245,6 +353,11 @@ impl Delivery {
             if let (Some(request), Some(target)) = (&entry.result, target) {
                 match api.result(&target.recording_id, request).await {
                     Ok(()) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 3u64 << 32));
+
                         if let Err(e) = self.spool.clear_result(entry.local_id) {
                             log::error!("Could not acknowledge the game result: {e}");
                             return false;
@@ -252,6 +365,11 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 3u64 << 32),
+                            "Game result delivery failed; retrying".into(),
+                        );
+
                         log::warn!("Sending the game result failed: {e}");
 
                         if unauthorized(&e) {
@@ -314,6 +432,14 @@ impl Delivery {
         let mut pass_failed = false;
 
         for chunk in self.spool.pending() {
+            if !self
+                .spool
+                .bind_device(chunk.local_id, api.device_id)
+                .unwrap_or(false)
+            {
+                continue;
+            }
+
             let Some(target) = chunk.target else { continue };
             let Ok(body) = std::fs::read(&chunk.path) else {
                 continue;
@@ -345,10 +471,19 @@ impl Delivery {
                 .await
             {
                 ChunkOutcome::Stored => {
+                    self.history_errors
+                        .lock()
+                        .unwrap()
+                        .remove(&(chunk.local_id, chunk.local_seq as u64));
+
                     let _ = self.spool.done(&chunk);
                     self.recorder.lock().unwrap().on_chunk_uploaded(now_ms());
                 }
                 ChunkOutcome::Retry { after_ms } => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        "Recording upload failed; retrying".into(),
+                    );
                     pass_failed = true;
 
                     *self.delivery_error.lock().unwrap() =
@@ -357,6 +492,10 @@ impl Delivery {
                     retry = Some(after_ms);
                 }
                 ChunkOutcome::RateLimited { after_ms } => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        "Recording upload rate limited; retrying".into(),
+                    );
                     *self.delivery_error.lock().unwrap() =
                         Some("Recording upload rate limited; retrying".into());
 
@@ -372,7 +511,15 @@ impl Delivery {
                     return Some(None);
                 }
                 ChunkOutcome::Rejected(status) => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        HistoryOperationError::Permanent(
+                            "Recording chunk permanently rejected".into(),
+                        ),
+                    );
+
                     pass_failed = true;
+
                     *self.delivery_error.lock().unwrap() =
                         Some(format!("Recording chunk rejected ({status})"));
 

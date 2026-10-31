@@ -146,6 +146,8 @@ pub struct ApiClient {
     http: Client,
     base: String,
     auth: Option<String>,
+    pub device_id: Option<Id16>,
+    owner_limit: std::sync::Arc<tokio::sync::Semaphore>,
 }
 
 impl ApiClient {
@@ -161,13 +163,23 @@ impl ApiClient {
 
     pub fn with_base_url(base: String, credentials: Option<&DeviceCredentials>) -> Self {
         let http = Client::builder()
+            .no_brotli()
+            .no_gzip()
+            .no_deflate()
+            .no_zstd()
             .timeout(Duration::from_secs(10))
             .build()
             .expect("static client configuration is valid");
 
         let auth = credentials.map(|c| device_auth_header(&c.device_id, &c.device_secret));
 
-        Self { http, base, auth }
+        Self {
+            http,
+            base,
+            auth,
+            device_id: credentials.map(|c| c.device_id),
+            owner_limit: std::sync::Arc::new(tokio::sync::Semaphore::new(4)),
+        }
     }
 
     pub fn authenticated(&self) -> bool {
@@ -229,6 +241,197 @@ impl ApiClient {
         bincode::decode_from_slice(&bytes, BINCODE_CONFIG)
             .map(|(value, _)| Some(value))
             .map_err(|e| e.to_string())
+    }
+
+    async fn owner_bytes(
+        &self,
+        method: Method,
+        path: &str,
+        body: Vec<u8>,
+        frame: bool,
+    ) -> Result<Vec<u8>, tutorlolv2_protocol::HistoryError> {
+        use crate::history::error;
+        use tutorlolv2_protocol::HistoryErrorKind as K;
+
+        let _permit = tokio::time::timeout(Duration::from_secs(10), self.owner_limit.acquire())
+            .await
+            .map_err(|_| error(K::Offline, "History transport busy; retry", true))?
+            .map_err(|_| error(K::Other, "History transport unavailable", true))?;
+
+        let auth = self
+            .auth
+            .as_ref()
+            .ok_or_else(|| error(K::Unauthorized, "Device registration required", true))?;
+
+        let mut response = self
+            .http
+            .request(method, format!("{}/api/me/recordings{path}", self.base))
+            .header("Authorization", auth)
+            .header("Content-Type", OCTET_STREAM)
+            .body(body)
+            .send()
+            .await
+            .map_err(|_| error(K::Offline, "History server unavailable", true))?;
+
+        let status = response.status().as_u16();
+
+        if !(200..300).contains(&status) {
+            let kind = match status {
+                401 => K::Unauthorized,
+                403 => K::Restricted,
+                404 => K::NotFound,
+                409 => K::Conflict,
+                422 => K::UnsupportedFormat,
+                _ => K::Other,
+            };
+
+            return Err(error(
+                kind,
+                "History request failed",
+                status >= 500 || status == 429,
+            ));
+        }
+
+        let encoding = response
+            .headers()
+            .get("Content-Encoding")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_owned();
+
+        let bound = if frame {
+            tutorlolv2_protocol::MAX_CHUNK_BYTES
+        } else {
+            16 << 20
+        };
+
+        if response.content_length().is_some_and(|n| n > bound as u64) {
+            return Err(error(
+                K::InvalidData,
+                "History response exceeds limit",
+                false,
+            ));
+        }
+
+        let mut bytes = vec![];
+
+        while let Some(part) = response
+            .chunk()
+            .await
+            .map_err(|_| error(K::Offline, "History response interrupted", true))?
+        {
+            if bytes.len().saturating_add(part.len()) > bound {
+                return Err(error(
+                    K::InvalidData,
+                    "History response exceeds limit",
+                    false,
+                ));
+            }
+
+            bytes.extend_from_slice(&part);
+        }
+
+        if frame {
+            if encoding != "br" {
+                return Err(error(K::InvalidData, "Unsupported replay encoding", false));
+            }
+
+            let raw = decompress(&bytes)
+                .map_err(|_| error(K::InvalidData, "Corrupt replay data", false))?;
+
+            if raw.len() > MAX_CHUNK_DECOMPRESSED {
+                return Err(error(K::InvalidData, "Replay exceeds limit", false));
+            }
+
+            Ok(raw)
+        } else if encoding.is_empty() {
+            Ok(bytes)
+        } else {
+            Err(error(
+                K::InvalidData,
+                "Unsupported metadata encoding",
+                false,
+            ))
+        }
+    }
+
+    async fn owner<T: Decode<()>>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Vec<u8>,
+    ) -> Result<T, tutorlolv2_protocol::HistoryError> {
+        let bytes = self.owner_bytes(method, path, body, false).await?;
+        let (value, used) = bincode::decode_from_slice(&bytes, BINCODE_CONFIG).map_err(|_| {
+            crate::history::error(
+                tutorlolv2_protocol::HistoryErrorKind::InvalidData,
+                "Invalid history metadata",
+                false,
+            )
+        })?;
+
+        if used != bytes.len() {
+            return Err(crate::history::error(
+                tutorlolv2_protocol::HistoryErrorKind::InvalidData,
+                "Trailing metadata bytes",
+                false,
+            ));
+        }
+
+        Ok(value)
+    }
+
+    pub async fn history_page(
+        &self,
+        before: Option<Id16>,
+    ) -> Result<tutorlolv2_protocol::HistoryPage, tutorlolv2_protocol::HistoryError> {
+        let path = before
+            .map(|id| format!("?limit=100&before={}", uuid_text(&id)))
+            .unwrap_or("?limit=100".into());
+
+        self.owner(Method::GET, &path, vec![]).await
+    }
+
+    pub async fn history_details(
+        &self,
+        id: Id16,
+    ) -> Result<tutorlolv2_protocol::RecordingDetails, tutorlolv2_protocol::HistoryError> {
+        self.owner(Method::GET, &format!("/{}", uuid_text(&id)), vec![])
+            .await
+    }
+
+    pub async fn history_frames(
+        &self,
+        id: Id16,
+        seq: u32,
+    ) -> Result<Vec<u8>, tutorlolv2_protocol::HistoryError> {
+        if seq > i32::MAX as u32 {
+            return Err(crate::history::error(
+                tutorlolv2_protocol::HistoryErrorKind::InvalidData,
+                "Invalid chunk sequence",
+                false,
+            ));
+        }
+
+        self.owner_bytes(
+            Method::GET,
+            &format!("/{}/frames/{seq}", uuid_text(&id)),
+            vec![],
+            true,
+        )
+        .await
+    }
+
+    pub async fn history_share(
+        &self,
+        id: Id16,
+        mode: tutorlolv2_protocol::HistoryShareMode,
+    ) -> Result<ShareState, tutorlolv2_protocol::HistoryError> {
+        let body =
+            bincode::encode_to_vec(SetShareMode { mode: mode.into() }, BINCODE_CONFIG).unwrap();
+
+        self.owner(Method::PUT, &format!("/{}/share", uuid_text(&id)), body)
+            .await
     }
 
     pub async fn register(&self, app_version: &str) -> Result<DeviceCredentials, String> {

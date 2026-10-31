@@ -100,6 +100,74 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
     ));
 
     let (control, inbox) = mpsc::channel(1);
+    let history_shared = shared.clone();
+    let history_app = app.clone();
+
+    async_runtime::spawn(async move {
+        let mut previous = 0;
+
+        loop {
+            let worker = history_shared.clone();
+            let _ = async_runtime::spawn_blocking(move || {
+                let pending = worker.spool.pending();
+                let controls = worker.spool.outbox();
+                let mut ids = worker.spool.local_sessions();
+                let session = worker.store.load_session();
+
+                if let Some(s) = &session
+                    && !ids.contains(&s.local_id)
+                {
+                    ids.push(s.local_id);
+                }
+
+                let device = worker.store.load_device().map(|d| d.device_id);
+                let locals = ids
+                    .into_iter()
+                    .filter(|local| worker.spool.bind_device(*local, device).unwrap_or(false))
+                    .map(|local| {
+                        let id = worker
+                            .spool
+                            .target_of(local)
+                            .map(|t| t.recording_id)
+                            .or_else(|| {
+                                session
+                                    .as_ref()
+                                    .filter(|s| s.local_id == local)
+                                    .and_then(|s| s.server.map(|v| v.0))
+                            });
+                        (
+                            local,
+                            id,
+                            pending
+                                .iter()
+                                .filter(|c| c.local_id == local)
+                                .count()
+                                .min(u32::MAX as usize) as u32,
+                            controls.iter().any(|e| e.local_id == local),
+                            worker.spool.loss_count(local),
+                        )
+                    })
+                    .collect();
+
+                if let Err(e) = worker.history.reconcile_local(device, locals) {
+                    log::warn!("History synchronization failed: {}", e.message);
+                }
+
+                let _ = worker.sync_history_errors(device);
+            })
+            .await;
+
+            let revision = history_shared.history.revision();
+
+            if revision != previous {
+                use tauri::Emitter;
+                let _ = history_app.emit("history-changed", ());
+                previous = revision;
+            }
+
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+    });
 
     async_runtime::spawn(shared.clone().registration());
     async_runtime::spawn(shared.clone().outbox_loop());

@@ -483,6 +483,15 @@ async fn rejected_live_upload_refreshes_expired_code_to_private_without_republis
 
 #[tokio::test]
 async fn user_private_transition_cancels_live_request_without_waiting_for_response() {
+    private_transition_cancels_live_request(false).await;
+}
+
+#[tokio::test]
+async fn history_private_transition_cancels_live_request_without_waiting_for_response() {
+    private_transition_cancels_live_request(true).await;
+}
+
+async fn private_transition_cancels_live_request(history: bool) {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let (delivery, snapshot, share) =
         publisher(format!("http://{}", listener.local_addr().unwrap()));
@@ -519,7 +528,14 @@ async fn user_private_transition_cancels_live_request_without_waiting_for_respon
     });
     let make_private = async {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        delivery.set_share_mode(ShareMode::Private).await.unwrap();
+        if history {
+            delivery
+                .set_history_share_mode([9; 16], HistoryShareMode::Private)
+                .await
+                .unwrap();
+        } else {
+            delivery.set_share_mode(ShareMode::Private).await.unwrap();
+        }
     };
     let start = std::time::Instant::now();
     let (published, _) = tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -533,5 +549,57 @@ async fn user_private_transition_cancels_live_request_without_waiting_for_respon
     assert!(!published.unwrap());
     assert!(start.elapsed() < std::time::Duration::from_secs(1));
     release.send(()).unwrap();
+    worker.join().unwrap();
+}
+
+#[tokio::test]
+async fn history_share_response_updates_only_the_matching_active_recorder() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let (delivery, snapshot, live) =
+        publisher(format!("http://{}", listener.local_addr().unwrap()));
+    let public = ShareState {
+        mode: ShareMode::Public,
+        code: Some("public42".into()),
+        url: None,
+    };
+    let private = tutorlolv2_desktop_app::sharing::private_share();
+    let responses = [private.clone(), public.clone(), private.clone()];
+    let worker = std::thread::spawn(move || {
+        for share in responses {
+            let (mut stream, _) = listener.accept().unwrap();
+            assert!(read_request(&mut stream).starts_with("PUT /api/me/recordings/"));
+            respond(
+                &mut stream,
+                200,
+                &bincode::encode_to_vec(share, BINCODE_CONFIG).unwrap(),
+            );
+        }
+    });
+    delivery
+        .set_history_share_mode([8; 16], HistoryShareMode::Private)
+        .await
+        .unwrap();
+    assert_eq!(
+        delivery.recording_state().share,
+        live,
+        "finished historical records must not alter the active game"
+    );
+    delivery
+        .set_history_share_mode([9; 16], HistoryShareMode::Public)
+        .await
+        .unwrap();
+    assert_eq!(delivery.recording_state().share, public);
+    assert!(
+        !delivery
+            .publish_live(&[9; 16], &live, &snapshot)
+            .await
+            .unwrap(),
+        "stale capability must not be published"
+    );
+    delivery
+        .set_history_share_mode([9; 16], HistoryShareMode::Private)
+        .await
+        .unwrap();
+    assert_eq!(delivery.recording_state().share, private);
     worker.join().unwrap();
 }
