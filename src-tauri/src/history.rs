@@ -236,6 +236,7 @@ impl History {
                     hidden: false,
                 });
 
+                row.local_id = Some(local);
                 row.recording_id = id.or(row.recording_id);
                 row.pending_chunks = pending;
                 row.pending_control = control;
@@ -258,7 +259,7 @@ impl History {
                 let mut retained = vec![];
 
                 for old in entries.drain(..) {
-                    if old.local_id == row.local_id
+                    if row.local_id.is_some() && old.local_id == row.local_id
                         || row.recording_id.is_some() && old.recording_id == row.recording_id
                     {
                         row.hidden |= old.hidden;

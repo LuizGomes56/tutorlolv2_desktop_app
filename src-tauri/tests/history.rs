@@ -596,3 +596,54 @@ fn initial_m3_index_migrates_without_losing_local_hide_or_pending_state() {
     assert!(history.list(0, 100).entries.is_empty());
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[tokio::test]
+async fn adopting_server_history_attaches_local_id_without_collapsing_unrelated_rows() {
+    use tutorlolv2_desktop_app::BINCODE_CONFIG;
+    use tutorlolv2_protocol::*;
+    let page = bincode::encode_to_vec(
+        HistoryPage {
+            items: vec![item(10), item(11), item(12)],
+            next_before: None,
+        },
+        BINCODE_CONFIG,
+    )
+    .unwrap();
+    let (base, worker) = server(vec![(200, "", page)]);
+    let dir = std::env::temp_dir().join(format!("tl-adopt-server-row-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    history.refresh(api(base), true).await;
+    worker.join().unwrap();
+    history.hide([12; 16]).unwrap();
+    assert_eq!(history.list(0, 50).entries.len(), 2);
+
+    for _ in 0..2 {
+        history
+            .reconcile_local(vec![([99; 16], Some([10; 16]), 3, true, 2)])
+            .unwrap();
+        let restarted = History::new(Store::new(dir.clone()), Some([1; 16]));
+        let rows = restarted.list(0, 50).entries;
+        assert_eq!(
+            rows.len(),
+            2,
+            "unrelated visible rows and hidden flags must survive"
+        );
+        let adopted = rows
+            .iter()
+            .find(|row| row.recording_id == Some([10; 16]))
+            .unwrap();
+        assert_eq!(adopted.local_id, Some([99; 16]));
+        assert_eq!(adopted.pending_chunks, 3);
+        assert!(adopted.pending_control);
+        assert_eq!(adopted.lost_chunks, 2);
+        assert_eq!(adopted.summary.as_ref().unwrap().recording.id, [10; 16]);
+        let unrelated = rows
+            .iter()
+            .find(|row| row.recording_id == Some([11; 16]))
+            .unwrap();
+        assert_eq!(unrelated.local_id, None);
+        assert_eq!(unrelated.pending_chunks, 0);
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}
