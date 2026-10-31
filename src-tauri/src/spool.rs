@@ -50,6 +50,18 @@ pub struct OutboxEntry {
     pub target: Option<Target>,
 }
 
+#[derive(Clone, Copy, Encode, Decode)]
+enum LossReason {
+    Rejected,
+    Overflow,
+}
+
+#[derive(Encode, Decode)]
+struct LossJournal {
+    version: u16,
+    entries: Vec<(u32, LossReason)>,
+}
+
 pub struct Spool {
     root: PathBuf,
     max_bytes: u64,
@@ -87,6 +99,101 @@ fn parse_hex(name: &str) -> Option<Id16> {
 }
 
 impl Spool {
+    // Intent is synced before destructive mutation. A surviving pending chunk means
+    // the intent did not complete; rejected or absent chunks count once.
+    fn loss_intent(&self, path: &Path, reason: LossReason) -> io::Result<()> {
+        let dir = path
+            .parent()
+            .ok_or_else(|| io::Error::other("Invalid loss path"))?;
+
+        let seq = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .and_then(|s| s.parse::<u32>().ok())
+            .ok_or_else(|| io::Error::other("Invalid chunk sequence"))?;
+
+        let journal_path = dir.join("loss.bin");
+        let mut journal: LossJournal = if journal_path.exists() {
+            read_record(&journal_path).ok_or_else(|| io::Error::other("Unreadable loss ledger"))?
+        } else {
+            LossJournal {
+                version: 1,
+                entries: vec![],
+            }
+        };
+
+        if journal.version != 1 {
+            return Err(io::Error::other("Unsupported loss ledger"));
+        }
+
+        if !journal.entries.iter().any(|(s, _)| *s == seq) {
+            journal.entries.push((seq, reason));
+            write_atomic(
+                &journal_path,
+                &bincode::encode_to_vec(journal, BINCODE_CONFIG).map_err(io::Error::other)?,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn loss_count(&self, local_id: Id16) -> u32 {
+        let dir = self.session_dir(&local_id);
+        let Some(journal) = read_record::<LossJournal>(&dir.join("loss.bin")) else {
+            return 0;
+        };
+
+        journal
+            .entries
+            .iter()
+            .filter(|(seq, _)| !dir.join(format!("{seq:08}.chunk")).exists())
+            .count()
+            .min(u32::MAX as usize) as u32
+    }
+
+    pub fn bind_device(&self, local_id: Id16, device: Option<Id16>) -> io::Result<bool> {
+        let _guard = self.mutation.lock().unwrap();
+        let dir = self.session_dir(&local_id);
+        let path = dir.join("owner.bin");
+        let orphan = dir.join("orphan.bin");
+
+        if orphan.exists() {
+            return Ok(false);
+        }
+
+        // An assigned legacy target cannot recover ownership after device.bin is lost.
+        // Keep its pending work diagnostically instead of adopting it on registration.
+        if !path.exists() && device.is_none() && self.target_of(local_id).is_some() {
+            write_atomic(&orphan, b"M3 orphaned owner v1")?;
+            return Ok(false);
+        }
+
+        if path.exists() {
+            let owner: Id16 =
+                read_record(&path).ok_or_else(|| io::Error::other("Invalid session owner"))?;
+            return Ok(Some(owner) == device);
+        }
+
+        if let Some(id) = device {
+            fs::create_dir_all(&dir)?;
+            write_atomic(
+                &path,
+                &bincode::encode_to_vec(id, BINCODE_CONFIG).map_err(io::Error::other)?,
+            )?;
+        }
+
+        Ok(true)
+    }
+
+    pub fn local_sessions(&self) -> Vec<Id16> {
+        fs::read_dir(&self.root)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter_map(|e| e.file_name().to_str().and_then(parse_hex))
+            .collect()
+    }
+
     /// 64 MiB (spec §12.4).
     pub const DEFAULT_MAX_BYTES: u64 = 64 << 20;
 
@@ -289,6 +396,10 @@ impl Spool {
                 break;
             }
 
+            if path.extension().is_some_and(|e| e == CHUNK_EXT) {
+                self.loss_intent(&path, LossReason::Overflow)?;
+            }
+
             fs::remove_file(path)?;
             used = used.saturating_sub(size);
             dropped += 1;
@@ -464,12 +575,27 @@ impl Spool {
     /// The server stored the chunk.
     pub fn done(&self, chunk: &PendingChunk) -> io::Result<()> {
         let _guard = self.mutation.lock().unwrap();
+        let path = self.session_dir(&chunk.local_id).join("loss.bin");
+
+        if path.exists() {
+            let mut journal: LossJournal =
+                read_record(&path).ok_or_else(|| io::Error::other("Unreadable loss ledger"))?;
+
+            journal.entries.retain(|(seq, _)| *seq != chunk.local_seq);
+
+            write_atomic(
+                &path,
+                &bincode::encode_to_vec(journal, BINCODE_CONFIG).map_err(io::Error::other)?,
+            )?;
+        }
+
         remove_if_present(&chunk.path)
     }
 
     /// The server refused the chunk for good; kept as `.rejected` for diagnosis.
     pub fn reject(&self, chunk: &PendingChunk) -> io::Result<()> {
         let _guard = self.mutation.lock().unwrap();
+        self.loss_intent(&chunk.path, LossReason::Rejected)?;
         fs::rename(&chunk.path, chunk.path.with_extension(REJECTED_EXT))
     }
 
@@ -520,9 +646,9 @@ impl Spool {
 
                 path.extension()
                     .is_some_and(|x| x == CHUNK_EXT || x == REJECTED_EXT)
-                    || path
-                        .file_name()
-                        .is_some_and(|n| n == START_FILE || n == END_FILE || n == RESULT_FILE)
+                    || path.file_name().is_some_and(|n| {
+                        n == START_FILE || n == END_FILE || n == RESULT_FILE || n == "loss.bin"
+                    })
             });
 
             if !has_chunks && Some(local_id) != keep {

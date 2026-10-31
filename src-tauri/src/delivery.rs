@@ -16,6 +16,9 @@ const OUTBOX_EVERY: Duration = Duration::from_secs(30);
 const UPLOAD_EVERY: Duration = Duration::from_secs(60);
 
 pub struct Delivery {
+    pub history: crate::history::History,
+    pub(crate) history_errors:
+        Mutex<std::collections::BTreeMap<(tutorlolv2_protocol::Id16, u64), String>>,
     pub(crate) recorder: Mutex<Recorder>,
     pub(crate) api: RwLock<ApiClient>,
     pub(crate) spool: Spool,
@@ -36,7 +39,16 @@ pub struct Delivery {
 
 impl Delivery {
     pub fn new(recorder: Recorder, api: ApiClient, spool: Spool, store: Store) -> Self {
+        let history = crate::history::History::new(store.clone(), api.device_id);
+
+        // Adopt legacy spool ownership only while the original loaded credential exists.
+        for local in spool.local_sessions() {
+            let _ = spool.bind_device(local, api.device_id);
+        }
+
         Self {
+            history,
+            history_errors: Mutex::new(std::collections::BTreeMap::new()),
             recorder: Mutex::new(recorder),
             api: RwLock::new(api),
             spool,
@@ -93,6 +105,8 @@ impl Delivery {
                             if let Err(e) = self.store.save_device(&credentials) {
                                 log::error!("Could not save device.bin: {e}");
                             }
+
+                            let _ = self.history.bind(Some(credentials.device_id));
 
                             *self.api.write().await = ApiClient::new(Some(&credentials));
                             self.outbox_now.notify_one();
@@ -158,6 +172,14 @@ impl Delivery {
         let mut complete = true;
 
         for entry in self.spool.outbox() {
+            if !self
+                .spool
+                .bind_device(entry.local_id, api.device_id)
+                .unwrap_or(false)
+            {
+                continue;
+            }
+
             let mut target = entry.target;
 
             if let Some(request) = &entry.start {
@@ -177,6 +199,11 @@ impl Delivery {
 
                 match started {
                     Ok(started) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 1u64 << 32));
+
                         let proposed = Target {
                             recording_id: started.recording_id,
                             seq_offset: started.next_chunk_seq,
@@ -209,10 +236,17 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 1u64 << 32),
+                            "Session assignment failed; retrying".into(),
+                        );
+
                         log::warn!("Start session failed: {e}");
+
                         if unauthorized(&e) {
                             self.credentials_rejected().await;
                         }
+
                         return false;
                     }
                 }
@@ -224,6 +258,11 @@ impl Delivery {
 
                 match api.end(&target.recording_id, request).await {
                     Ok(()) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 2u64 << 32));
+
                         let _ = self.spool.clear_end(entry.local_id);
                         let effects = self.recorder.lock().unwrap().on_end_sent(entry.local_id);
 
@@ -231,6 +270,11 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 2u64 << 32),
+                            "Recording end failed; retrying".into(),
+                        );
+
                         log::warn!("Ending the recording failed: {e}");
 
                         if unauthorized(&e) {
@@ -245,6 +289,11 @@ impl Delivery {
             if let (Some(request), Some(target)) = (&entry.result, target) {
                 match api.result(&target.recording_id, request).await {
                     Ok(()) => {
+                        self.history_errors
+                            .lock()
+                            .unwrap()
+                            .remove(&(entry.local_id, 3u64 << 32));
+
                         if let Err(e) = self.spool.clear_result(entry.local_id) {
                             log::error!("Could not acknowledge the game result: {e}");
                             return false;
@@ -252,6 +301,11 @@ impl Delivery {
                     }
                     Err(e) => {
                         *self.control_error.lock().unwrap() = Some(e.clone());
+                        self.history_errors.lock().unwrap().insert(
+                            (entry.local_id, 3u64 << 32),
+                            "Game result delivery failed; retrying".into(),
+                        );
+
                         log::warn!("Sending the game result failed: {e}");
 
                         if unauthorized(&e) {
@@ -314,6 +368,14 @@ impl Delivery {
         let mut pass_failed = false;
 
         for chunk in self.spool.pending() {
+            if !self
+                .spool
+                .bind_device(chunk.local_id, api.device_id)
+                .unwrap_or(false)
+            {
+                continue;
+            }
+
             let Some(target) = chunk.target else { continue };
             let Ok(body) = std::fs::read(&chunk.path) else {
                 continue;
@@ -345,10 +407,19 @@ impl Delivery {
                 .await
             {
                 ChunkOutcome::Stored => {
+                    self.history_errors
+                        .lock()
+                        .unwrap()
+                        .remove(&(chunk.local_id, chunk.local_seq as u64));
+
                     let _ = self.spool.done(&chunk);
                     self.recorder.lock().unwrap().on_chunk_uploaded(now_ms());
                 }
                 ChunkOutcome::Retry { after_ms } => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        "Recording upload failed; retrying".into(),
+                    );
                     pass_failed = true;
 
                     *self.delivery_error.lock().unwrap() =
@@ -357,6 +428,10 @@ impl Delivery {
                     retry = Some(after_ms);
                 }
                 ChunkOutcome::RateLimited { after_ms } => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        "Recording upload rate limited; retrying".into(),
+                    );
                     *self.delivery_error.lock().unwrap() =
                         Some("Recording upload rate limited; retrying".into());
 
@@ -372,7 +447,13 @@ impl Delivery {
                     return Some(None);
                 }
                 ChunkOutcome::Rejected(status) => {
+                    self.history_errors.lock().unwrap().insert(
+                        (chunk.local_id, chunk.local_seq as u64),
+                        "Recording chunk permanently rejected".into(),
+                    );
+
                     pass_failed = true;
+
                     *self.delivery_error.lock().unwrap() =
                         Some(format!("Recording chunk rejected ({status})"));
 

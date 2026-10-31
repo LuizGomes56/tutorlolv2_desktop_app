@@ -18,6 +18,7 @@ pub struct AppState {
 }
 
 pub mod delivery;
+pub mod history;
 pub mod lcu;
 pub mod live_client;
 mod overlay;
@@ -87,11 +88,148 @@ async fn set_share_mode(
     result
 }
 
+fn history_auth(window: &tauri::WebviewWindow) -> Result<(), tutorlolv2_protocol::HistoryError> {
+    history::authorize(window.label())
+}
+
+fn queue_history(shared: std::sync::Arc<delivery::Delivery>, app: AppHandle, repair: bool) {
+    if !shared.history.begin(repair) {
+        return;
+    }
+
+    tauri::async_runtime::spawn(async move {
+        use tauri::Emitter;
+        let api = shared.api.read().await.clone();
+        shared.history.refresh(api, repair).await;
+        let _ = app.emit("history-changed", ());
+    });
+}
+
+#[tauri::command]
+fn list_history(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    offset: u32,
+    limit: u32,
+) -> Result<tutorlolv2_protocol::HistoryList, tutorlolv2_protocol::HistoryError> {
+    history_auth(&window)?;
+    if !(1..=100).contains(&limit) {
+        return Err(history::error(
+            tutorlolv2_protocol::HistoryErrorKind::InvalidData,
+            "History page size must be between 1 and 100",
+            false,
+        ));
+    }
+    let shared = state.recorder.shared.clone();
+    let cached = shared.history.list(offset, limit);
+
+    queue_history(shared, window.app_handle().clone(), false);
+
+    Ok(cached)
+}
+
+#[tauri::command]
+async fn get_history_details(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    recording_id: String,
+) -> Result<tutorlolv2_protocol::HistoryDetails, tutorlolv2_protocol::HistoryError> {
+    history_auth(&window)?;
+
+    let id = history::parse_id(&recording_id)?;
+    let shared = &state.recorder.shared;
+    let api = shared.api.read().await.clone();
+
+    shared
+        .history
+        .details(api.device_id, api.history_details(id).await?)
+}
+
+#[tauri::command]
+async fn get_history_frames(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    recording_id: String,
+    seq: u32,
+) -> Result<InvokeResponseBody, tutorlolv2_protocol::HistoryError> {
+    history_auth(&window)?;
+
+    let id = history::parse_id(&recording_id)?;
+    let api = state.recorder.shared.api.read().await.clone();
+    let bytes = api.history_frames(id, seq).await?;
+
+    state.recorder.shared.history.check_device(api.device_id)?;
+    Ok(InvokeResponseBody::Raw(bytes))
+}
+
+#[tauri::command]
+async fn set_history_share_mode(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    recording_id: String,
+    mode: tutorlolv2_protocol::HistoryShareMode,
+) -> Result<tutorlolv2_protocol::ShareState, tutorlolv2_protocol::HistoryError> {
+    use tauri::Emitter;
+
+    history_auth(&window)?;
+
+    let id = history::parse_id(&recording_id)?;
+    let shared = &state.recorder.shared;
+    let api = shared.api.read().await.clone();
+    let share = api.history_share(id, mode).await?;
+
+    shared.history.share(api.device_id, id, share.clone())?;
+    let _ = window.app_handle().emit("history-changed", ());
+
+    Ok(share)
+}
+
+#[tauri::command]
+fn hide_history_entry(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    recording_id: String,
+) -> Result<(), tutorlolv2_protocol::HistoryError> {
+    use tauri::Emitter;
+
+    history_auth(&window)?;
+
+    state
+        .recorder
+        .shared
+        .history
+        .hide(history::parse_id(&recording_id)?)?;
+
+    let _ = window.app_handle().emit("history-changed", ());
+    Ok(())
+}
+
+#[tauri::command]
+fn repair_history(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+) -> Result<(), tutorlolv2_protocol::HistoryError> {
+    history_auth(&window)?;
+    queue_history(
+        state.recorder.shared.clone(),
+        window.app_handle().clone(),
+        true,
+    );
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(overlay::OverlayState::default())
         .invoke_handler(tauri::generate_handler![
+            list_history,
+            get_history_details,
+            get_history_frames,
+            set_history_share_mode,
+            hide_history_entry,
+            repair_history,
             get_live_game,
             get_recording_state,
             set_share_mode,
@@ -115,7 +253,11 @@ pub fn run() {
             let _ = (window, event);
         })
         .setup(|app| {
-            let window = app.get_webview_window("main").unwrap();
+            // No webview may invoke commands before its managed recorder state exists.
+            // The configured main window has create=false and is built only after manage.
+            let latest = LatestSnapshot::default();
+            let recorder = recorder_task::spawn(app.handle(), latest.clone());
+            app.manage(AppState { latest, recorder });
 
             // #[cfg(feature = "overlay")]
             {
@@ -170,7 +312,6 @@ pub fn run() {
 
             #[cfg(debug_assertions)]
             {
-                window.open_devtools();
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
@@ -178,10 +319,15 @@ pub fn run() {
                 )?;
             }
 
-            let latest = LatestSnapshot::default();
-            let recorder = recorder_task::spawn(app.handle(), latest.clone());
+            let config = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .find(|config| config.label == "main")
+                .ok_or("Main window configuration missing")?;
 
-            app.manage(AppState { latest, recorder });
+            let _ = WebviewWindowBuilder::from_config(app, config)?.build()?;
 
             Ok(())
         })
