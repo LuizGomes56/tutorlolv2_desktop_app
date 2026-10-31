@@ -590,3 +590,70 @@ async fn registration_interrupted_after_device_save_discards_previous_history_at
     assert!(delivery.history.check_device(Some([7; 16])).is_ok());
     assert!(delivery.flush().await);
 }
+
+#[tokio::test]
+async fn evicted_chunk_retry_errors_clear_while_permanent_rejections_remain() {
+    let root = dir("history_evicted_transient_errors");
+    let spool = Spool::new(root.join("spool"), Spool::DEFAULT_MAX_BYTES);
+    let retry_id = new_local_id(1, [1; 10]);
+    let rejected_id = new_local_id(2, [2; 10]);
+    for (local, recording) in [(retry_id, [8; 16]), (rejected_id, [9; 16])] {
+        spool
+            .set_target(
+                local,
+                &Target {
+                    recording_id: recording,
+                    seq_offset: 0,
+                },
+            )
+            .unwrap();
+        spool.put(local, 0, &chunk(0)).unwrap();
+    }
+    let (base, worker) = server(vec![(500, vec![]), (422, vec![])]);
+    let delivery = driver(&root, base);
+    delivery
+        .history
+        .local(retry_id, Some([8; 16]), 1, false, 0)
+        .unwrap();
+    delivery
+        .history
+        .local(rejected_id, Some([9; 16]), 1, false, 0)
+        .unwrap();
+    assert!(!delivery.flush().await);
+    worker.join().unwrap();
+    delivery.sync_history_errors(Some([1; 16])).unwrap();
+    assert!(
+        delivery
+            .history
+            .list(0, 50)
+            .entries
+            .iter()
+            .all(|row| row.last_error.is_some())
+    );
+    // Completed budget eviction removes the pending payload; it can no longer retry.
+    let pending = spool
+        .pending()
+        .into_iter()
+        .find(|c| c.local_id == retry_id)
+        .unwrap();
+    std::fs::remove_file(pending.path).unwrap();
+    delivery.sync_history_errors(Some([1; 16])).unwrap();
+    let rows = delivery.history.list(0, 50).entries;
+    assert!(
+        rows.iter()
+            .find(|r| r.recording_id == Some([8; 16]))
+            .unwrap()
+            .last_error
+            .is_none(),
+        "evicted payload cannot still be retrying"
+    );
+    assert!(
+        rows.iter()
+            .find(|r| r.recording_id == Some([9; 16]))
+            .unwrap()
+            .last_error
+            .as_ref()
+            .is_some_and(|e| e.contains("permanently rejected"))
+    );
+    let _ = std::fs::remove_dir_all(root);
+}

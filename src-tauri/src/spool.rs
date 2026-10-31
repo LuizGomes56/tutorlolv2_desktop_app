@@ -376,9 +376,62 @@ impl Spool {
             }
         }
 
-        let evictable: u64 = chunks.iter().map(|(_, _, bytes)| *bytes).sum();
+        chunks.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
+        let mut planned = Vec::new();
+        let mut journals = std::collections::BTreeMap::<PathBuf, LossJournal>::new();
 
-        if used.saturating_sub(evictable).saturating_add(incoming) > self.max_bytes {
+        // Plan the complete write before deleting anything. Permanent loss records
+        // consume space too, including vector-length and sequence encoding growth.
+        // If irreducible metadata cannot fit, retain all existing data and fail.
+        for (_, path, size) in chunks {
+            if used.saturating_add(incoming) <= self.max_bytes {
+                break;
+            }
+
+            if path.extension().is_some_and(|e| e == CHUNK_EXT) {
+                let journal_path = path.parent().unwrap().join("loss.bin");
+                if !journals.contains_key(&journal_path) {
+                    let journal = if journal_path.exists() {
+                        read_record(&journal_path)
+                            .ok_or_else(|| io::Error::other("Unreadable loss ledger"))?
+                    } else {
+                        LossJournal {
+                            version: 1,
+                            entries: vec![],
+                        }
+                    };
+                    journals.insert(journal_path.clone(), journal);
+                }
+                let journal = journals.get_mut(&journal_path).unwrap();
+                if journal.version != 1 {
+                    return Err(io::Error::other("Unsupported loss ledger"));
+                }
+                let seq = path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .and_then(|s| s.parse::<u32>().ok())
+                    .ok_or_else(|| io::Error::other("Invalid chunk sequence"))?;
+                if !journal.entries.iter().any(|(s, _)| *s == seq) {
+                    let previous = if journal_path.exists() || !journal.entries.is_empty() {
+                        bincode::encode_to_vec(&*journal, BINCODE_CONFIG)
+                            .map_err(io::Error::other)?
+                            .len() as u64
+                    } else {
+                        0
+                    };
+                    journal.entries.push((seq, LossReason::Overflow));
+                    let next = bincode::encode_to_vec(&*journal, BINCODE_CONFIG)
+                        .map_err(io::Error::other)?
+                        .len() as u64;
+                    used = used.saturating_add(next.saturating_sub(previous));
+                }
+            }
+
+            used = used.saturating_sub(size);
+            planned.push(path);
+        }
+
+        if used.saturating_add(incoming) > self.max_bytes {
             return Err(io::Error::other(
                 "Spool metadata and incoming record exceed budget",
             ));
@@ -388,25 +441,13 @@ impl Spool {
             return Ok(0);
         }
 
-        chunks.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
         let mut dropped = 0;
-
-        for (_, path, size) in chunks {
-            if used.saturating_add(incoming) <= self.max_bytes {
-                break;
-            }
-
+        for path in planned {
             if path.extension().is_some_and(|e| e == CHUNK_EXT) {
                 self.loss_intent(&path, LossReason::Overflow)?;
             }
-
             fs::remove_file(path)?;
-            used = used.saturating_sub(size);
             dropped += 1;
-        }
-
-        if used.saturating_add(incoming) > self.max_bytes {
-            return Err(io::Error::other("Spool metadata exceeds budget"));
         }
 
         Ok(dropped)

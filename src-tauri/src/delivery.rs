@@ -15,10 +15,29 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 const OUTBOX_EVERY: Duration = Duration::from_secs(30);
 const UPLOAD_EVERY: Duration = Duration::from_secs(60);
 
+enum HistoryOperationError {
+    Retry(String),
+    Permanent(String),
+}
+
+impl From<&str> for HistoryOperationError {
+    fn from(value: &str) -> Self {
+        Self::Retry(value.into())
+    }
+}
+
+impl HistoryOperationError {
+    fn message(&self) -> &str {
+        match self {
+            Self::Retry(message) | Self::Permanent(message) => message,
+        }
+    }
+}
+
 pub struct Delivery {
     pub history: crate::history::History,
-    pub(crate) history_errors:
-        Mutex<std::collections::BTreeMap<(tutorlolv2_protocol::Id16, u64), String>>,
+    history_errors:
+        Mutex<std::collections::BTreeMap<(tutorlolv2_protocol::Id16, u64), HistoryOperationError>>,
     pub(crate) recorder: Mutex<Recorder>,
     pub(crate) api: RwLock<ApiClient>,
     pub(crate) spool: Spool,
@@ -66,6 +85,35 @@ impl Delivery {
             upload_lock: tokio::sync::Mutex::new(None),
             outbox_lock: tokio::sync::Mutex::new(()),
         }
+    }
+
+    pub fn sync_history_errors(
+        &self,
+        device: Option<tutorlolv2_protocol::Id16>,
+    ) -> Result<(), tutorlolv2_protocol::HistoryError> {
+        let pending = self
+            .spool
+            .pending()
+            .into_iter()
+            .map(|chunk| (chunk.local_id, u64::from(chunk.local_seq)))
+            .collect::<std::collections::BTreeSet<_>>();
+        let mut errors = self.history_errors.lock().unwrap();
+        errors.retain(|key, error| {
+            key.1 > u64::from(u32::MAX)
+                || matches!(error, HistoryOperationError::Permanent(_))
+                || pending.contains(key)
+        });
+        let errors = errors
+            .iter()
+            .map(|((local, _), error)| {
+                (
+                    *local,
+                    self.spool.target_of(*local).map(|t| t.recording_id),
+                    error.message().to_owned(),
+                )
+            })
+            .collect();
+        self.history.errors(device, errors)
     }
 
     /// Run the uploader, flushing existing data immediately on startup.
@@ -465,7 +513,9 @@ impl Delivery {
                 ChunkOutcome::Rejected(status) => {
                     self.history_errors.lock().unwrap().insert(
                         (chunk.local_id, chunk.local_seq as u64),
-                        "Recording chunk permanently rejected".into(),
+                        HistoryOperationError::Permanent(
+                            "Recording chunk permanently rejected".into(),
+                        ),
                     );
 
                     pass_failed = true;

@@ -153,21 +153,7 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
                     log::warn!("History synchronization failed: {}", e.message);
                 }
 
-                let errors = worker
-                    .history_errors
-                    .lock()
-                    .unwrap()
-                    .iter()
-                    .map(|((local, _), message)| {
-                        (
-                            *local,
-                            worker.spool.target_of(*local).map(|t| t.recording_id),
-                            message.clone(),
-                        )
-                    })
-                    .collect();
-
-                let _ = worker.history.errors(device, errors);
+                let _ = worker.sync_history_errors(device);
             })
             .await;
 
