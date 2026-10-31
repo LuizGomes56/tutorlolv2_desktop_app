@@ -304,8 +304,16 @@ async fn failed_chunk_does_not_block_later_uploads() {
         .unwrap();
     spool.put(id, 0, &chunk(0)).unwrap();
     spool.put(id, 1, &chunk(1)).unwrap();
-    let (base, worker) = server(vec![(500, vec![]), (201, vec![])]);
-    assert!(!driver(&root, base).flush().await);
+    let (base, worker) = server(vec![
+        (500, vec![]),
+        (201, vec![]),
+        (500, vec![]),
+        (201, vec![]),
+        (201, vec![]),
+    ]);
+    let delivery = driver(&root, base);
+    assert!(!delivery.flush().await);
+    assert!(delivery.recording_state().upload.last_error.is_some());
     assert_eq!(
         spool
             .pending()
@@ -314,7 +322,14 @@ async fn failed_chunk_does_not_block_later_uploads() {
             .collect::<Vec<_>>(),
         [0]
     );
-    assert_eq!(worker.join().unwrap().len(), 2);
+    spool.put(id, 2, &chunk(2)).unwrap();
+    assert!(!delivery.flush().await);
+    assert_eq!(spool.pending().len(), 1);
+    assert!(delivery.recording_state().upload.last_error.is_some());
+    assert!(delivery.flush().await);
+    assert!(spool.pending().is_empty());
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    assert_eq!(worker.join().unwrap().len(), 5);
 }
 
 #[tokio::test]

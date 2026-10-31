@@ -311,6 +311,7 @@ impl Delivery {
         }
 
         let mut retry = None;
+        let mut pass_failed = false;
 
         for chunk in self.spool.pending() {
             let Some(target) = chunk.target else { continue };
@@ -346,11 +347,13 @@ impl Delivery {
                 ChunkOutcome::Stored => {
                     let _ = self.spool.done(&chunk);
                     self.recorder.lock().unwrap().on_chunk_uploaded(now_ms());
-                    *self.delivery_error.lock().unwrap() = None;
                 }
                 ChunkOutcome::Retry { after_ms } => {
+                    pass_failed = true;
+
                     *self.delivery_error.lock().unwrap() =
                         Some("Recording upload failed; retrying".into());
+
                     retry = Some(after_ms);
                 }
                 ChunkOutcome::RateLimited { after_ms } => {
@@ -369,6 +372,7 @@ impl Delivery {
                     return Some(None);
                 }
                 ChunkOutcome::Rejected(status) => {
+                    pass_failed = true;
                     *self.delivery_error.lock().unwrap() =
                         Some(format!("Recording chunk rejected ({status})"));
 
@@ -376,6 +380,10 @@ impl Delivery {
                     let _ = self.spool.reject(&chunk);
                 }
             }
+        }
+
+        if !pass_failed {
+            *self.delivery_error.lock().unwrap() = None;
         }
 
         retry
