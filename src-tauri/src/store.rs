@@ -2,6 +2,7 @@
 //! bincode records, written atomically. Unreadable files are moved aside as
 //! `*.corrupt`, never deleted.
 
+use crate::BINCODE_CONFIG;
 use crate::recorder::SessionFile;
 use bincode::{Decode, Encode};
 use std::{
@@ -107,7 +108,7 @@ impl Store {
         bytes.extend_from_slice(&VERSION.to_le_bytes());
         bytes.push(kind as u8);
 
-        bincode::encode_into_std_write(value, &mut bytes, bincode::config::standard())
+        bincode::encode_into_std_write(value, &mut bytes, BINCODE_CONFIG)
             .map_err(io::Error::other)?;
 
         let path = self.dir.join(name);
@@ -123,7 +124,7 @@ impl Store {
 }
 
 fn decode<T: Decode<()>>(payload: &[u8]) -> Option<T> {
-    let (value, used) = bincode::decode_from_slice(payload, bincode::config::standard()).ok()?;
+    let (value, used) = bincode::decode_from_slice(payload, BINCODE_CONFIG).ok()?;
     (used == payload.len()).then_some(value)
 }
 

@@ -6,6 +6,9 @@ use tauri::{
     WebviewUrl, WebviewWindowBuilder, ipc::InvokeResponseBody,
 };
 
+/// Shared encoding for persisted records and server requests.
+pub const BINCODE_CONFIG: bincode::config::Configuration = bincode::config::standard();
+
 /// How long closing the app may take to save the recording in progress.
 const EXIT_FLUSH: Duration = Duration::from_secs(2);
 
@@ -20,6 +23,7 @@ pub mod live_client;
 mod overlay;
 pub mod recorder;
 mod recorder_task;
+pub mod sharing;
 mod shortcut;
 mod shortcut_commands;
 pub mod spool;
@@ -54,12 +58,43 @@ async fn get_live_game(state: State<'_, AppState>) -> Result<InvokeResponseBody,
         .ok_or_else(|| "No live game".to_owned())
 }
 
+#[tauri::command]
+fn get_recording_state(state: State<'_, AppState>) -> tutorlolv2_protocol::RecordingState {
+    state.recorder.shared.recording_state()
+}
+
+#[tauri::command]
+async fn set_share_mode(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    mode: tutorlolv2_protocol::ShareMode,
+) -> Result<tutorlolv2_protocol::ShareState, String> {
+    use tauri::Emitter;
+
+    sharing::authorize_share_window(window.label())?;
+
+    let result = state.recorder.shared.set_share_mode(mode).await;
+    let current = state.recorder.shared.recording_state();
+
+    let _ = window
+        .app_handle()
+        .emit("recording-state-changed", &current);
+
+    let _ = window
+        .app_handle()
+        .emit("share-state-changed", &current.share);
+
+    result
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(overlay::OverlayState::default())
         .invoke_handler(tauri::generate_handler![
             get_live_game,
+            get_recording_state,
+            set_share_mode,
             blur_overlay,
             get_overlay_focus,
             toggle_overlay,

@@ -1,4 +1,5 @@
 use std::io::Read;
+use tutorlolv2_desktop_app::BINCODE_CONFIG;
 use tutorlolv2_desktop_app::uploader::*;
 use tutorlolv2_protocol::{RAW_CHUNK_FORMAT, RawChunk, RawSnapshot};
 
@@ -19,7 +20,7 @@ fn decode(body: &[u8]) -> (RawChunk, Vec<u8>) {
     brotli::Decompressor::new(body, 4096)
         .read_to_end(&mut raw)
         .unwrap();
-    let (chunk, used) = bincode::decode_from_slice(&raw, bincode::config::standard()).unwrap();
+    let (chunk, used) = bincode::decode_from_slice(&raw, BINCODE_CONFIG).unwrap();
     assert_eq!(used, raw.len());
     (chunk, raw)
 }

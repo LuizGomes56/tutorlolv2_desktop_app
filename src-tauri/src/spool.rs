@@ -2,6 +2,7 @@
 //! §12.4). Layout: `spool/<local_id hex>/<local_seq:08>.chunk`, plus
 //! `target.bin` once the server assigned the recording.
 
+use crate::BINCODE_CONFIG;
 use bincode::{Decode, Encode};
 use std::{
     fs, io,
@@ -120,7 +121,7 @@ impl Spool {
 
         let reserved_path = self.session_dir(&local_id).join(RESERVED_FILE);
         let previous = fs::metadata(&reserved_path).map_or(0, |m| m.len());
-        let reserve_bytes = bincode::encode_to_vec(next, bincode::config::standard())
+        let reserve_bytes = bincode::encode_to_vec(next, BINCODE_CONFIG)
             .map_err(io::Error::other)?
             .len() as u64;
 
@@ -160,8 +161,7 @@ impl Spool {
 
             return self.write_bounded(
                 &dir.join(RESERVED_FILE),
-                &bincode::encode_to_vec(next, bincode::config::standard())
-                    .map_err(io::Error::other)?,
+                &bincode::encode_to_vec(next, BINCODE_CONFIG).map_err(io::Error::other)?,
             );
         }
 
@@ -311,8 +311,7 @@ impl Spool {
 
         fs::create_dir_all(&dir)?;
 
-        let bytes = bincode::encode_to_vec(target, bincode::config::standard())
-            .map_err(io::Error::other)?;
+        let bytes = bincode::encode_to_vec(target, BINCODE_CONFIG).map_err(io::Error::other)?;
 
         self.write_bounded(&dir.join(TARGET_FILE), &bytes).map(drop)
     }
@@ -368,8 +367,7 @@ impl Spool {
             return Ok(());
         }
 
-        let bytes =
-            bincode::encode_to_vec(value, bincode::config::standard()).map_err(io::Error::other)?;
+        let bytes = bincode::encode_to_vec(value, BINCODE_CONFIG).map_err(io::Error::other)?;
 
         self.write_bounded(&path, &bytes).map(drop)
     }
@@ -539,7 +537,7 @@ impl Spool {
 fn read_record<T: Decode<()>>(path: &Path) -> Option<T> {
     let bytes = fs::read(path).ok()?;
 
-    bincode::decode_from_slice(&bytes, bincode::config::standard())
+    bincode::decode_from_slice(&bytes, BINCODE_CONFIG)
         .ok()
         .map(|(value, _)| value)
 }

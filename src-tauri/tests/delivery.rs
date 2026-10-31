@@ -6,6 +6,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use tutorlolv2_desktop_app::BINCODE_CONFIG;
 use tutorlolv2_desktop_app::{
     delivery::Delivery,
     recorder::Recorder,
@@ -121,6 +122,82 @@ fn chunk(seq: u32) -> Vec<u8> {
 }
 
 #[tokio::test]
+async fn successful_end_retry_clears_control_error_without_a_chunk_upload() {
+    let root = dir("end_error_recovery");
+    let spool = Spool::new(root.join("spool"), Spool::DEFAULT_MAX_BYTES);
+    let id = new_local_id(1, [0; 10]);
+    spool
+        .set_target(
+            id,
+            &Target {
+                recording_id: [9; 16],
+                seq_offset: 0,
+            },
+        )
+        .unwrap();
+    spool
+        .set_end(
+            id,
+            &EndRecording {
+                reason: EndReason::GameEndEvent,
+                result: None,
+                final_game_time: Some(1200.0),
+            },
+        )
+        .unwrap();
+    let (base, worker) = server(vec![(503, vec![]), (204, vec![])]);
+    let delivery = driver(&root, base);
+    assert!(!delivery.flush().await);
+    assert!(delivery.recording_state().upload.last_error.is_some());
+    assert!(delivery.flush().await);
+    assert!(spool.outbox().is_empty());
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    let paths = worker.join().unwrap();
+    assert!(paths.iter().all(|p| p.contains("/end ")));
+}
+
+#[tokio::test]
+async fn successful_chunk_upload_does_not_clear_pending_control_error() {
+    let root = dir("result_error_with_chunk");
+    let spool = Spool::new(root.join("spool"), Spool::DEFAULT_MAX_BYTES);
+    let id = new_local_id(1, [0; 10]);
+    spool
+        .set_target(
+            id,
+            &Target {
+                recording_id: [9; 16],
+                seq_offset: 0,
+            },
+        )
+        .unwrap();
+    spool
+        .set_result(
+            id,
+            &RecordingResult {
+                result: GameResult::Win,
+                game_length_s: Some(1200),
+                riot_game: None,
+            },
+        )
+        .unwrap();
+    let (base, worker) = server(vec![
+        (503, vec![]),
+        (503, vec![]),
+        (201, vec![]),
+        (204, vec![]),
+    ]);
+    let delivery = driver(&root, base);
+    assert!(!delivery.flush().await);
+    spool.put(id, 0, &chunk(0)).unwrap();
+    assert!(!delivery.flush().await);
+    assert!(spool.pending().is_empty());
+    assert!(delivery.recording_state().upload.last_error.is_some());
+    assert!(delivery.flush().await);
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    assert_eq!(worker.join().unwrap().len(), 4);
+}
+
+#[tokio::test]
 async fn result_retries_after_restart() {
     let root = dir("result_retry");
     let id = new_local_id(1, [0; 10]);
@@ -202,7 +279,7 @@ async fn recovery_does_not_reuse_an_older_pending_chunk_sequence() {
             url: None,
         },
     };
-    let response = bincode::encode_to_vec(started, bincode::config::standard()).unwrap();
+    let response = bincode::encode_to_vec(started, BINCODE_CONFIG).unwrap();
     let (base, worker) = server(vec![(200, response), (201, vec![]), (201, vec![])]);
     assert!(driver(&root, base).flush().await);
     assert!(spool.pending().is_empty());
@@ -227,8 +304,16 @@ async fn failed_chunk_does_not_block_later_uploads() {
         .unwrap();
     spool.put(id, 0, &chunk(0)).unwrap();
     spool.put(id, 1, &chunk(1)).unwrap();
-    let (base, worker) = server(vec![(500, vec![]), (201, vec![])]);
-    assert!(!driver(&root, base).flush().await);
+    let (base, worker) = server(vec![
+        (500, vec![]),
+        (201, vec![]),
+        (500, vec![]),
+        (201, vec![]),
+        (201, vec![]),
+    ]);
+    let delivery = driver(&root, base);
+    assert!(!delivery.flush().await);
+    assert!(delivery.recording_state().upload.last_error.is_some());
     assert_eq!(
         spool
             .pending()
@@ -237,7 +322,14 @@ async fn failed_chunk_does_not_block_later_uploads() {
             .collect::<Vec<_>>(),
         [0]
     );
-    assert_eq!(worker.join().unwrap().len(), 2);
+    spool.put(id, 2, &chunk(2)).unwrap();
+    assert!(!delivery.flush().await);
+    assert_eq!(spool.pending().len(), 1);
+    assert!(delivery.recording_state().upload.last_error.is_some());
+    assert!(delivery.flush().await);
+    assert!(spool.pending().is_empty());
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    assert_eq!(worker.join().unwrap().len(), 5);
 }
 
 #[tokio::test]
@@ -385,7 +477,7 @@ async fn failed_old_result_does_not_block_a_new_session() {
         (503, vec![]),
         (
             200,
-            bincode::encode_to_vec(started, bincode::config::standard()).unwrap(),
+            bincode::encode_to_vec(started, BINCODE_CONFIG).unwrap(),
         ),
     ]);
     assert!(!driver(&root, base).flush().await);

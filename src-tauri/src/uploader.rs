@@ -1,5 +1,6 @@
 //! HTTP calls to the TutorLoL server (spec §10.2) and chunk encoding.
 
+use crate::BINCODE_CONFIG;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use bincode::{Decode, Encode};
 use sha2::{Digest, Sha256};
@@ -10,7 +11,8 @@ use std::{
 use tauri_plugin_http::reqwest::{Client, Method, StatusCode};
 use tutorlolv2_protocol::{
     BROTLI_LGWIN, BROTLI_QUALITY, DeviceCredentials, EndRecording, Id16, MAX_CHUNK_DECOMPRESSED,
-    RawChunk, RecordingResult, RegisterDevice, SessionStarted, StartSession,
+    RawChunk, RawSnapshot, RecordingResult, RegisterDevice, SessionStarted, SetShareMode,
+    ShareMode, ShareState, StartSession,
 };
 
 const OCTET_STREAM: &str = "application/octet-stream";
@@ -26,8 +28,8 @@ fn sha_hex(bytes: &[u8]) -> String {
 
 /// Upload body (`brotli(bincode(chunk))`) and its `X-Content-Sha256`.
 pub fn encode_chunk(chunk: &RawChunk) -> (Vec<u8>, String) {
-    let raw = bincode::encode_to_vec(chunk, bincode::config::standard())
-        .expect("encoding into a Vec cannot fail");
+    let raw =
+        bincode::encode_to_vec(chunk, BINCODE_CONFIG).expect("encoding into a Vec cannot fail");
 
     let mut body = Vec::with_capacity(raw.len() / 8);
 
@@ -62,7 +64,7 @@ pub fn body_sha(body: &[u8]) -> io::Result<String> {
 pub fn renumber(body: &[u8], new_seq: u32) -> io::Result<(Vec<u8>, String)> {
     let raw = decompress(body)?;
     let (mut chunk, _): (RawChunk, _) =
-        bincode::decode_from_slice(&raw, bincode::config::standard()).map_err(io::Error::other)?;
+        bincode::decode_from_slice(&raw, BINCODE_CONFIG).map_err(io::Error::other)?;
 
     chunk.seq = new_seq;
 
@@ -212,8 +214,7 @@ impl ApiClient {
         path: &str,
         body: impl Encode,
     ) -> Result<Option<T>, String> {
-        let body =
-            bincode::encode_to_vec(body, bincode::config::standard()).map_err(|e| e.to_string())?;
+        let body = bincode::encode_to_vec(body, BINCODE_CONFIG).map_err(|e| e.to_string())?;
 
         let (status, _, bytes) = self.send(method, path, body, None).await?;
 
@@ -225,7 +226,7 @@ impl ApiClient {
             return Ok(None);
         }
 
-        bincode::decode_from_slice(&bytes, bincode::config::standard())
+        bincode::decode_from_slice(&bytes, BINCODE_CONFIG)
             .map(|(value, _)| Some(value))
             .map_err(|e| e.to_string())
     }
@@ -260,6 +261,62 @@ impl ApiClient {
         match self.send(Method::POST, &path, body, Some(sha_hex)).await {
             Ok((status, retry_after, _)) => chunk_outcome(status.as_u16(), retry_after.as_deref()),
             Err(_) => ChunkOutcome::Retry { after_ms: None },
+        }
+    }
+
+    pub async fn share(&self, id: &Id16) -> Result<ShareState, String> {
+        self.call(
+            Method::GET,
+            &format!("/recordings/{}/share", uuid_text(id)),
+            (),
+        )
+        .await?
+        .ok_or_else(|| "empty share response".into())
+    }
+
+    pub async fn set_share_mode(&self, id: &Id16, mode: ShareMode) -> Result<ShareState, String> {
+        self.call(
+            Method::PUT,
+            &format!("/recordings/{}/share", uuid_text(id)),
+            SetShareMode { mode },
+        )
+        .await?
+        .ok_or_else(|| "empty share response".into())
+    }
+
+    pub async fn upload_live(&self, id: &Id16, snapshot: &RawSnapshot) -> Result<(), String> {
+        let raw = bincode::encode_to_vec(snapshot, BINCODE_CONFIG).map_err(|e| e.to_string())?;
+
+        if raw.len() > 512 * 1024 {
+            return Err("live snapshot exceeds size limit".into());
+        }
+
+        let mut body = Vec::new();
+
+        {
+            let mut writer =
+                brotli::CompressorWriter::new(&mut body, 4096, BROTLI_QUALITY, BROTLI_LGWIN);
+
+            writer.write_all(&raw).map_err(|e| e.to_string())?;
+        }
+
+        if body.len() > 64 * 1024 {
+            return Err("compressed live snapshot exceeds size limit".into());
+        }
+
+        let (status, _, bytes) = self
+            .send(
+                Method::PUT,
+                &format!("/recordings/{}/live", uuid_text(id)),
+                body,
+                None,
+            )
+            .await?;
+
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(format!("{status}: {}", String::from_utf8_lossy(&bytes)))
         }
     }
 
