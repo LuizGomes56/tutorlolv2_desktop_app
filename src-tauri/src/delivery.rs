@@ -24,7 +24,7 @@ pub struct Delivery {
     pub(crate) outbox_now: Notify,
     pub(crate) register_now: Notify,
     pub(crate) sharing_now: Notify,
-    pub(crate) sharing_error: Mutex<Option<String>>,
+    pub(crate) sharing_error: Mutex<Option<(tutorlolv2_protocol::Id16, String)>>,
     pub(crate) sharing_refresh_error: Mutex<Option<String>>,
     pub(crate) live_error: Mutex<Option<String>>,
     pub(crate) control_error: Mutex<Option<String>>,
