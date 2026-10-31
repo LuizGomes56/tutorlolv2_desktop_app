@@ -316,6 +316,91 @@ fn read_request(stream: &mut std::net::TcpStream) -> String {
     }
 }
 
+#[tokio::test]
+async fn failed_share_refresh_preserves_last_known_access_and_pauses_publication() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let (delivery, snapshot, share) =
+        publisher(format!("http://{}", listener.local_addr().unwrap()));
+    let response = bincode::encode_to_vec(&share, BINCODE_CONFIG).unwrap();
+    let worker = std::thread::spawn(move || {
+        for (method, status, body) in [
+            ("GET", 500, b"unavailable".as_slice()),
+            ("GET", 200, response.as_slice()),
+            ("PUT", 204, &[]),
+        ] {
+            let (mut stream, _) = listener.accept().unwrap();
+            assert!(read_request(&mut stream).starts_with(method));
+            respond(&mut stream, status, body);
+        }
+    });
+    assert!(delivery.refresh_share(&[9; 16]).await.is_err());
+    let state = delivery.recording_state();
+    assert_eq!(
+        state.share, share,
+        "a failed lookup does not revoke server access"
+    );
+    assert!(
+        state
+            .upload
+            .last_error
+            .as_deref()
+            .unwrap()
+            .contains("unverified")
+    );
+    assert!(
+        !delivery
+            .publish_live(&[9; 16], &share, &snapshot)
+            .await
+            .unwrap()
+    );
+    delivery.refresh_share(&[9; 16]).await.unwrap();
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    assert!(
+        delivery
+            .publish_live(&[9; 16], &share, &snapshot)
+            .await
+            .unwrap()
+    );
+    worker.join().unwrap();
+}
+
+#[tokio::test]
+async fn live_upload_error_survives_share_lookup_until_publication_succeeds() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let (delivery, snapshot, share) =
+        publisher(format!("http://{}", listener.local_addr().unwrap()));
+    let response = bincode::encode_to_vec(&share, BINCODE_CONFIG).unwrap();
+    let worker = std::thread::spawn(move || {
+        for (method, status, body) in [
+            ("PUT", 500, b"upload failed".as_slice()),
+            ("GET", 200, response.as_slice()),
+            ("PUT", 204, &[]),
+        ] {
+            let (mut stream, _) = listener.accept().unwrap();
+            assert!(read_request(&mut stream).starts_with(method));
+            respond(&mut stream, status, body);
+        }
+    });
+    assert!(
+        delivery
+            .publish_live(&[9; 16], &share, &snapshot)
+            .await
+            .is_err()
+    );
+    let error = delivery.recording_state().upload.last_error;
+    assert!(error.as_deref().is_some_and(|e| e.contains("500")));
+    delivery.refresh_share(&[9; 16]).await.unwrap();
+    assert_eq!(delivery.recording_state().upload.last_error, error);
+    assert!(
+        delivery
+            .publish_live(&[9; 16], &share, &snapshot)
+            .await
+            .unwrap()
+    );
+    assert!(delivery.recording_state().upload.last_error.is_none());
+    worker.join().unwrap();
+}
+
 fn respond(stream: &mut std::net::TcpStream, status: u16, body: &[u8]) {
     use std::io::Write;
     write!(

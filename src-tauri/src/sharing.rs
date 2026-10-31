@@ -28,10 +28,12 @@ impl Delivery {
 
         state.upload.pending_chunks = self.spool.pending().len().min(u32::MAX as usize) as u32;
         state.upload.last_error = self
-            .sharing_error
+            .sharing_refresh_error
             .lock()
             .unwrap()
             .clone()
+            .or_else(|| self.sharing_error.lock().unwrap().clone())
+            .or_else(|| self.live_error.lock().unwrap().clone())
             .or_else(|| self.delivery_error.lock().unwrap().clone());
 
         state
@@ -60,6 +62,12 @@ impl Delivery {
                 }
 
                 *self.sharing_error.lock().unwrap() = None;
+                *self.sharing_refresh_error.lock().unwrap() = None;
+
+                if share.mode == ShareMode::Private {
+                    *self.live_error.lock().unwrap() = None;
+                }
+
                 self.sharing_now.notify_one();
 
                 Ok(share)
@@ -80,6 +88,10 @@ impl Delivery {
     }
 
     fn live_share_is_current(&self, id: &Id16, share: &ShareState) -> bool {
+        if self.sharing_refresh_error.lock().unwrap().is_some() {
+            return false;
+        }
+
         let recorder = self.recorder.lock().unwrap();
         let state = recorder.recording_state();
 
@@ -90,22 +102,26 @@ impl Delivery {
             && recorder.live_snapshot().is_some()
     }
 
-    async fn refresh_share(&self, id: &Id16) -> Result<(), String> {
+    /// Restore authoritative sharing without claiming revocation on a failed lookup.
+    pub async fn refresh_share(&self, id: &Id16) -> Result<(), String> {
         let _guard = self.sharing_lock.lock().await;
         let api = self.api.read().await.clone();
 
         match api.share(id).await {
             Ok(share) => {
+                if share.mode == ShareMode::Private {
+                    *self.live_error.lock().unwrap() = None;
+                }
+
                 self.recorder.lock().unwrap().set_share(*id, share);
+                *self.sharing_refresh_error.lock().unwrap() = None;
+
                 Ok(())
             }
             Err(error) => {
-                // Never continue displaying/publishing an unverified expired code.
-                self.recorder
-                    .lock()
-                    .unwrap()
-                    .set_share(*id, private_share());
-
+                *self.sharing_refresh_error.lock().unwrap() = Some(format!(
+                    "Sharing state unverified; the existing link may still be accessible: {error}"
+                ));
                 Err(error)
             }
         }
@@ -141,6 +157,7 @@ impl Delivery {
                         self.recording_changed();
                     }
 
+                    *self.live_error.lock().unwrap() = result.as_ref().err().cloned();
                     return result.map(|()| true);
                 }
                 _ = self.sharing_now.notified() => {
@@ -168,27 +185,27 @@ impl Delivery {
 
                 if restored_id != Some(id) || resumed {
                     match self.refresh_share(&id).await {
-                        Ok(()) => {
-                            restored_id = Some(id);
-                            *self.sharing_error.lock().unwrap() = None;
-                        }
-                        Err(error) => {
-                            restored_id = None;
-                            *self.sharing_error.lock().unwrap() = Some(error);
-                        }
+                        Ok(()) => restored_id = Some(id),
+                        Err(_) => restored_id = None,
                     }
+
                     state = self.recording_state();
                 }
             } else {
                 restored_id = None;
                 sent = None;
+
+                *self.sharing_refresh_error.lock().unwrap() = None;
+                *self.live_error.lock().unwrap() = None;
             }
 
             if previous.as_ref() != Some(&state) {
                 let _ = app.emit("recording-state-changed", &state);
+
                 if previous.as_ref().map(|s| &s.share) != Some(&state.share) {
                     let _ = app.emit("share-state-changed", &state.share);
                 }
+
                 previous = Some(state.clone());
             }
 
@@ -200,23 +217,18 @@ impl Delivery {
             if let (Some(id), Some(snapshot)) = (live_state.recording_id, snapshot) {
                 let key = (id, snapshot.captured_at_ms, live_state.share.code.clone());
 
-                if live_state.share.mode != ShareMode::Private
+                if restored_id == Some(id)
+                    && live_state.share.mode != ShareMode::Private
                     && live_state.share.code.is_some()
                     && sent.as_ref() != Some(&key)
                 {
                     match self.publish_live(&id, &live_state.share, &snapshot).await {
                         Ok(true) => {
                             sent = Some(key);
-                            *self.sharing_error.lock().unwrap() = None;
                             continue;
                         }
-                        Ok(false) => {
-                            continue;
-                        }
-                        Err(error) => {
-                            restored_id = None;
-                            *self.sharing_error.lock().unwrap() = Some(error);
-                        }
+                        Ok(false) => continue,
+                        Err(_) => restored_id = None,
                     }
                 }
             }
