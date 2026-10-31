@@ -149,7 +149,7 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
                     })
                     .collect();
 
-                if let Err(e) = worker.history.reconcile_local(locals) {
+                if let Err(e) = worker.history.reconcile_local(device, locals) {
                     log::warn!("History synchronization failed: {}", e.message);
                 }
 
@@ -167,7 +167,7 @@ pub fn spawn(app: &AppHandle, latest: LatestSnapshot) -> RecorderHandle {
                     })
                     .collect();
 
-                let _ = worker.history.errors(errors);
+                let _ = worker.history.errors(device, errors);
             })
             .await;
 

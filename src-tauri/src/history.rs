@@ -152,8 +152,19 @@ impl History {
         Ok(())
     }
 
-    fn update(&self, f: impl FnOnce(&mut Vec<HistoryEntry>)) -> Result<(), HistoryError> {
+    fn update_for_device(
+        &self,
+        device: Option<Id16>,
+        f: impl FnOnce(&mut Vec<HistoryEntry>),
+    ) -> Result<(), HistoryError> {
         let mut s = self.state.lock().unwrap();
+        if s.index.device_id != device {
+            return Err(error(
+                HistoryErrorKind::Unauthorized,
+                "History device changed",
+                true,
+            ));
+        }
         let mut next = s.index.clone();
 
         f(&mut next.entries);
@@ -176,8 +187,12 @@ impl History {
         Ok(())
     }
 
-    pub fn errors(&self, errors: Vec<(Id16, Option<Id16>, String)>) -> Result<(), HistoryError> {
-        self.update(|entries| {
+    pub fn errors(
+        &self,
+        device: Option<Id16>,
+        errors: Vec<(Id16, Option<Id16>, String)>,
+    ) -> Result<(), HistoryError> {
+        self.update_for_device(device, |entries| {
             for e in entries.iter_mut() {
                 e.last_error = None;
             }
@@ -199,9 +214,10 @@ impl History {
 
     pub fn reconcile_local(
         &self,
+        device: Option<Id16>,
         locals: Vec<(Id16, Option<Id16>, u32, bool, u32)>,
     ) -> Result<(), HistoryError> {
-        self.update(|entries| {
+        self.update_for_device(device, |entries| {
             for row in entries.iter_mut() {
                 row.pending_chunks = 0;
                 row.pending_control = false;
@@ -289,7 +305,8 @@ impl History {
         control: bool,
         lost: u32,
     ) -> Result<(), HistoryError> {
-        self.update(|entries| {
+        let device = self.state.lock().unwrap().index.device_id;
+        self.update_for_device(device, |entries| {
             let mut row = entries
                 .iter()
                 .find(|e| e.local_id == Some(local))

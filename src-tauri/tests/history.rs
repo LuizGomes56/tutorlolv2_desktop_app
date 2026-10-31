@@ -56,10 +56,13 @@ fn resumed_sessions_aggregate_without_recounting_or_losing_hide() {
     let history = History::new(Store::new(dir.clone()), Some([1; 16]));
     for _ in 0..3 {
         history
-            .reconcile_local(vec![
-                ([2; 16], Some([4; 16]), 1, true, 2),
-                ([3; 16], Some([4; 16]), 2, false, 3),
-            ])
+            .reconcile_local(
+                Some([1; 16]),
+                vec![
+                    ([2; 16], Some([4; 16]), 1, true, 2),
+                    ([3; 16], Some([4; 16]), 2, false, 3),
+                ],
+            )
             .unwrap();
     }
     let row = history.list(0, 50).entries.remove(0);
@@ -67,10 +70,13 @@ fn resumed_sessions_aggregate_without_recounting_or_losing_hide() {
     assert_eq!(row.lost_chunks, 5);
     history.hide([4; 16]).unwrap();
     history
-        .reconcile_local(vec![
-            ([2; 16], Some([4; 16]), 0, false, 2),
-            ([3; 16], Some([4; 16]), 0, false, 3),
-        ])
+        .reconcile_local(
+            Some([1; 16]),
+            vec![
+                ([2; 16], Some([4; 16]), 0, false, 2),
+                ([3; 16], Some([4; 16]), 0, false, 3),
+            ],
+        )
         .unwrap();
     assert!(history.list(0, 50).entries.is_empty());
     let _ = std::fs::remove_dir_all(dir);
@@ -275,16 +281,19 @@ fn two_offline_rows_collapse_when_both_resume_the_same_recording() {
     let _ = std::fs::remove_dir_all(&dir);
     let history = History::new(Store::new(dir.clone()), Some([1; 16]));
     history
-        .reconcile_local(vec![
-            ([2; 16], None, 1, true, 0),
-            ([3; 16], None, 2, true, 0),
-        ])
+        .reconcile_local(
+            Some([1; 16]),
+            vec![([2; 16], None, 1, true, 0), ([3; 16], None, 2, true, 0)],
+        )
         .unwrap();
     history
-        .reconcile_local(vec![
-            ([2; 16], Some([4; 16]), 1, false, 0),
-            ([3; 16], Some([4; 16]), 2, false, 0),
-        ])
+        .reconcile_local(
+            Some([1; 16]),
+            vec![
+                ([2; 16], Some([4; 16]), 1, false, 0),
+                ([3; 16], Some([4; 16]), 2, false, 0),
+            ],
+        )
         .unwrap();
     let rows = history.list(0, 50).entries;
     assert_eq!(rows.len(), 1);
@@ -420,6 +429,7 @@ async fn bounded_unknown_result_refresh_does_not_starve_later_recordings() {
     let history = History::new(Store::new(dir.clone()), Some([1; 16]));
     history
         .reconcile_local(
+            Some([1; 16]),
             (1..=21)
                 .map(|id| ([id; 16], Some([id; 16]), 0, false, 0))
                 .collect(),
@@ -474,10 +484,13 @@ async fn stale_details_404_does_not_poison_refresh_and_unavailability_survives_w
     let _ = std::fs::remove_dir_all(&dir);
     let history = History::new(Store::new(dir.clone()), Some([1; 16]));
     history
-        .reconcile_local(vec![
-            ([1; 16], Some([1; 16]), 2, true, 1),
-            ([2; 16], Some([2; 16]), 0, false, 0),
-        ])
+        .reconcile_local(
+            Some([1; 16]),
+            vec![
+                ([1; 16], Some([1; 16]), 2, true, 1),
+                ([2; 16], Some([2; 16]), 0, false, 0),
+            ],
+        )
         .unwrap();
     history.refresh(api(base), false).await;
     let rows = history.list(0, 100);
@@ -503,10 +516,10 @@ async fn stale_details_404_does_not_poison_refresh_and_unavailability_survives_w
             .as_ref()
             .is_some_and(|e| e.contains("unavailable"))
     );
-    history.errors(vec![]).unwrap();
+    history.errors(Some([1; 16]), vec![]).unwrap();
     drop(history);
     let history = History::new(Store::new(dir.clone()), Some([1; 16]));
-    history.errors(vec![]).unwrap();
+    history.errors(Some([1; 16]), vec![]).unwrap();
     assert!(
         history
             .list(0, 100)
@@ -591,7 +604,7 @@ fn initial_m3_index_migrates_without_losing_local_hide_or_pending_state() {
     assert!(history.list(0, 100).entries.is_empty());
     assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1);
     history
-        .reconcile_local(vec![([1; 16], Some([2; 16]), 3, true, 2)])
+        .reconcile_local(Some([1; 16]), vec![([1; 16], Some([2; 16]), 3, true, 2)])
         .unwrap();
     assert!(history.list(0, 100).entries.is_empty());
     let _ = std::fs::remove_dir_all(dir);
@@ -620,7 +633,7 @@ async fn adopting_server_history_attaches_local_id_without_collapsing_unrelated_
 
     for _ in 0..2 {
         history
-            .reconcile_local(vec![([99; 16], Some([10; 16]), 3, true, 2)])
+            .reconcile_local(Some([1; 16]), vec![([99; 16], Some([10; 16]), 3, true, 2)])
             .unwrap();
         let restarted = History::new(Store::new(dir.clone()), Some([1; 16]));
         let rows = restarted.list(0, 50).entries;
@@ -645,5 +658,45 @@ async fn adopting_server_history_attaches_local_id_without_collapsing_unrelated_
         assert_eq!(unrelated.local_id, None);
         assert_eq!(unrelated.pending_chunks, 0);
     }
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn stale_local_worker_cannot_publish_rows_or_errors_after_device_replacement() {
+    use tutorlolv2_protocol::HistoryErrorKind;
+    let dir = std::env::temp_dir().join(format!("tl-stale-local-worker-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    // A worker collects this batch before registration replaces the binding.
+    let collected = vec![([8; 16], Some([9; 16]), 1, true, 2)];
+    history.bind(Some([2; 16])).unwrap();
+    history.local([3; 16], Some([4; 16]), 0, false, 0).unwrap();
+    history
+        .errors(
+            Some([2; 16]),
+            vec![([3; 16], Some([4; 16]), "replacement error".into())],
+        )
+        .unwrap();
+    let before = history.list(0, 50).entries;
+    let revision = history.revision();
+    assert_eq!(
+        history
+            .reconcile_local(Some([1; 16]), collected)
+            .unwrap_err()
+            .kind,
+        HistoryErrorKind::Unauthorized
+    );
+    assert_eq!(
+        history.errors(Some([1; 16]), vec![]).unwrap_err().kind,
+        HistoryErrorKind::Unauthorized
+    );
+    assert_eq!(history.revision(), revision);
+    assert_eq!(history.list(0, 50).entries, before);
+    assert_eq!(
+        History::new(Store::new(dir.clone()), Some([2; 16]))
+            .list(0, 50)
+            .entries,
+        before
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
