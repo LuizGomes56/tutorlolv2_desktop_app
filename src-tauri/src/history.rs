@@ -596,10 +596,9 @@ impl History {
                                     .is_some_and(|id| state.index.unavailable.contains(&id));
 
                                 if repair {
-                                    return unavailable
-                                        && !items.iter().any(|item| {
-                                            Some(item.summary.recording.id) == e.recording_id
-                                        });
+                                    return !items.iter().any(|item| {
+                                        Some(item.summary.recording.id) == e.recording_id
+                                    });
                                 }
 
                                 if unavailable {
@@ -618,7 +617,7 @@ impl History {
                         ids.sort_unstable();
                         ids.dedup();
 
-                        if !ids.is_empty() {
+                        if !repair && !ids.is_empty() {
                             let start = state
                                 .details_after
                                 .and_then(|last| ids.iter().position(|id| *id > last))
@@ -627,8 +626,10 @@ impl History {
                             ids.rotate_left(start);
                         }
 
-                        ids.truncate(20);
-                        state.details_after = ids.last().copied();
+                        if !repair {
+                            ids.truncate(20);
+                            state.details_after = ids.last().copied();
+                        }
                         ids
                     };
 

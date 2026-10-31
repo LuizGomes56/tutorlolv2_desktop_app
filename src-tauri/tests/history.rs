@@ -534,9 +534,13 @@ async fn stale_details_404_does_not_poison_refresh_and_unavailability_survives_w
     history.refresh(api(base), false).await;
     assert!(history.list(0, 100).refresh_error.is_none());
     assert_eq!(worker.join().unwrap().len(), 1);
-    let (base, worker) = server(vec![(200, "", page), (200, "", details(1))]);
+    let (base, worker) = server(vec![
+        (200, "", page),
+        (200, "", details(1)),
+        (200, "", details(2)),
+    ]);
     history.refresh(api(base), true).await;
-    assert_eq!(worker.join().unwrap().len(), 2);
+    assert_eq!(worker.join().unwrap().len(), 3);
     let rows = history.list(0, 100);
     let recovered = rows
         .entries
@@ -697,6 +701,69 @@ fn stale_local_worker_cannot_publish_rows_or_errors_after_device_replacement() {
             .list(0, 50)
             .entries,
         before
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[tokio::test]
+async fn full_repair_checks_all_newly_missing_completed_cached_recordings() {
+    use tutorlolv2_desktop_app::BINCODE_CONFIG;
+    use tutorlolv2_protocol::*;
+    let page = |items| {
+        bincode::encode_to_vec(
+            HistoryPage {
+                items,
+                next_before: None,
+            },
+            BINCODE_CONFIG,
+        )
+        .unwrap()
+    };
+    let dir =
+        std::env::temp_dir().join(format!("tl-repair-missing-complete-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    let (base, worker) = server(vec![(200, "", page((1..=23).map(item).collect()))]);
+    history.refresh(api(base), true).await;
+    worker.join().unwrap();
+    history.hide([23; 16]).unwrap();
+    history
+        .reconcile_local(Some([1; 16]), vec![([99; 16], Some([1; 16]), 3, true, 2)])
+        .unwrap();
+    let mut responses = vec![(200, "", page(vec![item(30)]))];
+    responses.extend((1..=23).map(|_| (404, "", vec![])));
+    let (base, worker) = server(responses);
+    history.refresh(api(base), true).await;
+    let rows = history.list(0, 100).entries;
+    assert_eq!(
+        rows.len(),
+        23,
+        "repair must retain cached local rows and hide flags"
+    );
+    for row in rows.iter().filter(|row| row.recording_id != Some([30; 16])) {
+        assert!(
+            row.last_error
+                .as_ref()
+                .is_some_and(|error| error.contains("unavailable")),
+            "repair must check every omitted cached ID, including beyond20"
+        );
+    }
+    assert_eq!(worker.join().unwrap().len(), 24);
+    let row = rows
+        .iter()
+        .find(|row| row.recording_id == Some([1; 16]))
+        .unwrap();
+    assert_eq!((row.pending_chunks, row.lost_chunks), (3, 2));
+    assert!(row.pending_control);
+    let restarted = History::new(Store::new(dir.clone()), Some([1; 16]));
+    assert_eq!(restarted.list(0, 100).entries, rows);
+    let (base, worker) = server(vec![(200, "", page(vec![item(30)]))]);
+    restarted.refresh(api(base), false).await;
+    assert!(restarted.list(0, 100).refresh_error.is_none());
+    assert_eq!(
+        worker.join().unwrap().len(),
+        1,
+        "background refresh skips confirmed unavailable IDs"
     );
     let _ = std::fs::remove_dir_all(dir);
 }
