@@ -767,3 +767,124 @@ async fn full_repair_checks_all_newly_missing_completed_cached_recordings() {
     );
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn acknowledged_inflight_eviction_clears_history_loss_across_restart() {
+    use tutorlolv2_desktop_app::spool::Spool;
+    let dir = std::env::temp_dir().join(format!("tl-loss-ack-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let spool = Spool::new(dir.join("spool"), 1024);
+    spool.put([2; 16], 0, &[0; 600]).unwrap();
+    let inflight = spool.pending().remove(0);
+    spool.put([3; 16], 0, &[0; 600]).unwrap();
+    assert_eq!(spool.loss_count([2; 16]), 1);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    history
+        .reconcile_local(Some([1; 16]), vec![([2; 16], Some([4; 16]), 0, false, 1)])
+        .unwrap();
+    assert_eq!(history.list(0, 50).entries[0].lost_chunks, 1);
+    spool.done(&inflight).unwrap();
+    assert_eq!(spool.loss_count([2; 16]), 0);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    history
+        .reconcile_local(
+            Some([1; 16]),
+            vec![([2; 16], Some([4; 16]), 0, false, spool.loss_count([2; 16]))],
+        )
+        .unwrap();
+    assert_eq!(history.list(0, 50).entries[0].lost_chunks, 0);
+    assert_eq!(
+        History::new(Store::new(dir.clone()), Some([1; 16]))
+            .list(0, 50)
+            .entries[0]
+            .lost_chunks,
+        0
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[tokio::test]
+async fn removed_resumed_local_loss_survives_while_current_loss_decreases() {
+    let dir = std::env::temp_dir().join(format!("tl-loss-retained-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+    history.local([2; 16], None, 0, false, 2).unwrap();
+    history
+        .reconcile_local(
+            Some([1; 16]),
+            vec![
+                ([2; 16], Some([4; 16]), 0, false, 2),
+                ([3; 16], Some([4; 16]), 0, false, 3),
+            ],
+        )
+        .unwrap();
+    assert_eq!(history.list(0, 50).entries[0].lost_chunks, 5);
+    let page = bincode::encode_to_vec(
+        tutorlolv2_protocol::HistoryPage {
+            items: vec![item(4)],
+            next_before: None,
+        },
+        tutorlolv2_desktop_app::BINCODE_CONFIG,
+    )
+    .unwrap();
+    let (base, worker) = server(vec![
+        (200, "", page.clone()),
+        (200, "", page.clone()),
+        (200, "", page),
+    ]);
+    for _ in 0..3 {
+        let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+        history.refresh(api(base.clone()), true).await;
+        assert!(history.list(0, 50).refresh_error.is_none());
+        history
+            .reconcile_local(Some([1; 16]), vec![([3; 16], Some([4; 16]), 0, false, 1)])
+            .unwrap();
+        assert_eq!(history.list(0, 50).entries[0].lost_chunks, 3);
+    }
+    assert_eq!(worker.join().unwrap().len(), 3);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn legacy_loss_totals_remain_conservative_floors_without_double_counting() {
+    use tutorlolv2_protocol::*;
+    for previous in [false, true] {
+        let dir =
+            std::env::temp_dir().join(format!("tl-loss-legacy-{previous}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = Store::new(dir.clone());
+        let row = HistoryEntry {
+            local_id: Some([2; 16]),
+            recording_id: Some([4; 16]),
+            summary: None,
+            share: tutorlolv2_desktop_app::sharing::private_share(),
+            pending_chunks: 0,
+            pending_control: false,
+            lost_chunks: 5,
+            last_error: None,
+            hidden: false,
+        };
+        if previous {
+            store
+                .save_history(&(Some([1u8; 16]), vec![row], vec![[4u8; 16]]))
+                .unwrap();
+        } else {
+            store.save_history(&(Some([1u8; 16]), vec![row])).unwrap();
+        }
+        // Provenance is unrecoverable: five may include removed sessions. A
+        // shrinking current journal must neither erase that total nor add it twice.
+        for lost in [2, 0, 6, 1] {
+            let history = History::new(Store::new(dir.clone()), Some([1; 16]));
+            history
+                .reconcile_local(
+                    Some([1; 16]),
+                    vec![([2; 16], Some([4; 16]), 0, false, lost)],
+                )
+                .unwrap();
+            let row = history.list(0, 50).entries.remove(0);
+            assert_eq!(row.lost_chunks, if lost == 6 { 6 } else { 5 });
+            assert_eq!(row.last_error.is_some(), previous);
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}

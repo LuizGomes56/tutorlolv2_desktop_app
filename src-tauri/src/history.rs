@@ -12,6 +12,17 @@ struct Index {
     device_id: Option<Id16>,
     entries: Vec<HistoryEntry>,
     unavailable: Vec<Id16>,
+    // Last authoritative journal contribution per local, including removed sessions.
+    // Retain aliases after row collapse so surviving journals can decrease independently.
+    losses: Vec<(Id16, Option<Id16>, u32)>,
+    legacy_losses: Vec<(Option<Id16>, Option<Id16>, u32)>,
+}
+
+#[derive(Decode)]
+struct PreviousIndex {
+    device_id: Option<Id16>,
+    entries: Vec<HistoryEntry>,
+    unavailable: Vec<Id16>,
 }
 
 // Accept the initial unreleased M3 metadata payload without losing cached hide flags.
@@ -30,14 +41,81 @@ fn decode_index(bytes: &[u8]) -> Option<Index> {
         return Some(index);
     }
 
+    if let Ok((previous, used)) =
+        bincode::decode_from_slice::<PreviousIndex, _>(bytes, crate::BINCODE_CONFIG)
+        && used == bytes.len()
+    {
+        return Some(migrate_index(
+            previous.device_id,
+            previous.entries,
+            previous.unavailable,
+        ));
+    }
+
     let (legacy, used) =
         bincode::decode_from_slice::<LegacyIndex, _>(bytes, crate::BINCODE_CONFIG).ok()?;
 
-    (used == bytes.len()).then_some(Index {
-        device_id: legacy.device_id,
-        entries: legacy.entries,
-        unavailable: vec![],
-    })
+    (used == bytes.len()).then(|| migrate_index(legacy.device_id, legacy.entries, vec![]))
+}
+
+fn migrate_index(
+    device_id: Option<Id16>,
+    entries: Vec<HistoryEntry>,
+    unavailable: Vec<Id16>,
+) -> Index {
+    // Older aggregate totals have no recoverable per-local provenance. Preserve them
+    // as a floor, rather than inventing additive losses or guessing which journal
+    // supplied them. Newly tracked contributions can still decrease independently.
+    let legacy_losses = entries
+        .iter()
+        .filter(|e| e.lost_chunks > 0)
+        .map(|e| (e.local_id, e.recording_id, e.lost_chunks))
+        .collect();
+    Index {
+        device_id,
+        entries,
+        unavailable,
+        losses: vec![],
+        legacy_losses,
+    }
+}
+
+impl Index {
+    fn loss(&mut self, local: Id16, id: Option<Id16>, lost: u32) {
+        if let Some(entry) = self.losses.iter_mut().find(|e| e.0 == local) {
+            entry.1 = id.or(entry.1);
+            entry.2 = lost;
+        } else {
+            self.losses.push((local, id, lost));
+        }
+        for (alias, recording, _) in &mut self.legacy_losses {
+            if *alias == Some(local) {
+                *recording = id.or(*recording);
+            }
+        }
+    }
+
+    fn reconcile_losses(&mut self) {
+        for row in &mut self.entries {
+            let matches = |local, id| {
+                row.local_id.is_some() && row.local_id == local
+                    || row.recording_id.is_some() && row.recording_id == id
+            };
+            let known = self
+                .losses
+                .iter()
+                .filter(|(local, id, _)| matches(Some(*local), *id))
+                .fold(0u32, |sum, (_, _, lost)| sum.saturating_add(*lost));
+            let legacy = self
+                .legacy_losses
+                .iter()
+                .filter(|(local, id, _)| matches(*local, *id))
+                .map(|(_, _, lost)| *lost)
+                .max()
+                .unwrap_or(0);
+            row.lost_chunks = known.max(legacy);
+        }
+    }
 }
 
 struct State {
@@ -103,6 +181,8 @@ impl History {
             device_id,
             entries: vec![],
             unavailable: vec![],
+            losses: vec![],
+            legacy_losses: vec![],
         });
 
         if index.device_id != device_id {
@@ -111,6 +191,8 @@ impl History {
                 device_id,
                 entries: vec![],
                 unavailable: vec![],
+                losses: vec![],
+                legacy_losses: vec![],
             };
         }
 
@@ -140,6 +222,8 @@ impl History {
             device_id: id,
             entries: vec![],
             unavailable: vec![],
+            losses: vec![],
+            legacy_losses: vec![],
         };
 
         self.store.save_history(&next).map_err(storage)?;
@@ -155,7 +239,7 @@ impl History {
     fn update_for_device(
         &self,
         device: Option<Id16>,
-        f: impl FnOnce(&mut Vec<HistoryEntry>),
+        f: impl FnOnce(&mut Index),
     ) -> Result<(), HistoryError> {
         let mut s = self.state.lock().unwrap();
         if s.index.device_id != device {
@@ -167,7 +251,8 @@ impl History {
         }
         let mut next = s.index.clone();
 
-        f(&mut next.entries);
+        f(&mut next);
+        next.reconcile_losses();
 
         for entry in &mut next.entries {
             if entry
@@ -192,7 +277,8 @@ impl History {
         device: Option<Id16>,
         errors: Vec<(Id16, Option<Id16>, String)>,
     ) -> Result<(), HistoryError> {
-        self.update_for_device(device, |entries| {
+        self.update_for_device(device, |index| {
+            let entries = &mut index.entries;
             for e in entries.iter_mut() {
                 e.last_error = None;
             }
@@ -217,7 +303,11 @@ impl History {
         device: Option<Id16>,
         locals: Vec<(Id16, Option<Id16>, u32, bool, u32)>,
     ) -> Result<(), HistoryError> {
-        self.update_for_device(device, |entries| {
+        self.update_for_device(device, |index| {
+            for (local, id, _, _, lost) in &locals {
+                index.loss(*local, *id, *lost);
+            }
+            let entries = &mut index.entries;
             for row in entries.iter_mut() {
                 row.pending_chunks = 0;
                 row.pending_control = false;
@@ -284,8 +374,6 @@ impl History {
                             row.summary = old.summary.clone();
                             row.share = old.share.clone();
                         }
-
-                        row.lost_chunks = row.lost_chunks.max(old.lost_chunks);
                     } else {
                         retained.push(old)
                     }
@@ -306,7 +394,9 @@ impl History {
         lost: u32,
     ) -> Result<(), HistoryError> {
         let device = self.state.lock().unwrap().index.device_id;
-        self.update_for_device(device, |entries| {
+        self.update_for_device(device, |index| {
+            index.loss(local, id, lost);
+            let entries = &mut index.entries;
             let mut row = entries
                 .iter()
                 .find(|e| e.local_id == Some(local))
