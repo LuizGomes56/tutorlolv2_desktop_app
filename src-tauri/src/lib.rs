@@ -175,10 +175,8 @@ async fn set_history_share_mode(
 
     let id = history::parse_id(&recording_id)?;
     let shared = &state.recorder.shared;
-    let api = shared.api.read().await.clone();
-    let share = api.history_share(id, mode).await?;
+    let share = shared.set_history_share_mode(id, mode).await?;
 
-    shared.history.share(api.device_id, id, share.clone())?;
     let _ = window.app_handle().emit("history-changed", ());
 
     Ok(share)

@@ -97,38 +97,54 @@ impl Delivery {
     pub(crate) async fn registration(self: Arc<Self>) {
         loop {
             if !self.api.read().await.authenticated() {
-                let mut attempt = 0;
-
-                loop {
-                    match ApiClient::new(None).register(APP_VERSION).await {
-                        Ok(credentials) => {
-                            if let Err(e) = self.store.save_device(&credentials) {
-                                log::error!("Could not save device.bin: {e}");
-                            }
-
-                            let _ = self.history.bind(Some(credentials.device_id));
-
-                            *self.api.write().await = ApiClient::new(Some(&credentials));
-                            self.outbox_now.notify_one();
-                            self.upload_now.notify_one();
-
-                            break;
-                        }
-                        Err(e) => {
-                            log::warn!("Device registration failed: {e}");
-                            tokio::time::sleep(Duration::from_millis(backoff_ms(
-                                attempt,
-                                jitter(),
-                            )))
-                            .await;
-
-                            attempt += 1;
-                        }
-                    }
-                }
+                self.register_device(ApiClient::new(None)).await;
             }
 
             self.register_now.notified().await;
+        }
+    }
+
+    /// Register once, then retry local persistence of the same credentials before
+    /// publishing them to delivery workers. No recorder lock is held while waiting.
+    pub async fn register_device(&self, registration_api: ApiClient) {
+        let mut attempt = 0;
+        let credentials = loop {
+            match registration_api.register(APP_VERSION).await {
+                Ok(credentials) => break credentials,
+                Err(e) => log::warn!("Device registration failed: {e}"),
+            }
+
+            tokio::time::sleep(Duration::from_millis(backoff_ms(attempt, jitter()))).await;
+            attempt += 1;
+        };
+
+        attempt = 0;
+        loop {
+            // Persist the secret first: an interruption after this write can recover
+            // on startup, where History::new discards a cache for another device.
+            let persisted = match self.store.save_device(&credentials) {
+                Err(e) => {
+                    log::error!("Could not save device.bin: {e}");
+                    false
+                }
+                Ok(()) => match self.history.bind(Some(credentials.device_id)) {
+                    Ok(()) => true,
+                    Err(e) => {
+                        log::error!("Could not bind history to registered device: {e:?}");
+                        false
+                    }
+                },
+            };
+
+            if persisted {
+                *self.api.write().await = ApiClient::new(Some(&credentials));
+                self.outbox_now.notify_one();
+                self.upload_now.notify_one();
+                return;
+            }
+
+            tokio::time::sleep(Duration::from_millis(backoff_ms(attempt, jitter()))).await;
+            attempt += 1;
         }
     }
 

@@ -51,6 +51,30 @@ impl Delivery {
         state
     }
 
+    pub async fn set_history_share_mode(
+        &self,
+        id: Id16,
+        mode: tutorlolv2_protocol::HistoryShareMode,
+    ) -> Result<ShareState, tutorlolv2_protocol::HistoryError> {
+        let _guard = self.sharing_lock.lock().await;
+        let api = self.api.read().await.clone();
+        let share = api.history_share(id, mode).await?;
+        self.history.check_device(api.device_id)?;
+
+        // History may already see the server end while the local recorder is still active.
+        // Update only that matching recorder, including cancellation of an in-flight live push.
+        if self.recorder.lock().unwrap().set_share(id, share.clone()) {
+            *self.sharing_error.lock().unwrap() = None;
+            *self.sharing_refresh_error.lock().unwrap() = None;
+            if share.mode == ShareMode::Private {
+                *self.live_error.lock().unwrap() = None;
+            }
+            self.sharing_now.notify_one();
+        }
+        self.history.share(api.device_id, id, share.clone())?;
+        Ok(share)
+    }
+
     pub async fn set_share_mode(&self, mode: ShareMode) -> Result<ShareState, String> {
         let _guard = self.sharing_lock.lock().await;
         let state = self.recording_state();

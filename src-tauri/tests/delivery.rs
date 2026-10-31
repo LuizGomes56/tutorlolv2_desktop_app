@@ -487,3 +487,106 @@ async fn failed_old_result_does_not_block_a_new_session() {
     assert!(paths[0].starts_with("PATCH "));
     assert!(paths[1].contains("/sessions "));
 }
+
+async fn registration_storage_recovery(blocked_file: &str) {
+    let root = dir(&format!("registration_{}", blocked_file));
+    let store = Store::new(root.clone());
+    let old = DeviceCredentials {
+        device_id: [1; 16],
+        device_secret: [2; 32],
+    };
+    store.save_device(&old).unwrap();
+    let credentials = DeviceCredentials {
+        device_id: [7; 16],
+        device_secret: [8; 32],
+    };
+    let response = bincode::encode_to_vec(&credentials, BINCODE_CONFIG).unwrap();
+    let (base, worker) = server(vec![(201, response)]);
+    let delivery = Arc::new(Delivery::new(
+        Recorder::new(None, None, "test".into()),
+        ApiClient::with_base_url(base.clone(), None),
+        Spool::new(root.join("spool"), Spool::DEFAULT_MAX_BYTES),
+        store.clone(),
+    ));
+    delivery.history.bind(Some(old.device_id)).unwrap();
+    delivery
+        .history
+        .local([3; 16], Some([4; 16]), 1, true, 0)
+        .unwrap();
+    let blocked = root.join(blocked_file);
+    std::fs::create_dir(&blocked).unwrap();
+    let task = tokio::spawn({
+        let delivery = delivery.clone();
+        async move {
+            delivery
+                .register_device(ApiClient::with_base_url(base, None))
+                .await
+        }
+    });
+    let paths = tokio::task::spawn_blocking(move || worker.join().unwrap())
+        .await
+        .unwrap();
+    assert_eq!(paths.len(), 1);
+    assert!(paths[0].contains("/devices "));
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert!(
+        !task.is_finished(),
+        "Local persistence failure must keep registration pending"
+    );
+    assert!(
+        !delivery.flush().await,
+        "Credentials must not be published before local persistence succeeds"
+    );
+    assert!(delivery.history.check_device(Some(old.device_id)).is_ok());
+    assert_eq!(delivery.history.list(0, 50).entries.len(), 1);
+    std::fs::remove_dir(&blocked).unwrap();
+    tokio::time::timeout(Duration::from_secs(5), task)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(delivery.flush().await);
+    assert!(
+        delivery
+            .history
+            .check_device(Some(credentials.device_id))
+            .is_ok()
+    );
+    assert!(delivery.history.list(0, 50).entries.is_empty());
+    let saved = store.load_device().unwrap();
+    assert_eq!(saved.device_id, credentials.device_id);
+    assert_eq!(saved.device_secret, credentials.device_secret);
+}
+
+#[tokio::test]
+async fn registration_retries_history_storage_without_registering_another_device() {
+    registration_storage_recovery("history.bin.tmp").await;
+}
+
+#[tokio::test]
+async fn registration_retries_credential_storage_before_publishing_identity() {
+    registration_storage_recovery("device.bin.tmp").await;
+}
+
+#[tokio::test]
+async fn registration_interrupted_after_device_save_discards_previous_history_at_startup() {
+    let root = dir("registration_interrupted_startup");
+    let store = Store::new(root.clone());
+    let history = tutorlolv2_desktop_app::history::History::new(store.clone(), Some([1; 16]));
+    history.local([3; 16], Some([4; 16]), 1, true, 0).unwrap();
+    let credentials = DeviceCredentials {
+        device_id: [7; 16],
+        device_secret: [8; 32],
+    };
+    store.save_device(&credentials).unwrap();
+    // Model an exit after saving credentials, before the history bind succeeds.
+    std::fs::create_dir(root.join("history.bin.tmp")).unwrap();
+    let delivery = Arc::new(Delivery::new(
+        Recorder::new(None, None, "test".into()),
+        ApiClient::new(store.load_device().as_ref()),
+        Spool::new(root.join("spool"), Spool::DEFAULT_MAX_BYTES),
+        store,
+    ));
+    assert!(delivery.history.list(0, 50).entries.is_empty());
+    assert!(delivery.history.check_device(Some([7; 16])).is_ok());
+    assert!(delivery.flush().await);
+}
