@@ -34,6 +34,7 @@ impl Delivery {
             .clone()
             .or_else(|| self.sharing_error.lock().unwrap().clone())
             .or_else(|| self.live_error.lock().unwrap().clone())
+            .or_else(|| self.control_error.lock().unwrap().clone())
             .or_else(|| self.delivery_error.lock().unwrap().clone());
 
         state

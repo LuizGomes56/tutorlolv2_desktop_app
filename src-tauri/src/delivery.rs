@@ -27,6 +27,7 @@ pub struct Delivery {
     pub(crate) sharing_error: Mutex<Option<String>>,
     pub(crate) sharing_refresh_error: Mutex<Option<String>>,
     pub(crate) live_error: Mutex<Option<String>>,
+    pub(crate) control_error: Mutex<Option<String>>,
     pub(crate) delivery_error: Mutex<Option<String>>,
     pub(crate) sharing_lock: tokio::sync::Mutex<()>,
     upload_lock: tokio::sync::Mutex<Option<Instant>>,
@@ -47,6 +48,7 @@ impl Delivery {
             sharing_error: Mutex::new(None),
             sharing_refresh_error: Mutex::new(None),
             live_error: Mutex::new(None),
+            control_error: Mutex::new(None),
             delivery_error: Mutex::new(None),
             sharing_lock: tokio::sync::Mutex::new(()),
             upload_lock: tokio::sync::Mutex::new(None),
@@ -206,7 +208,7 @@ impl Delivery {
                         target = Some(assigned);
                     }
                     Err(e) => {
-                        *self.delivery_error.lock().unwrap() = Some(e.clone());
+                        *self.control_error.lock().unwrap() = Some(e.clone());
                         log::warn!("Start session failed: {e}");
                         if unauthorized(&e) {
                             self.credentials_rejected().await;
@@ -228,7 +230,7 @@ impl Delivery {
                         self.persist_effects(effects);
                     }
                     Err(e) => {
-                        *self.delivery_error.lock().unwrap() = Some(e.clone());
+                        *self.control_error.lock().unwrap() = Some(e.clone());
                         log::warn!("Ending the recording failed: {e}");
 
                         if unauthorized(&e) {
@@ -249,6 +251,7 @@ impl Delivery {
                         }
                     }
                     Err(e) => {
+                        *self.control_error.lock().unwrap() = Some(e.clone());
                         log::warn!("Sending the game result failed: {e}");
 
                         if unauthorized(&e) {
@@ -261,6 +264,11 @@ impl Delivery {
                 }
             }
         }
+
+        if complete {
+            *self.control_error.lock().unwrap() = None;
+        }
+
         complete
     }
 
