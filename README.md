@@ -1,3 +1,5 @@
+# Moved to [tutorlolv2 repository](https://github.com/LuizGomes56/tutorlolv2)
+
 ## Future Desktop and Web applications for TutorLoL
 
 - **Check out** [TutorLoLv2 backend repository](https://github.com/LuizGomes56/tutorlolv2)
